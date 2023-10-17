@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Fuxcel</title>
+	
+	<link rel="stylesheet" href="css/fuxcel.css">
+	<script defer src="js/fuxcel.js"></script>
+</head>
+
+<style>
+	#div:after {
+		display: flex;
+		content: "Hello";
+	}
+</style>
+
+<body>
+	<form action="" id="test-form">
+		<input type="text" class="test-input" data-fuxcel-test-one="test">
+		<div id="div" class="test-div" title="boss">
+			<h1>Hello</h1>
+			<span>Hello <small>World</small></span>
+		</div>
+		<div id="other-div" class="test-div"></div>
+	</form>
+	
+	<form action="" id="test-form-1">
+		<input type="text" class="test-input" data-fuxcel-test-one="test">
+		<div class="test-div"></div>
+	</form>
+	
+	<a href="" style="display:flex;position:relative;">
+		Dropdown Link
+		<div style="position: absolute;top: 100%;display: none">Menu</div>
+	</a>
+</body>
+</html>
