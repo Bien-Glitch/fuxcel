@@ -2,6 +2,8 @@ type FuxcelOrString<T extends string | object, U extends boolean | string | null
 type Selector = string | null;
 
 interface FuxcelInterface {
+	get hasFocus(): Promise<any>
+	
 	attrib<T extends string | object, U extends string | null>(name: T, value?: U): FuxcelOrString<T, U>
 	
 	dataAttrib<T extends string | object, U extends string | null>(name: T, value?: U): FuxcelOrString<T, U>
@@ -51,8 +53,8 @@ const isObject = (value: any): boolean => {
 }
 
 class FuxcelBase {
-	private length: number;
-	protected prev: object;
+	protected length: number;
+	protected prev: {length: number};
 	
 	/**
 	 *
@@ -61,7 +63,7 @@ class FuxcelBase {
 	 */
 	constructor(selector: string | Iterable<any> | any, context?: string | Iterable<any> | any) {
 		const fuxcel: any = this;
-		const selectedElements: [] | NodeListOf<any> | undefined = init();
+		const selectedElements: any[] | NodeListOf<any> | undefined = init();
 		const documentDOMArray: any[] = fuxcel.#_toArray(document);
 		
 		this.length = 0;
@@ -112,6 +114,7 @@ class FuxcelBase {
 		const iterable: any[] = [
 			's',
 			'fuxcel',
+			'fuxcelvalidator',
 			'jquery',
 			'nodelist',
 			'collection'
@@ -131,16 +134,22 @@ class FuxcelBase {
 		return this.#_isIterable(element) ? Array.from(element) : [element];
 	}
 	
-	#_setPrev(prevObj: Fuxcel) {
-		this.prev = new Fuxcel(prevObj);
-	}
-	
 	get prevObj() {
 		return this.prev;
 	}
 	
 	get toArray(): any[] {
+		if (!this.length)
+			throw ('No element selected');
 		return this.#_toArray(this);
+	}
+	
+	static get isMobileDevice() {
+		return navigator.userAgent.toLowerCase().includes('mobile');
+	}
+	
+	static get pointerIsTouch() {
+		return window.matchMedia("(pointer: coarse)").matches;
 	}
 }
 
@@ -205,6 +214,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	}
 	
 	#_setPrev(prevObj: Fuxcel): Fuxcel {
+		// @ts-ignore
 		this.prev = new Fuxcel(prevObj);
 		return this;
 	}
@@ -247,6 +257,57 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 				throw (`Function \`prop()\` expects 1-2 arguments. None given.`);
 		}
 		return this;
+	}
+	
+	get resetFuxcelObject() {
+		const selectedElements: any[] | NodeListOf<any> | undefined = this.toArray;
+		const documentDOMArray: any[] = fx(document).toArray;
+		
+		// @ts-ignore
+		Object.keys(this).forEach(key => delete this[key]);
+		this.length = 0;
+		this.prev = {length: 0};
+		
+		documentDOMArray.forEach((value, key) => {
+			// @ts-ignore
+			this.prev[key] = value;
+			this.prev.length++;
+		});
+		
+		selectedElements.forEach((value, index) => {
+			// @ts-ignore
+			this[index] = value;
+			this.length++;
+		});
+		return this;
+	}
+	
+	get classes(): DOMTokenList {
+		const selected: HTMLElement[] = this.toArray;
+		return selected[0].classList
+	}
+	
+	get hasFocus(): Promise<any> {
+		const selected: HTMLElement[] = this.toArray;
+		const selector = Fuxcel.pointerIsTouch ? ':focus' : ':hover';
+		
+		return new Promise(async resolve => {
+			await selected.forEach((element: HTMLElement) => resolve(fx(element).matchSelector(selector)));
+		});
+	}
+	
+	get innerHTML(): string {
+		const selected: HTMLElement[] = this.toArray;
+		return selected[0].innerHTML;
+	}
+	
+	get outerHTML(): string {
+		const selected: HTMLElement[] = this.toArray;
+		return selected[0].outerHTML;
+	}
+	
+	get formValidator(): FuxcelValidator {
+		return new FuxcelValidator(this);
 	}
 	
 	/**
@@ -451,9 +512,45 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		return fx(siblings).#_setPrev(this);
 	}
 	
-	hasFocus() {
-		// const selected: HTMLElement[] = this.toArray;
-		return this.matchSelector(':hover');
+	hasScrollBar(direction: string = 'vertical'): boolean {
+		const selected: HTMLElement[] = this.toArray;
+		let scrollType: { vertical: string, horizontal: string } = {vertical: 'scrollHeight', horizontal: 'scrollWidth'},
+			clientType: { vertical: string, horizontal: string } = {vertical: 'clientHeight', horizontal: 'clientWidth'};
+		
+		// @ts-ignore
+		if (isString(direction) && scrollType[direction])
+			// @ts-ignore
+			return selected[0][scrollType[direction]] > selected[0][clientType[direction]]
+		throw (`Function \`asScrollBar()\` expects 1 argument. 0 given.`);
+	}
+	
+	insertHTML(value: string, position: string | null = null): Fuxcel {
+		const selected: HTMLElement[] = this.toArray;
+		const positions: { affix: string, prefix: string, postfix: string, suffix: string } = {
+			affix: 'beforebegin',
+			prefix: 'afterbegin',
+			postfix: 'afterend',
+			suffix: 'beforeend'
+		}
+		
+		// @ts-ignore
+		if (isString(position) && !positions[position])
+			throw (`Invalid position option given. Valid position options:\n'affix',\n'prefix',\n'postfix',\n'suffix'`);
+		
+		// @ts-ignore
+		selected.forEach((element: HTMLElement) => isString(position) ? element.insertAdjacentHTML(positions[position], value) : element.innerHTML = value);
+		return this
+	}
+	
+	/**
+	 *
+	 * @param tagName {string}
+	 */
+	isElement(tagName: string): boolean {
+		const selected: HTMLElement[] = this.toArray;
+		if (isString(tagName))
+			return selected[0].tagName.toLowerCase() === tagName.toLowerCase();
+		throw (`Function \`matchSelector()\` expects 1 string argument. 0 given`);
 	}
 	
 	/**
@@ -462,16 +559,55 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	 */
 	matchSelector(selector: Selector): boolean {
 		const selected: HTMLElement[] = this.toArray;
-		
 		if (isString(selector))
 			return (selected[0].matches || selected[0].webkitMatchesSelector).call(selected[0], <string>selector);
 		throw (`Function \`matchSelector()\` expects 1 argument. 0 given`);
 	}
 }
 
+class FuxcelValidator extends Fuxcel {
+	constructor(selector: string | Iterable<any> | any, context?: string | Iterable<any> | any) {
+		super(selector, context);
+	}
+	
+	#_fxValidator(selected: Fuxcel): FuxcelValidator {
+		return new FuxcelValidator(selected);
+	}
+	
+	#_initValidateForms(forms: HTMLElement[]): FuxcelValidator {
+		forms.forEach((form: HTMLElement) => {
+		
+		});
+		return this.#_fxValidator(fx(forms)).resetFuxcelObject;
+	}
+	
+	init(config: Object | null = null): FuxcelValidator {
+		const selected: HTMLElement[] = this.toArray;
+		let forms = selected.filter((element: HTMLElement) => fx(element).isElement('form')),
+			nonForms = selected.filter((element: HTMLElement) => !fx(element).isElement('form'))
+		
+		if (forms.length) {
+			if (nonForms.length)
+				console.error(`${nonForms.length} non form-element${nonForms.length === 1 ? '' : 's'} passed to validator:`, nonForms)
+			
+			return this.#_initValidateForms(forms);
+		} else {
+			console.error(`Non form-elements passed to the validator`, nonForms)
+			throw (`${nonForms.length} non form-element${nonForms.length === 1 ? '' : 's'} passed to validator.`);
+		}
+	}
+	
+	ele() {
+		return 'hate';
+	}
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-	const testDiv = fx('#div')
-	console.log(testDiv.siblings());
+	const testElement = fx('form, div')
+	console.log(testElement.children());
+	const listener = Fuxcel.pointerIsTouch ? 'click' : 'mouseenter';
+	
+	console.log(testElement.formValidator.init());
 });
 // const input = document.querySelector('.test-input');
 // input.setAttribute('type', 'password');

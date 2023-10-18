@@ -79,6 +79,7 @@ class FuxcelBase {
         const iterable = [
             's',
             'fuxcel',
+            'fuxcelvalidator',
             'jquery',
             'nodelist',
             'collection'
@@ -94,14 +95,19 @@ class FuxcelBase {
     #_toArray(element) {
         return this.#_isIterable(element) ? Array.from(element) : [element];
     }
-    #_setPrev(prevObj) {
-        this.prev = new Fuxcel(prevObj);
-    }
     get prevObj() {
         return this.prev;
     }
     get toArray() {
+        if (!this.length)
+            throw ('No element selected');
         return this.#_toArray(this);
+    }
+    static get isMobileDevice() {
+        return navigator.userAgent.toLowerCase().includes('mobile');
+    }
+    static get pointerIsTouch() {
+        return window.matchMedia("(pointer: coarse)").matches;
     }
 }
 class Fuxcel extends FuxcelBase {
@@ -160,6 +166,7 @@ class Fuxcel extends FuxcelBase {
         return this;
     }
     #_setPrev(prevObj) {
+        // @ts-ignore
         this.prev = new Fuxcel(prevObj);
         return this;
     }
@@ -202,6 +209,47 @@ class Fuxcel extends FuxcelBase {
                 throw (`Function \`prop()\` expects 1-2 arguments. None given.`);
         }
         return this;
+    }
+    get resetFuxcelObject() {
+        const selectedElements = this.toArray;
+        const documentDOMArray = fx(document).toArray;
+        // @ts-ignore
+        Object.keys(this).forEach(key => delete this[key]);
+        this.length = 0;
+        this.prev = { length: 0 };
+        documentDOMArray.forEach((value, key) => {
+            // @ts-ignore
+            this.prev[key] = value;
+            this.prev.length++;
+        });
+        selectedElements.forEach((value, index) => {
+            // @ts-ignore
+            this[index] = value;
+            this.length++;
+        });
+        return this;
+    }
+    get classes() {
+        const selected = this.toArray;
+        return selected[0].classList;
+    }
+    get hasFocus() {
+        const selected = this.toArray;
+        const selector = Fuxcel.pointerIsTouch ? ':focus' : ':hover';
+        return new Promise(async (resolve) => {
+            await selected.forEach((element) => resolve(fx(element).matchSelector(selector)));
+        });
+    }
+    get innerHTML() {
+        const selected = this.toArray;
+        return selected[0].innerHTML;
+    }
+    get outerHTML() {
+        const selected = this.toArray;
+        return selected[0].outerHTML;
+    }
+    get formValidator() {
+        return new FuxcelValidator(this);
     }
     /**
      *
@@ -388,9 +436,39 @@ class Fuxcel extends FuxcelBase {
         });
         return fx(siblings).#_setPrev(this);
     }
-    hasFocus() {
-        // const selected: HTMLElement[] = this.toArray;
-        return this.matchSelector(':hover');
+    hasScrollBar(direction = 'vertical') {
+        const selected = this.toArray;
+        let scrollType = { vertical: 'scrollHeight', horizontal: 'scrollWidth' }, clientType = { vertical: 'clientHeight', horizontal: 'clientWidth' };
+        // @ts-ignore
+        if (isString(direction) && scrollType[direction])
+            // @ts-ignore
+            return selected[0][scrollType[direction]] > selected[0][clientType[direction]];
+        throw (`Function \`asScrollBar()\` expects 1 argument. 0 given.`);
+    }
+    insertHTML(value, position = null) {
+        const selected = this.toArray;
+        const positions = {
+            affix: 'beforebegin',
+            prefix: 'afterbegin',
+            postfix: 'afterend',
+            suffix: 'beforeend'
+        };
+        // @ts-ignore
+        if (isString(position) && !positions[position])
+            throw (`Invalid position option given. Valid position options:\n'affix',\n'prefix',\n'postfix',\n'suffix'`);
+        // @ts-ignore
+        selected.forEach((element) => isString(position) ? element.insertAdjacentHTML(positions[position], value) : element.innerHTML = value);
+        return this;
+    }
+    /**
+     *
+     * @param tagName {string}
+     */
+    isElement(tagName) {
+        const selected = this.toArray;
+        if (isString(tagName))
+            return selected[0].tagName.toLowerCase() === tagName.toLowerCase();
+        throw (`Function \`matchSelector()\` expects 1 string argument. 0 given`);
     }
     /**
      *
@@ -403,9 +481,40 @@ class Fuxcel extends FuxcelBase {
         throw (`Function \`matchSelector()\` expects 1 argument. 0 given`);
     }
 }
+class FuxcelValidator extends Fuxcel {
+    constructor(selector, context) {
+        super(selector, context);
+    }
+    #_fxValidator(selected) {
+        return new FuxcelValidator(selected);
+    }
+    #_initValidateForms(forms) {
+        forms.forEach((form) => {
+        });
+        return this.#_fxValidator(fx(forms)).resetFuxcelObject;
+    }
+    init(config = null) {
+        const selected = this.toArray;
+        let forms = selected.filter((element) => fx(element).isElement('form')), nonForms = selected.filter((element) => !fx(element).isElement('form'));
+        if (forms.length) {
+            if (nonForms.length)
+                console.error(`${nonForms.length} non form-element${nonForms.length === 1 ? '' : 's'} passed to validator:`, nonForms);
+            return this.#_initValidateForms(forms);
+        }
+        else {
+            console.error(`Non form-elements passed to the validator`, nonForms);
+            throw (`${nonForms.length} non form-element${nonForms.length === 1 ? '' : 's'} passed to validator.`);
+        }
+    }
+    ele() {
+        return 'hate';
+    }
+}
 document.addEventListener('DOMContentLoaded', () => {
-    const testDiv = fx('#div');
-    console.log(testDiv.siblings());
+    const testElement = fx('form, div');
+    console.log(testElement.children());
+    const listener = Fuxcel.pointerIsTouch ? 'click' : 'mouseenter';
+    console.log(testElement.formValidator.init());
 });
 // const input = document.querySelector('.test-input');
 // input.setAttribute('type', 'password');
