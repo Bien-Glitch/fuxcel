@@ -8,57 +8,36 @@
 	<script defer src="js/fuxcel.js"></script>
 </head>
 
-<style>
-	#div:after {
-		display: flex;
-		content: "Hello";
-	}
-</style>
-
 <body>
-	<form action="" id="test-form">
-		
-		<div class="form-group">
-			<div class="form-group-wrapper">
-				<div class="input-group">
-					<div class="input-group-wrapper">
-						<label class="fx-floating">name</label>
-						<input type="text" placeholder="name" class="form-field">
-						<div class="validation-icons">
-							hello
-						</div>
-					</div>
-					<div></div>
-				</div>
-				<div></div>
+	<main>
+		<form action="" id="test-form">
+			<div class="form-group">
+				<label for="title">title</label>
+				<input type="text" id="title" placeholder="title" class="form-field">
 			</div>
-		</div>
-		
-		<div class="form-group">
-			<div class="form-group-wrapper">
-				<div class="input-group">
-					<div class="input-group-wrapper">
-						<label class="fx-floating">email</label>
-						<input type="email" placeholder="email" class="form-field">
-						<div class="validation-icons">
-						
-						</div>
-					</div>
-					<div></div>
-				</div>
-				<div></div>
+			
+			<div class="form-group">
+				<label for="name">name</label>
+				<input type="text" id="name" placeholder="name" class="form-field">
 			</div>
-		</div>
-	</form>
-	
-	<form action="" id="test-form-1">
-		<input type="text" class="test-input" data-fuxcel-test-one="test">
-		<div class="test-div"></div>
-	</form>
-	
-	<a href="" class="drop" style="display:flex;position:relative;">
-		Dropdown Link
-		<div style="position: absolute;top: 100%;display: none">Menu</div>
-	</a>
+			
+			<div class="form-group">
+				<input type="email" id="email" placeholder="email" class="form-field" style="padding: 1rem">
+				<label for="email">email</label>
+			</div>
+		</form>
+		
+		<form action="" id="test-form-1">
+			<div class="form-group">
+				<input type="password" name="password" class="form-field">
+				<label>password</label>
+			</div>
+		</form>
+		
+		<a href="" class="drop" style="display:flex;position:relative;">
+			Dropdown Link
+			<div style="position: absolute;top: 100%;display: none">Menu</div>
+		</a>
+	</main>
 </body>
 </html>

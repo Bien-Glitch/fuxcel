@@ -1,4 +1,6 @@
 @import "fuxcel.root";
+@import "fuxcel.color";
+@import "fuxcel.animation";
 @import "fuxcel.form";
 
 *,
@@ -8,5 +10,9 @@
 }
 
 body {
+  margin: 0;
 
+  main {
+    padding: 0 0.75rem;
+  }
 }
