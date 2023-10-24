@@ -1,6 +1,7 @@
 type FuxcelOrString<T extends string | object, U extends boolean | string | null = null> = T extends object ? Fuxcel : (T extends string ? (U extends string ? Fuxcel : (U extends boolean ? Fuxcel : string)) : string);
 type FuxcelEventListener<T extends string | object, U = T extends object ? boolean : Function, V = U extends boolean ? null : boolean> = Fuxcel;
-type Selector = string | null;
+type StringOrNull = string | null;
+type Selector = StringOrNull;
 declare type ValidatorConfigObject = {
 	regExp: {
 		name: RegExp,
@@ -73,6 +74,10 @@ const fx: fxInterface = (selector: string | Iterable<any> | any, context: string
  */
 const isBool = (value: any): boolean => {
 	return typeof value === 'boolean';
+}
+
+const isFunction = (value: any): boolean => {
+	return typeof value === 'function';
 }
 
 /**
@@ -208,7 +213,7 @@ class FuxcelBase {
 		return this.#_isIterable(element) ? Array.from(element) : [element];
 	}
 	
-	get fieldAttributes(): { id: string | null, type: string | null, fxId: string | null, fxRole: string | null, formId: string | null } {
+	get fieldAttributes(): { id: StringOrNull, type: StringOrNull, fxId: StringOrNull, fxRole: StringOrNull, formId: StringOrNull } {
 		const selected: HTMLElement[] = this.toArray;
 		return {
 			// @ts-ignore
@@ -638,7 +643,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		throw (`Function \`asScrollBar()\` expects 1 argument. 0 given.`);
 	}
 	
-	insertHTML(value: string, position: string | null = null): Fuxcel {
+	insertHTML(value: string, position: StringOrNull = null): Fuxcel {
 		const selected: HTMLElement[] = this.toArray;
 		const positions: { affix: string, prefix: string, postfix: string, suffix: string } = {
 			affix: 'beforebegin',
@@ -730,7 +735,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	}*/
 	
 	off(event?: string): Fuxcel
-	off(event?: string | null): Fuxcel {
+	off(event?: StringOrNull): Fuxcel {
 		const selected: HTMLElement[] = this.toArray;
 		
 		selected.forEach((element: HTMLElement) => {
@@ -819,12 +824,12 @@ class FuxcelValidator extends Fuxcel {
 			capslockAlert: true,
 			validateCard: false,
 			validateName: false,
-			validateEmail: false,
+			validateEmail: true,
 			validatePhone: false,
 			validatePassword: true,
 			validateUsername: false,
 			nativeValidation: false,
-			useDefaultStyling: false,
+			useDefaultStyling: true,
 			passwordId: 'password',
 			passwordConfirmId: 'password_confirmation',
 			initWrapper: '.form-group',
@@ -1013,6 +1018,10 @@ class FuxcelValidator extends Fuxcel {
 											if (_input.isPasswordField) {
 											} else
 												_input.validateField();
+										
+										if (_input.isEmailField)
+											configObject.config.validateEmail ? _input.validateEmail(configObject.regExp.email) : _input.toggleValidation();
+										
 									}
 								}
 							});
@@ -1068,12 +1077,13 @@ class FuxcelValidator extends Fuxcel {
 	}
 	
 	get validationProps(): { id: string, formGroup: string, validationField: string, validIcon: string, invalidIcon: string, validationIconField: string } {
-		// const selected: HTMLElement[] = this.toArray;
 		const configObject = this.#_fxValidatorConfig;
 		
 		const formGroup = configObject.config.initWrapper;
 		const formId = `#${this.fieldAttributes.formId}`;
 		const elementId = `#${this.fieldAttributes.id}`;
+		
+		// this.validateRegex(/[-_]/, '');
 		
 		if (formId)
 			return {
@@ -1087,7 +1097,40 @@ class FuxcelValidator extends Fuxcel {
 		throw ('NonForm element given');
 	}
 	
-	validateField(message: string | null = null, isError: boolean = false): FuxcelValidator {
+	validateRegex(regExpOrFn: Function): FuxcelValidator
+	validateRegex(regExpOrFn: RegExp, message: string): FuxcelValidator
+	validateRegex(regExpOrFn: Function | RegExp, message?: StringOrNull): FuxcelValidator {
+		const selected: HTMLElement[] = this.toArray;
+		
+		if (regExpOrFn && isFunction(regExpOrFn))
+			{ // @ts-ignore
+				regExpOrFn(this)
+			}
+		else {
+			if (regExpOrFn && isString(message))
+				// @ts-ignore
+				if (selected[0].value.length) {
+					// @ts-ignore
+					if (selected[0].value.match(regExpOrFn))
+						this.validateField();
+					else
+						this.validateField(message, true);
+				} else
+					this.validateField();
+			else
+				console.error('Function \`validateRegex()\` expects 2 arguments.');
+		}
+		return this;
+	}
+	
+	validateEmail(regExp: RegExp, customFormatEx: StringOrNull = null): FuxcelValidator {
+		/*return this.validateRegex(regExp, `Invalid E-Mail format: (eg. ${customFormatEx ?? 'johndoe@email.com'})`);*/
+		return this.validateRegex(() => {
+			this.validateField();
+		});
+	}
+	
+	validateField(message: StringOrNull = null, isError: boolean = false): FuxcelValidator {
 		const selected: FuxcelValidator = this;
 		// @ts-ignore
 		const target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement = selected[0];
@@ -1109,7 +1152,7 @@ class FuxcelValidator extends Fuxcel {
 		return this;
 	}
 	
-	showError(message: string | null = null) {
+	showError(message: StringOrNull = null) {
 		const fieldAttribs = this.fieldAttributes;
 		const validationProps = this.validationProps;
 		
@@ -1127,7 +1170,7 @@ class FuxcelValidator extends Fuxcel {
 			fx(validationProps.formGroup).replaceClass('success', 'error');
 	}
 	
-	showSuccess(message: string | null = null) {
+	showSuccess(message: StringOrNull = null) {
 		const fieldAttribs = this.fieldAttributes;
 		const validationProps = this.validationProps;
 		
@@ -1143,7 +1186,30 @@ class FuxcelValidator extends Fuxcel {
 			fx(validationProps.formGroup).replaceClass('error', 'success');
 	}
 	
-	renderMessage(message: string | null = null, renderType: string | null = null): FuxcelValidator {
+	undoValidation(destroyValidation: boolean = false): FuxcelValidator {
+		const selected: FuxcelValidator = this;
+		const fieldAttribs = selected.fieldAttributes;
+		const validationProps = selected.validationProps;
+		
+		if (destroyValidation) {
+			// @ts-ignore
+			delete validatorErrorBag[fieldAttribs.formId][fieldAttribs.id];
+			// @ts-ignore
+			validatorErrorCount[fieldAttribs.formId] = Object.keys(validatorErrorCount[fieldAttribs.formId]).length
+		}
+		
+		if (selected.#_fxValidatorConfig.config.useDefaultStyling)
+			fx(`${validationProps.formGroup} .form-group-wrapper`).removeClass('error', 'success');
+		else
+			fx(validationProps.formGroup).removeClass('error', 'success');
+		return this;
+	}
+	
+	toggleValidation() {
+		return this.canBeValidated ? this.validateField() : this.undoValidation();
+	}
+	
+	renderMessage(message: StringOrNull = null, renderType: StringOrNull = null): FuxcelValidator {
 		this.insertHTML(`<small class="${renderType}">${message ?? '&nbsp;'}</small>`);
 		return this;
 	}
