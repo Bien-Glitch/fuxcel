@@ -96,6 +96,15 @@ const isObject = (value: any): boolean => {
 	return typeof value === 'object';
 }
 
+const passLuhnAlgo = (input: any | string | number): boolean => {
+	const digitSum = (c: any | number): number => (c < 10) ? c : digitSum(Math.trunc(c / 10) + (c % 10));
+	
+	return input.split('').reverse()
+		.map(Number)
+		.map((value: number, index: number) => index % 2 !== 0 ? digitSum(value * 2) : 2)
+		.reduce((previous: number, current: number) => previous + current) % 10 === 0;
+}
+
 const parseBool = (value: any): boolean => {
 	switch (isString(value) ? value.toString().toLowerCase() : value) {
 		case true:
@@ -955,8 +964,6 @@ class FuxcelValidator extends Fuxcel {
 			// @ts-ignore
 			validatorErrorCount[formId] = {};
 			
-			console.log(validatorErrorBag)
-			
 			if (formGroups.length)
 				formGroups.toArray.forEach((formGroup: HTMLElement) => {
 					const configObject = this.#_fxValidatorConfig;
@@ -1015,13 +1022,33 @@ class FuxcelValidator extends Fuxcel {
 									
 									if (_input.canBeValidated) {
 										if (!filterFieldType.has(elementType) && !filterFieldType.has(fxRole) && !filterField.has(elementId) && !filterField.has(fxRole) && !filterField.has(fxId))
-											if (_input.isPasswordField) {
-											} else
+											if (_input.isPasswordField)
+												_input.#_validatePasswordFields();
+											else
 												_input.validateField();
 										
 										if (_input.isEmailField)
 											configObject.config.validateEmail ? _input.validateEmail(configObject.regExp.email) : _input.toggleValidation();
 										
+										if (_input.isNameField)
+											!configObject.config.validateName ? _input.validateName(configObject.regExp.name) : _input.toggleValidation();
+										
+										if (_input.isPhoneField)
+											configObject.config.validatePhone ? _input.validatePhone(configObject.regExp.phone) : _input.toggleValidation();
+										
+										if (_input.isUsernameField)
+											configObject.config.validateUsername ? _input.validateUsername(configObject.regExp.username) : _input.toggleValidation();
+										
+										if (configObject.config.validateCard) {
+											if (elementId?.includes('card_cvv') || fxRole?.includes('card_cvv') || fxId?.includes('card_cvv'))
+												_input.validateCardCVV(configObject.regExp.cardCVV);
+											if (elementId?.includes('card_number') || fxRole?.includes('card_number') || fxId?.includes('card_number'))
+												_input.validateCardCVV(configObject.regExp.cardNumber);
+										} else {
+											if ((elementId?.includes('card_cvv') || fxRole?.includes('card_cvv') || fxId?.includes('card_cvv')) || (elementId?.includes('card_number') || fxRole?.includes('card_number') || fxId?.includes('card_number')))
+												_input.toggleValidation();
+										}
+										filterFieldType.has(elementType) && elementType !== 'email' && _input.validateField();
 									}
 								}
 							});
@@ -1032,6 +1059,10 @@ class FuxcelValidator extends Fuxcel {
 				console.error(`init-wrapper element not found in form: #${formId}`);
 		});
 		return fx(forms).formValidator;
+	}
+	
+	#_validatePasswordFields() {
+	
 	}
 	
 	init(config: Object | null = null): FuxcelValidator {
@@ -1055,9 +1086,29 @@ class FuxcelValidator extends Fuxcel {
 		return selected.length ? (this.dataAttrib('fx-validate') ? parseBool(this.dataAttrib('fx-validate')) : true) : false;
 	}
 	
+	get formFieldElements() {
+		const selected: HTMLElement[] = this.toArray;
+		if (selected.length > 1) {
+			const elements = {}
+			selected.forEach((element: HTMLFormElement | HTMLElement) => {
+				if (fx(element).isElement('form'))
+					// @ts-ignore
+					elements[element.id] = <HTMLFormElement>element.elements
+			});
+			return elements
+		}
+		// @ts-ignore
+		return this.isElement('form') ? selected[0].elements : console.error('Non form elements given', selected)
+	}
+	
 	get isEmailField() {
 		const attributes = this.fieldAttributes;
 		return attributes.type?.includes('email') || attributes.type?.includes('email') || attributes.id?.includes('email') || attributes.fxId?.includes('email') || attributes.fxRole?.includes('email');
+	}
+	
+	get isNameField() {
+		const attributes = this.fieldAttributes;
+		return !this.isUsernameField && attributes.id?.includes('name') || attributes.fxId?.includes('name') || attributes.fxRole?.includes('name');
 	}
 	
 	get isPasswordField() {
@@ -1101,33 +1152,53 @@ class FuxcelValidator extends Fuxcel {
 	validateRegex(regExpOrFn: RegExp, message: string): FuxcelValidator
 	validateRegex(regExpOrFn: Function | RegExp, message?: StringOrNull): FuxcelValidator {
 		const selected: HTMLElement[] = this.toArray;
+		// @ts-ignore
+		const value: string = selected[0].value;
 		
-		if (regExpOrFn && isFunction(regExpOrFn))
-			{ // @ts-ignore
-				regExpOrFn(this)
-			}
-		else {
-			if (regExpOrFn && isString(message))
-				// @ts-ignore
-				if (selected[0].value.length) {
-					// @ts-ignore
-					if (selected[0].value.match(regExpOrFn))
-						this.validateField();
-					else
-						this.validateField(message, true);
-				} else
-					this.validateField();
-			else
-				console.error('Function \`validateRegex()\` expects 2 arguments.');
-		}
+		// @ts-ignore
+		(regExpOrFn && isFunction(regExpOrFn)) ? regExpOrFn(this) :
+			// @ts-ignore
+			(regExpOrFn && isString(message) ? ((value.length) ? (value.match(regExpOrFn) ? this.validateField() : this.validateField(message, true)) : this.validateField()) : console.error('Function \`validateRegex()\` expects 2 arguments.'));
 		return this;
 	}
 	
+	validateCardCVV(regExp: RegExp, customFormatEx: StringOrNull = null): FuxcelValidator {
+		return this.validateRegex(regExp, `Invalid CVV.`);
+	}
+	
+	validateCardNumber(regExp: RegExp, customFormatEx: StringOrNull = null): FuxcelValidator {
+		const selected: HTMLElement[] = this.toArray;
+		// @ts-ignore
+		const value: string = selected[0].value;
+		
+		return this.validateRegex(() => value.length ? (value.match(regExp) ?
+			(passLuhnAlgo(selected[0]) ? this.validateField() : this.validateField('Check Card Number and try again.', true)) :
+			this.validateField(`${customFormatEx ?? 'Only numbers are allowed.'}`)) : this.toggleValidation());
+	}
+	
 	validateEmail(regExp: RegExp, customFormatEx: StringOrNull = null): FuxcelValidator {
-		/*return this.validateRegex(regExp, `Invalid E-Mail format: (eg. ${customFormatEx ?? 'johndoe@email.com'})`);*/
-		return this.validateRegex(() => {
-			this.validateField();
-		});
+		return this.validateRegex(regExp, `Invalid E-Mail format: (eg. ${customFormatEx ?? 'johndoe@email.com'})`);
+	}
+	
+	validateName(regExp: RegExp, customFormatEx: StringOrNull = null): FuxcelValidator {
+		return this.validateRegex(regExp, `Invalid Name format: (eg. ${customFormatEx ?? 'john doe, john doe woods'})`);
+	}
+	
+	validatePhone(regExp: RegExp, customFormatEx: StringOrNull = null): FuxcelValidator {
+		return this.validateRegex(regExp, `Invalid Phone format: (eg. ${customFormatEx ?? '+234 8156547099, +1 104 2198'})`);
+	}
+	
+	validateUsername(regExp: RegExp, customFormatEx: StringOrNull = null): FuxcelValidator {
+		const selected: HTMLElement[] = this.toArray;
+		// @ts-ignore
+		const value: string = selected[0].value;
+		const minLength = parseInt(this.attrib('minlength') ?? 2);
+		// @ts-ignore
+		const fieldName = selected[0].id.toString().toTitleCase().replaceAll(/[_-]/gi, ' ');
+		
+		return this.validateRegex(() => value.length ? (value.length > minLength ?
+			(value.match(regExp) ? this.validateField() : this.validateField(`Invalid Username format: (eg. ${customFormatEx ?? 'Username must start and end with an alphabet, and can only contain alphabets and underscores.'})`)) :
+			this.validateField(`${customFormatEx ?? 'The ' + fieldName + ' requires a minimum of 3' + ' characters.'}`)) : this.toggleValidation());
 	}
 	
 	validateField(message: StringOrNull = null, isError: boolean = false): FuxcelValidator {
@@ -1213,16 +1284,42 @@ class FuxcelValidator extends Fuxcel {
 		this.insertHTML(`<small class="${renderType}">${message ?? '&nbsp;'}</small>`);
 		return this;
 	}
+	
+	renderValidationErrors(errors: object, message: StringOrNull = null, callbackFn: Function | null = null) {
+		const selected: FuxcelValidator = this;
+		// @ts-ignore
+		const target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement = selected[0];
+		
+		if (selected.isElement('form')) {
+			const fieldElements = this.formFieldElements;
+			console.log(fieldElements, this);
+			if (isObject(errors))
+				Object.keys(errors).forEach((elementId: string) => {
+					// @ts-ignore
+					const fieldName = elementId.toString().toTitleCase();
+					const element: FuxcelValidator = fx(`#${elementId}`).formValidator;
+					// @ts-ignore
+					if (elementId in fieldElements && (isString(errors[elementId]) && errors[elementId] !== undefined))
+						// @ts-ignore
+						element.validateField(errors[elementId], true);
+					else {
+						// @ts-ignore
+						if (isString(errors[elementId]) && errors[elementId] !== undefined)
+							element.validateField(`Verify ${fieldName} and try again.`, true);
+					}
+				});
+		}
+	}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
 	const body = document.querySelector('body');
 	const testElement = fx('form');
-	testElement.formValidator.isPasswordField;
-	
+	/*testElement.formValidator.isPasswordField;*/
 	testElement.formValidator.init({
 		config: {
 			useDefaultStyling: false
 		}
 	});
+	fx('#test-form-1').formValidator.renderValidationErrors({password: 'Hello'});
 });
