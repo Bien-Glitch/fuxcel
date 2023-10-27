@@ -1,9 +1,8 @@
-:root {
-  --fx-dark: #232323;
-  --fx-error: #e54242;
-  --fx-white-50: #808080;
-  --fx-border-color: #454545;
-  --fx-border-width: 1px;
+.fx-text-error {
+  color: var(--fx-error);
+}
+.fx-text-success {
+  color: var(--fx-success);
 }
 
 /*# sourceMappingURL=fuxcel.color.css.map */

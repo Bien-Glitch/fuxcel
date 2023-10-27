@@ -4,12 +4,13 @@ type StringOrNull = string | null;
 type Selector = StringOrNull;
 declare type ValidatorConfigObject = {
 	regExp: {
-		name: RegExp,
-		username: RegExp,
-		email: RegExp,
-		phone: RegExp,
-		cardCVV: RegExp,
-		cardNumber: RegExp,
+		name: RegExp | null,
+		username: RegExp | null,
+		email: RegExp | null,
+		phone: RegExp | null,
+		cardCVV: RegExp | null,
+		password: RegExp | null,
+		cardNumber: RegExp | null,
 	},
 	config: {
 		showIcons: boolean,
@@ -222,7 +223,7 @@ class FuxcelBase {
 		return this.#_isIterable(element) ? Array.from(element) : [element];
 	}
 	
-	get fieldAttributes(): { id: StringOrNull, type: StringOrNull, fxId: StringOrNull, fxRole: StringOrNull, formId: StringOrNull } {
+	get fieldAttributes(): { id: any, type: StringOrNull, fxId: StringOrNull, fxRole: StringOrNull, formId: StringOrNull } {
 		const selected: HTMLElement[] = this.toArray;
 		return {
 			// @ts-ignore
@@ -823,6 +824,7 @@ class FuxcelValidator extends Fuxcel {
 			phone: /^(\+\d{1,3}?\s)(\(\d{3}\)\s)?(\d+\s)*(\d{2,3}-?\d+)+$/g,
 			cardCVV: /[0-9]{3,4}$/gi,
 			cardNumber: /^[0-9]+$/gi,
+			password: null,
 		},
 		texts: {
 			capslock: 'Capslock active',
@@ -1028,22 +1030,22 @@ class FuxcelValidator extends Fuxcel {
 												_input.validateField();
 										
 										if (_input.isEmailField)
-											configObject.config.validateEmail ? _input.validateEmail(configObject.regExp.email) : _input.toggleValidation();
+											configObject.config.validateEmail ? _input.validateEmail(<RegExp>configObject.regExp.email) : _input.toggleValidation();
 										
 										if (_input.isNameField)
-											!configObject.config.validateName ? _input.validateName(configObject.regExp.name) : _input.toggleValidation();
+											!configObject.config.validateName ? _input.validateName(<RegExp>configObject.regExp.name) : _input.toggleValidation();
 										
 										if (_input.isPhoneField)
-											configObject.config.validatePhone ? _input.validatePhone(configObject.regExp.phone) : _input.toggleValidation();
+											configObject.config.validatePhone ? _input.validatePhone(<RegExp>configObject.regExp.phone) : _input.toggleValidation();
 										
 										if (_input.isUsernameField)
-											configObject.config.validateUsername ? _input.validateUsername(configObject.regExp.username) : _input.toggleValidation();
+											configObject.config.validateUsername ? _input.validateUsername(<RegExp>configObject.regExp.username) : _input.toggleValidation();
 										
 										if (configObject.config.validateCard) {
 											if (elementId?.includes('card_cvv') || fxRole?.includes('card_cvv') || fxId?.includes('card_cvv'))
-												_input.validateCardCVV(configObject.regExp.cardCVV);
+												_input.validateCardCVV(<RegExp>configObject.regExp.cardCVV);
 											if (elementId?.includes('card_number') || fxRole?.includes('card_number') || fxId?.includes('card_number'))
-												_input.validateCardCVV(configObject.regExp.cardNumber);
+												_input.validateCardCVV(<RegExp>configObject.regExp.cardNumber);
 										} else {
 											if ((elementId?.includes('card_cvv') || fxRole?.includes('card_cvv') || fxId?.includes('card_cvv')) || (elementId?.includes('card_number') || fxRole?.includes('card_number') || fxId?.includes('card_number')))
 												_input.toggleValidation();
@@ -1062,7 +1064,32 @@ class FuxcelValidator extends Fuxcel {
 	}
 	
 	#_validatePasswordFields() {
-	
+		const selected: HTMLElement[] = this.toArray;
+		// @ts-ignore
+		const form: HTMLFormElement = selected[0].form;
+		// @ts-ignore
+		const value: string = selected[0].value;
+		const fieldAttribs = this.fieldAttributes;
+		const configObject = this.#_fxValidatorConfig;
+		const minLength = parseInt(this.attrib('minlength'));
+		const fieldName = fieldAttribs.id.toString().toTitleCase().replaceAll(/[_-]/gi, ' ');
+		
+		if (configObject.config.validatePassword) {
+			if (fx(`#${configObject.config.passwordConfirmId}`, form).length) {
+				if (!value.length)
+					this.validateField()
+				else {
+					if (minLength && value.length < minLength) {
+						if (fieldAttribs.id === configObject.config.passwordId.toLowerCase())
+							this.validateField(`The ${fieldName} requires a minimum of ${minLength} characters.`)
+						if (fieldAttribs.id === configObject.config.passwordConfirmId.toLowerCase())
+							this.validateField(`Check Password.`)
+					} else if (configObject.regExp.password) {
+					
+					}
+				}
+			}
+		}
 	}
 	
 	init(config: Object | null = null): FuxcelValidator {
@@ -1203,15 +1230,13 @@ class FuxcelValidator extends Fuxcel {
 	
 	validateField(message: StringOrNull = null, isError: boolean = false): FuxcelValidator {
 		const selected: FuxcelValidator = this;
+		const fieldAttribs = selected.fieldAttributes;
 		// @ts-ignore
 		const target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement = selected[0];
 		
-		// @ts-ignore
-		const formId = selected[0].form.id, elementId = selected[0].id, tagName = selected[0].tagName.toLowerCase()
-		
 		let fieldValue = target.value,
 			minLength = parseInt(selected.attrib('minlength')),
-			fieldName = elementId.toString().toTitleCase().replaceAll(/[_-]/gi, ' '),
+			fieldName = fieldAttribs.id.toString().toTitleCase().replaceAll(/[_-]/gi, ' '),
 			finalMessage = minLength ?
 				(!isString(message) && fieldValue.length && fieldValue.length < minLength ? `The ${fieldName} requires a minimum of ${minLength} characters.` : message) :
 				(!isString(message) ? (selected.isPasswordField ? (fieldValue.length ? 'Ensure passwords.' : `The ${fieldName} field is required.`) : (!fieldValue.length ? `The ${fieldName} field is required.` : null)) : message);
@@ -1316,10 +1341,11 @@ document.addEventListener('DOMContentLoaded', () => {
 	const body = document.querySelector('body');
 	const testElement = fx('form');
 	/*testElement.formValidator.isPasswordField;*/
-	testElement.formValidator.init({
+	/*testElement.formValidator.init({
 		config: {
 			useDefaultStyling: false
 		}
 	});
-	fx('#test-form-1').formValidator.renderValidationErrors({password: 'Hello'});
+	fx('#test-form-1').formValidator.renderValidationErrors({password: 'Hello'});*/
+	console.log(fx('#password'))
 });

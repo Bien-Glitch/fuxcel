@@ -630,6 +630,7 @@ class FuxcelValidator extends Fuxcel {
             phone: /^(\+\d{1,3}?\s)(\(\d{3}\)\s)?(\d+\s)*(\d{2,3}-?\d+)+$/g,
             cardCVV: /[0-9]{3,4}$/gi,
             cardNumber: /^[0-9]+$/gi,
+            password: null,
         },
         texts: {
             capslock: 'Capslock active',
@@ -817,6 +818,31 @@ class FuxcelValidator extends Fuxcel {
         return fx(forms).formValidator;
     }
     #_validatePasswordFields() {
+        const selected = this.toArray;
+        // @ts-ignore
+        const form = selected[0].form;
+        // @ts-ignore
+        const value = selected[0].value;
+        const fieldAttribs = this.fieldAttributes;
+        const configObject = this.#_fxValidatorConfig;
+        const minLength = parseInt(this.attrib('minlength'));
+        const fieldName = fieldAttribs.id.toString().toTitleCase().replaceAll(/[_-]/gi, ' ');
+        if (configObject.config.validatePassword) {
+            if (fx(`#${configObject.config.passwordConfirmId}`, form).length) {
+                if (!value.length)
+                    this.validateField();
+                else {
+                    if (minLength && value.length < minLength) {
+                        if (fieldAttribs.id === configObject.config.passwordId.toLowerCase())
+                            this.validateField(`The ${fieldName} requires a minimum of ${minLength} characters.`);
+                        if (fieldAttribs.id === configObject.config.passwordConfirmId.toLowerCase())
+                            this.validateField(`Check Password.`);
+                    }
+                    else if (configObject.regExp.password) {
+                    }
+                }
+            }
+        }
     }
     init(config = null) {
         const selected = this.toArray;
@@ -930,11 +956,10 @@ class FuxcelValidator extends Fuxcel {
     }
     validateField(message = null, isError = false) {
         const selected = this;
+        const fieldAttribs = selected.fieldAttributes;
         // @ts-ignore
         const target = selected[0];
-        // @ts-ignore
-        const formId = selected[0].form.id, elementId = selected[0].id, tagName = selected[0].tagName.toLowerCase();
-        let fieldValue = target.value, minLength = parseInt(selected.attrib('minlength')), fieldName = elementId.toString().toTitleCase().replaceAll(/[_-]/gi, ' '), finalMessage = minLength ?
+        let fieldValue = target.value, minLength = parseInt(selected.attrib('minlength')), fieldName = fieldAttribs.id.toString().toTitleCase().replaceAll(/[_-]/gi, ' '), finalMessage = minLength ?
             (!isString(message) && fieldValue.length && fieldValue.length < minLength ? `The ${fieldName} requires a minimum of ${minLength} characters.` : message) :
             (!isString(message) ? (selected.isPasswordField ? (fieldValue.length ? 'Ensure passwords.' : `The ${fieldName} field is required.`) : (!fieldValue.length ? `The ${fieldName} field is required.` : null)) : message);
         if (!fieldValue || !fieldValue.length || fieldValue.length < minLength || (selected.isPasswordField && (!fieldValue.length || finalMessage)) || isError)
@@ -1021,11 +1046,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const body = document.querySelector('body');
     const testElement = fx('form');
     /*testElement.formValidator.isPasswordField;*/
-    testElement.formValidator.init({
+    /*testElement.formValidator.init({
         config: {
             useDefaultStyling: false
         }
     });
-    fx('#test-form-1').formValidator.renderValidationErrors({ password: 'Hello' });
+    fx('#test-form-1').formValidator.renderValidationErrors({password: 'Hello'});*/
+    console.log(fx('#password'));
 });
 //# sourceMappingURL=fuxcel.js.map
