@@ -2,36 +2,16 @@
 const listenerArray = [];
 const listenerObject = {};
 const listenerObjectRemoveList = {};
-const validatorErrorBag = {};
-const validatorErrorCount = {};
-/**
- *
- * @param selector {string|Iterable<any>|any}
- * @param context {string|Iterable<any>|any}
- */
 const fx = (selector, context = null) => new Fuxcel(selector, context);
-/*const fxValidator = (selector: string | Iterable<any> | any, context: string | Iterable<any> | any = null): FuxcelValidator => new FuxcelValidator(selector, context);*/
-/**
- *
- * @param value {any}
- */
 const isBool = (value) => {
     return typeof value === 'boolean';
 };
 const isFunction = (value) => {
     return typeof value === 'function';
 };
-/**
- *
- * @param value {any}
- */
 const isString = (value) => {
     return typeof value === 'string' && true;
 };
-/**
- *
- * @param value
- */
 const isObject = (value) => {
     return typeof value === 'object';
 };
@@ -55,7 +35,6 @@ const parseBool = (value) => {
             return false;
     }
 };
-// @ts-ignore
 String.prototype.toTitleCase = function () {
     const value = this;
     let titleCased = '', valueSplit = value.split(/([ _-])/gi);
@@ -70,11 +49,6 @@ String.prototype.toTitleCase = function () {
 class FuxcelBase {
     length;
     prev;
-    /**
-     *
-     * @param selector {string|Iterable<any>|any}
-     * @param context {string|Iterable<any>|any}
-     */
     constructor(selector, context) {
         const fuxcel = this;
         const selectedElements = init();
@@ -107,34 +81,19 @@ class FuxcelBase {
                     }
                     return target;
                 }
-                return context ? _context.querySelectorAll(selector) : document.querySelectorAll(selector);
+                return context && _context ? _context.querySelectorAll(selector) : document.querySelectorAll(selector);
             }
             catch (e) {
-                throw (e);
+                console.trace(e);
             }
         }
         return fuxcel;
     }
-    get #_constructors() {
-        const html = ['html'];
-        const iterable = [
-            's',
-            'fuxcel',
-            'fuxcelvalidator',
-            'jquery',
-            'nodelist',
-            'collection'
-        ];
-        return { iterable: iterable, html: html };
-    }
-    get #_fuxcel() {
-        return new Fuxcel(this);
-    }
     #_isIterable(element) {
-        return !!this.#_constructors.iterable.filter(value => value === element.constructor.name.toLowerCase()).length || Array.isArray(element);
+        return !!FuxcelBase.#_constructors.iterable.filter(value => value === element.constructor.name.toLowerCase()).length || Array.isArray(element);
     }
     #_isHTMLElement(element) {
-        return !!this.#_constructors.html.filter(value => element.constructor.name.toLowerCase().includes(value)).length;
+        return !!FuxcelBase.#_constructors.html.filter(value => element.constructor.name.toLowerCase().includes(value)).length;
     }
     #_toArray(element) {
         return this.#_isIterable(element) ? Array.from(element) : [element];
@@ -142,15 +101,10 @@ class FuxcelBase {
     get fieldAttributes() {
         const selected = this.toArray;
         return {
-            // @ts-ignore
             id: selected[0].getAttribute('id') && selected[0].getAttribute('id').toLowerCase(),
-            // @ts-ignore
             type: selected[0].getAttribute('type') && selected[0].getAttribute('type').toLowerCase(),
-            // @ts-ignore
             fxId: selected[0].getAttribute('type') && selected[0].getAttribute('type').toLowerCase(),
-            // @ts-ignore
             fxRole: selected[0].getAttribute('type') && selected[0].getAttribute('type').toLowerCase(),
-            // @ts-ignore
             formId: selected[0].form && selected[0].form.id && selected[0].form.id.toLowerCase()
         };
     }
@@ -159,8 +113,23 @@ class FuxcelBase {
     }
     get toArray() {
         if (!this.length)
-            throw ('No element selected');
+            console.trace('No element selected');
         return this.#_toArray(this);
+    }
+    static get #_constructors() {
+        const html = ['html'];
+        const iterable = [
+            's',
+            'fuxcelbase',
+            'fuxcel',
+            'fuxcelsteps',
+            'fuxcelvalidator',
+            'jquery',
+            'nodelist',
+            'object',
+            'collection'
+        ];
+        return { iterable: iterable, html: html };
     }
     static eventListenerBag() {
         return listenerObject;
@@ -173,6 +142,7 @@ class FuxcelBase {
     }
 }
 class Fuxcel extends FuxcelBase {
+    static pluginPath = './';
     constructor(selector, context) {
         super(selector, context);
     }
@@ -190,12 +160,10 @@ class Fuxcel extends FuxcelBase {
     #_setAttrib(name, value) {
         const selected = this.toArray;
         if (isString(name) && isString(value)) {
-            // @ts-ignore
             selected.forEach((element) => element.setAttribute(name, value));
         }
         else if (isObject(name)) {
             Object.keys(name).forEach(key => {
-                // @ts-ignore
                 selected.forEach((element) => element.setAttribute(key, name[key]));
             });
         }
@@ -210,12 +178,10 @@ class Fuxcel extends FuxcelBase {
     #_setDataAttrib(name, value) {
         const selected = this.toArray;
         if (isString(name) && isString(value)) {
-            // @ts-ignore
             selected.forEach((element) => element.dataset[name] = value);
         }
         else if (isObject(name)) {
             Object.keys(name).forEach(key => {
-                // @ts-ignore
                 selected.forEach((element) => element.dataset[key] = name[key]);
             });
         }
@@ -228,19 +194,16 @@ class Fuxcel extends FuxcelBase {
         return this;
     }
     #_setPrev(prevObj) {
-        // @ts-ignore
         this.prev = new Fuxcel(prevObj);
         return this;
     }
     #_setProp(name, value) {
         const selected = this.toArray;
         if (isString(name) && (isString(value) || isBool(value))) {
-            // @ts-ignore
             selected.forEach((element) => element[name] = value);
         }
         else if (isObject(name)) {
             Object.keys(name).forEach(key => {
-                // @ts-ignore
                 selected.forEach((element) => element[key] = name[key]);
             });
         }
@@ -255,12 +218,10 @@ class Fuxcel extends FuxcelBase {
     #_setStyle(name, value) {
         const selected = this.toArray;
         if (isString(name) && (isString(value) || isBool(value))) {
-            // @ts-ignore
             selected.forEach((element) => element.style[name] = value);
         }
         else if (isObject(name)) {
             Object.keys(name).forEach(key => {
-                // @ts-ignore
                 selected.forEach((element) => element.style[key] = name[key]);
             });
         }
@@ -270,25 +231,6 @@ class Fuxcel extends FuxcelBase {
             else
                 throw (`Function \`prop()\` expects 1-2 arguments. None given.`);
         }
-        return this;
-    }
-    get resetFuxcelObject() {
-        const selectedElements = this.toArray;
-        const documentDOMArray = fx(document).toArray;
-        // @ts-ignore
-        Object.keys(this).forEach(key => delete this[key]);
-        this.length = 0;
-        this.prev = { length: 0 };
-        documentDOMArray.forEach((value, key) => {
-            // @ts-ignore
-            this.prev[key] = value;
-            this.prev.length++;
-        });
-        selectedElements.forEach((value, index) => {
-            // @ts-ignore
-            this[index] = value;
-            this.length++;
-        });
         return this;
     }
     get classes() {
@@ -313,6 +255,12 @@ class Fuxcel extends FuxcelBase {
     get formValidator() {
         return new FuxcelValidator(this);
     }
+    static get path() {
+        return Fuxcel.pluginPath.replace(/\/$/, '');
+    }
+    static set path(path) {
+        Fuxcel.pluginPath = path;
+    }
     putClass(...tokenList) {
         const selected = this.toArray;
         selected.forEach((element) => tokenList.forEach(token => element.classList.add(token)));
@@ -330,125 +278,64 @@ class Fuxcel extends FuxcelBase {
         selected.forEach((element) => tokenList.forEach(token => element.classList.remove(token)));
         return this;
     }
-    /**
-     *
-     * @param name {string|Object}
-     * @param value {string|null}
-     * @return {Fuxcel|string}
-     */
     attrib(name, value) {
         const selected = this.toArray;
-        // @ts-ignore
         return (name && !value && isString(name)) ?
-            // @ts-ignore
             selected[0].getAttribute(name) :
-            // @ts-ignore
             this.#_setAttrib(name, value);
     }
-    /**
-     *
-     * @param name {string|Object}
-     * @param value {boolean|string|null}
-     * @return {Fuxcel|string}
-     */
     dataAttrib(name, value) {
         const selected = this.toArray;
         const formattedName = this.#_formatDataAttrib(name);
-        // @ts-ignore
         return (name && !value && isString(name)) ?
             selected[0].dataset[formattedName] :
-            // @ts-ignore
             this.#_setDataAttrib(formattedName, value);
     }
-    /**
-     *
-     * @param name {string|Object}
-     * @param value {boolean|string|null}
-     * @return {Fuxcel|string}
-     */
     prop(name, value) {
         const selected = this.toArray;
-        // @ts-ignore
         return (name && !value && isString(name)) ?
-            // @ts-ignore
             selected[0][name] :
-            // @ts-ignore
             this.#_setProp(name, value);
     }
-    /**
-     *
-     * @param name {string|Object}
-     * @param value {boolean|string|null}
-     * @return {Fuxcel|string}
-     */
     style(name, value) {
         const selected = this.toArray;
-        // @ts-ignore
         return (name && !value && isString(name)) ?
-            // @ts-ignore
             window.getComputedStyle(selected[0]).getPropertyValue(name) :
-            // @ts-ignore
             this.#_setStyle(name, value);
     }
-    /**
-     * @return Object
-     */
     listAttrib() {
         const selected = this.toArray;
         const list = {};
-        // @ts-ignore
         Array.from(selected[0].attributes).forEach(attrib => list[attrib.name] = attrib.value);
         return list;
     }
-    /**
-     * @return Object
-     */
     listProp() {
         const selected = this.toArray;
         const list = {};
-        // @ts-ignore
         Object.keys(selected[0]).filter(prop => Number.isNaN(parseInt(prop) && selected[0][prop])).forEach(prop => list[prop] = selected[0][prop]);
         return list;
     }
-    /**
-     *
-     * @param name {string[]}
-     * @return Fuxcel
-     */
     removeAttrib(...name) {
         const selected = this.toArray;
         selected.length && name.length && selected.forEach((element) => name.forEach(attr => element.removeAttribute(attr)));
         return this;
     }
-    /**
-     *
-     * @param name {string[]}
-     * @return Fuxcel
-     */
     removeDataAttrib(...name) {
         const selected = this.toArray;
         selected.length && name.length && selected.forEach((element) => name.forEach(value => {
             const dataAttr = this.#_formatDataAttrib(value);
-            // @ts-ignore
             delete element.dataset[dataAttr];
         }));
         return this;
     }
-    /**
-     *
-     * @param name {string[]}
-     * @return Fuxcel
-     */
     removeProp(...name) {
         const selected = this.toArray;
-        // @ts-ignore
         selected.length && name.length && selected.forEach((element) => name.forEach(prop => element[prop] = null));
         return this;
     }
     children(selector = null) {
         const selected = this.toArray;
         const children = [];
-        // @ts-ignore
         Array.from(selected[0].children).forEach((child) => {
             if (isString(selector)) {
                 if (fx(child).matchSelector(selector))
@@ -472,10 +359,25 @@ class Fuxcel extends FuxcelBase {
         });
         return fx(descendants).#_setPrev(this);
     }
-    /**
-     *
-     * @param selector {Selector}
-     */
+    parents(selector = null) {
+        const selected = this.toArray;
+        const parents = [];
+        let parentNode = selected[0].parentNode;
+        while (parentNode) {
+            if (isString(selector)) {
+                if (fx(parentNode).matchSelector(selector)) {
+                    parents.push(parentNode);
+                    break;
+                }
+            }
+            else {
+                if (parentNode !== selected[0])
+                    parents.push(parentNode);
+            }
+            parentNode = parentNode.parentNode;
+        }
+        return fx(parents).#_setPrev(this);
+    }
     prevSiblings(selector = null) {
         const selected = this.toArray;
         const prevSiblings = [];
@@ -495,14 +397,9 @@ class Fuxcel extends FuxcelBase {
         }
         return fx(prevSiblings).#_setPrev(this);
     }
-    /**
-     *
-     * @param selector
-     */
     siblings(selector = null) {
         const selected = this.toArray;
         const siblings = [];
-        // @ts-ignore
         Array.from(selected[0].parentNode.children).forEach((sibling) => {
             if (isString(selector)) {
                 if (fx(sibling).matchSelector(selector) && sibling !== selected[0])
@@ -518,9 +415,7 @@ class Fuxcel extends FuxcelBase {
     hasScrollBar(direction = 'vertical') {
         const selected = this.toArray;
         let scrollType = { vertical: 'scrollHeight', horizontal: 'scrollWidth' }, clientType = { vertical: 'clientHeight', horizontal: 'clientWidth' };
-        // @ts-ignore
         if (isString(direction) && scrollType[direction])
-            // @ts-ignore
             return selected[0][scrollType[direction]] > selected[0][clientType[direction]];
         throw (`Function \`asScrollBar()\` expects 1 argument. 0 given.`);
     }
@@ -532,27 +427,17 @@ class Fuxcel extends FuxcelBase {
             postfix: 'afterend',
             suffix: 'beforeend'
         };
-        // @ts-ignore
         if (isString(position) && !positions[position])
             throw (`Invalid position option given. Valid position options:\n'affix',\n'prefix',\n'postfix',\n'suffix'`);
-        // @ts-ignore
         selected.forEach((element) => isString(position) ? element.insertAdjacentHTML(positions[position], value) : element.innerHTML = value);
         return this;
     }
-    /**
-     *
-     * @param tagName {string}
-     */
     isElement(tagName) {
         const selected = this.toArray;
         if (isString(tagName))
             return selected[0].tagName.toLowerCase() === tagName.toLowerCase();
         throw (`Function \`matchSelector()\` expects 1 string argument. 0 given`);
     }
-    /**
-     *
-     * @param selector {Selector}
-     */
     matchSelector(selector) {
         const selected = this.toArray;
         if (isString(selector))
@@ -562,37 +447,19 @@ class Fuxcel extends FuxcelBase {
     off(event) {
         const selected = this.toArray;
         selected.forEach((element) => {
-            // @ts-ignore
             (element.listeners) && element.listeners.forEach((listener, index) => {
                 if (isString(event)) {
                     if (listener.event.toLowerCase() === event?.toLowerCase()) {
                         element.removeEventListener(listener.event, listener.listener, listener.option);
-                        // @ts-ignore
                         element.listeners.splice(index, 1);
                     }
                 }
                 else {
                     element.removeEventListener(listener.event, listener.listener, listener.option);
-                    // @ts-ignore
                     delete element.listeners;
                 }
             });
         });
-        /*// @ts-ignore
-        const lastKeyIndex = Object.keys(listenerObjectRemoveList).length - 1;
-        // @ts-ignore
-        const lastKey = lastKeyIndex === -1 ? -1 : parseInt(Object.keys(listenerObjectRemoveList)[lastKeyIndex]);
-        const nextKey = lastKey + 1;
-        
-        selected.forEach((element: HTMLElement) => {
-            let elementHasEvent = false;
-            // @ts-ignore
-            Object.keys(listenerObjectRemoveList).length && (elementHasEvent = !!Object.keys(listenerObjectRemoveList).filter(key => listenerObjectRemoveList[key]['element'] === element && listenerObjectRemoveList[key]['event'] === event).length);
-            // @ts-ignore
-            !elementHasEvent && (listenerObjectRemoveList[nextKey] = {element: element, event: event});
-        });
-        
-        console.log(listenerObjectRemoveList)*/
         return this;
     }
     upon(events, listener, option = true) {
@@ -600,63 +467,74 @@ class Fuxcel extends FuxcelBase {
         if (isObject(events) && listener === undefined)
             listener = true;
         selected.forEach((element) => {
-            // @ts-ignore
             if (!element.listeners)
-                // @ts-ignore
                 element.listeners = [];
             if (isObject(events))
                 Object.keys(events).forEach(event => {
-                    // @ts-ignore
                     element.addEventListener(event, events[event], listener);
-                    // @ts-ignore
                     element.listeners.push({ element: element, listener: events[event], event: event, option: listener });
                 });
             else {
-                // @ts-ignore
                 element.addEventListener(events, listener, option);
-                // @ts-ignore
                 element.listeners.push({ element: element, listener: listener, event: events, option: option });
             }
         });
         return this;
     }
+    value(value = null) {
+        const selected = this.toArray;
+        if (value) {
+            selected.forEach((element) => element.value = value);
+            return this;
+        }
+        return selected[0].value;
+    }
 }
 class FuxcelValidator extends Fuxcel {
     _defaultConfig = {
         regExp: {
-            name: /^([a-zA-Z]{2,255})(\s[a-zA-Z]{2,255}){1,2}$/gi,
-            username: /^[a-zA-Z]+(_?[a-zA-Z]){2,255}$/gi,
-            email: /^\w+([.-]?\w+)*@\w+([.-]?\w{2,3})*(\.\w{2,3})$/gi,
-            phone: /^(\+\d{1,3}?\s)(\(\d{3}\)\s)?(\d+\s)*(\d{2,3}-?\d+)+$/g,
             cardCVV: /[0-9]{3,4}$/gi,
             cardNumber: /^[0-9]+$/gi,
-            password: null,
-        },
-        texts: {
-            capslock: 'Capslock active',
+            email: /^\w+([.-]?\w+)*@\w+([.-]?\w{2,3})*(\.\w{2,3})$/gi,
+            name: /^([a-zA-Z]{2,255})(\s[a-zA-Z]{2,255}){1,2}$/gi,
+            phone: /^(\+\d{1,3}?\s)(\(\d{3}\)\s)?(\d+\s)*(\d{2,3}-?\d+)+$/g,
+            username: /^[a-zA-Z]+(_?[a-zA-Z]){2,255}$/gi,
+            password: /[0-9A-Za-z]{8,32}/gi,
         },
         config: {
+            capslockAlert: true,
             showIcons: true,
             showPassword: true,
-            capslockAlert: true,
             validateCard: false,
-            validateName: false,
             validateEmail: true,
-            validatePhone: false,
+            validateName: false,
             validatePassword: true,
+            validatePhone: false,
             validateUsername: false,
             nativeValidation: false,
             useDefaultStyling: true,
-            passwordId: 'password',
             passwordConfirmId: 'password_confirmation',
+            passwordId: 'password',
             initWrapper: '.form-group',
-        }
+        },
+        texts: {
+            capslock: 'Capslock active',
+            emailFormat: null,
+            nameFormat: null,
+            passwordFormat: null,
+            phoneFormat: null,
+            usernameFormat: null,
+        },
     };
+    #_initSteps = false;
     #_fxValidatorConfig = this._defaultConfig;
+    static #_validatorErrorBag = {};
+    static #_validatorErrorCount = {};
+    static #_stepsClass = '.fx-step';
     constructor(selector, context) {
         super(selector, context);
     }
-    #_toggleValidationIcons(oldIcon, newIcon) {
+    static #_toggleValidationIcons(oldIcon, newIcon) {
         const _oldIcon = fx(oldIcon);
         const _newIcon = fx(newIcon);
         if (_oldIcon.length && _newIcon.length) {
@@ -686,14 +564,14 @@ class FuxcelValidator extends Fuxcel {
             if (configObject.config.showIcons) {
                 const imageCheck = new Image();
                 const imageClose = new Image();
-                imageCheck.src = 'images/ok-24.svg';
-                imageClose.src = 'images/cancel-24.svg';
-                imageCheck.setAttribute('alt', 'success');
-                imageClose.setAttribute('alt', 'error');
+                imageCheck.src = `${Fuxcel.path}/images/ok-24.svg`;
+                imageClose.src = `${Fuxcel.path}/images/cancel-24.svg`;
+                imageCheck.setAttribute('alt', 'V');
+                imageClose.setAttribute('alt', 'X');
                 imageCheck.setAttribute('width', '22px');
                 imageClose.setAttribute('width', '22px');
-                imageCheck.classList.add('valid');
-                imageClose.classList.add('invalid');
+                imageCheck.classList.add('fx-valid-icon');
+                imageClose.classList.add('fx-invalid-icon');
                 validationIcons.classList.add('validation-icons');
                 validationIcons.append(imageCheck, imageClose);
             }
@@ -701,12 +579,14 @@ class FuxcelValidator extends Fuxcel {
                 if (_fieldElement.attrib('type') && _fieldElement.attrib('type').toString().toLowerCase() === 'password') {
                     const showPassword = new Image();
                     const hidePassword = new Image();
-                    showPassword.src = 'images/eye-24.png';
-                    hidePassword.src = 'images/invisible-24.png';
+                    showPassword.src = './images/eye-24.png';
+                    hidePassword.src = './images/invisible-24.png';
                     showPassword.setAttribute('alt', 'show-password-toggle');
                     hidePassword.setAttribute('alt', 'hide-password-toggle');
                     showPassword.setAttribute('width', '22px');
                     hidePassword.setAttribute('width', '22px');
+                    showPassword.classList.add('fx-show-password-icon');
+                    hidePassword.classList.add('fx-hide-password-icon');
                     togglePasswordIcons.classList.add('toggle-password-icons');
                     togglePasswordIcons.append(showPassword, hidePassword);
                 }
@@ -728,28 +608,47 @@ class FuxcelValidator extends Fuxcel {
             newInputGroup.append(newInputGroupWrapper);
             newFormGroupWrapper.append(newInputGroup, validationText);
             formGroup.append(newFormGroupWrapper);
+            newFieldGroup.style.height = `${expectedFieldElement.getBoundingClientRect().height * 2}px`;
+            fx(expectedLabelElement, form).style({
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center'
+            });
         }
-        else {
+        else
             formGroup.append(validationText);
-        }
         validationText.setAttribute('id', `${expectedFieldElement.id}Valid`);
         return formGroup;
     }
+    #_resetFuxcelObject(elements) {
+        const documentDOMArray = fx(document).toArray;
+        Object.keys(this).forEach(key => delete this[key]);
+        this.length = 0;
+        this.prev = { length: 0 };
+        documentDOMArray.forEach((value, key) => {
+            this.prev[key] = value;
+            this.prev.length++;
+        });
+        elements.toArray.forEach((value, index) => {
+            this[index] = value;
+            this.length++;
+        });
+        return this;
+    }
     #_initValidateForms(forms) {
         forms.forEach((form, index) => {
+            const that = this;
+            const configObject = this.validatorConfig;
             const _currentForm = fx(form).formValidator;
             if (!_currentForm.attrib('id'))
                 _currentForm.attrib({ id: `current-form-${index}` });
             let formId = _currentForm.attrib('id'), formGroups = fx(`#${formId} .form-group`).formValidator;
-            // @ts-ignore
-            validatorErrorBag[formId] = {};
-            // @ts-ignore
-            validatorErrorCount[formId] = {};
+            FuxcelValidator.#_validatorErrorBag[formId] = {};
+            FuxcelValidator.#_validatorErrorCount[formId] = {};
+            configObject.config.nativeValidation ? _currentForm.prop({ noValidate: false }) : _currentForm.prop({ noValidate: true });
             if (formGroups.length)
                 formGroups.toArray.forEach((formGroup) => {
-                    const configObject = this.#_fxValidatorConfig;
-                    const inputElement = 'input.form-field', selectElement = 'select.form-field', textAreaElement = 'textarea.form-field';
-                    const _fieldElement = fx(`${inputElement}, ${selectElement}, ${textAreaElement}`, formGroup).formValidator;
+                    const _fieldElement = fx('.form-field', formGroup).formValidator;
                     const _labelElement = fx('label', formGroup).formValidator;
                     if (_fieldElement.length && _labelElement.length) {
                         if (_fieldElement.length < 2 && _labelElement.length < 2) {
@@ -757,92 +656,238 @@ class FuxcelValidator extends Fuxcel {
                                 if (_fieldElement.attrib('name'))
                                     _fieldElement.attrib({ id: _fieldElement.attrib('name').toString().replaceAll('-', '_') });
                                 else {
-                                    // @ts-ignore
                                     console.error(`${_fieldElement[0].tagName} element has no \`id\` or \`name\` attribute`, _fieldElement);
                                     throw (`Field element does not have an \`id\` or \`name\` attribute`);
                                 }
                             const fieldElementId = _fieldElement.attrib('id');
                             if (_fieldElement.prop('tagName').toString().toLowerCase() === 'input' && !_fieldElement.attrib('placeholder'))
-                                _fieldElement.attrib({ placeholder: _fieldElement.attrib('name').toString().replaceAll('-', '_') });
+                                _fieldElement.attrib({ placeholder: _fieldElement.attrib('name').toString().toTitleCase().replaceAll(/[_-]/gi, ' ') });
                             if (!_labelElement.attrib('for'))
                                 _labelElement.attrib('for', fieldElementId);
-                            // @ts-ignore
                             const expectedFieldElement = _fieldElement[0];
-                            // @ts-ignore
                             const expectedLabelElement = _labelElement[0];
                             formGroup = this.#_placeElements(configObject, form, formGroup, expectedFieldElement, expectedLabelElement, _fieldElement);
-                            let _inputElement = fx(inputElement, formGroup), _selectElement = fx(selectElement, formGroup), _textAreaElement = fx(textAreaElement, formGroup);
-                            _inputElement.off().upon({
-                                input: function () {
-                                    const _input = fx(this).formValidator;
-                                    const fxId = _input.dataAttrib('fx-id') && _input.dataAttrib('id').toLowerCase();
-                                    const fxRole = _input.dataAttrib('fx-role') && _input.dataAttrib('role').toLowerCase();
-                                    const elementId = _input.attrib('id') && _input.attrib('id').toLowerCase();
-                                    const elementType = _input.attrib('type') && _input.attrib('type').toLowerCase();
-                                    const filterField = new Set(['name', 'username', 'card_cvv', 'card_number']);
-                                    const filterFieldType = new Set(['date', 'datetime', 'email', 'month']);
-                                    if (_input.canBeValidated) {
-                                        if (!filterFieldType.has(elementType) && !filterFieldType.has(fxRole) && !filterField.has(elementId) && !filterField.has(fxRole) && !filterField.has(fxId))
-                                            if (_input.isPasswordField)
-                                                _input.#_validatePasswordFields();
-                                            else
-                                                _input.validateField();
-                                        if (_input.isEmailField)
-                                            configObject.config.validateEmail ? _input.validateEmail(configObject.regExp.email) : _input.toggleValidation();
-                                        if (_input.isNameField)
-                                            !configObject.config.validateName ? _input.validateName(configObject.regExp.name) : _input.toggleValidation();
-                                        if (_input.isPhoneField)
-                                            configObject.config.validatePhone ? _input.validatePhone(configObject.regExp.phone) : _input.toggleValidation();
-                                        if (_input.isUsernameField)
-                                            configObject.config.validateUsername ? _input.validateUsername(configObject.regExp.username) : _input.toggleValidation();
-                                        if (configObject.config.validateCard) {
-                                            if (elementId?.includes('card_cvv') || fxRole?.includes('card_cvv') || fxId?.includes('card_cvv'))
-                                                _input.validateCardCVV(configObject.regExp.cardCVV);
-                                            if (elementId?.includes('card_number') || fxRole?.includes('card_number') || fxId?.includes('card_number'))
-                                                _input.validateCardCVV(configObject.regExp.cardNumber);
-                                        }
-                                        else {
-                                            if ((elementId?.includes('card_cvv') || fxRole?.includes('card_cvv') || fxId?.includes('card_cvv')) || (elementId?.includes('card_number') || fxRole?.includes('card_number') || fxId?.includes('card_number')))
-                                                _input.toggleValidation();
-                                        }
-                                        filterFieldType.has(elementType) && elementType !== 'email' && _input.validateField();
-                                    }
-                                }
-                            });
+                            this.#_validate(that, formGroup);
                         }
                     }
                 });
             else
                 console.error(`init-wrapper element not found in form: #${formId}`);
         });
-        return fx(forms).formValidator;
+        return this.#_resetFuxcelObject(fx(forms));
+    }
+    #_validate(that, formGroup) {
+        const inputElement = 'input.form-field', selectElement = 'select.form-field', textAreaElement = 'textarea.form-field';
+        const configObject = that.#_fxValidatorConfig;
+        let refillRequired, passwordToggle = FuxcelValidator.passwordTogglerIconClass, _inputElement = fx(inputElement, formGroup), _selectElement = fx(selectElement, formGroup), _textAreaElement = fx(textAreaElement, formGroup), _passwordToggle = fx(passwordToggle, formGroup), showPasswordToggle = `#${formGroup.id} ${passwordToggle} > .fx-show-password-icon`, hidePasswordToggle = `#${formGroup.id} ${passwordToggle} > .fx-hide-password-icon`;
+        _inputElement.length && _inputElement.off().upon({
+            blur: function () {
+                const _input = that.#_resetFuxcelObject(fx(this));
+                if (configObject.config.showPassword && _passwordToggle.length)
+                    if (_input.isPasswordField)
+                        _passwordToggle.hasFocus.then((focused) => {
+                            if (!focused && _input.value()?.length) {
+                                _passwordToggle.dataAttrib('require-refill', 'true');
+                                refillRequired = parseBool(_passwordToggle.dataAttrib('require-refill'));
+                                fx(`${showPasswordToggle}, ${hidePasswordToggle}`).style({ animation: 'fadeOut 500ms linear', display: 'none' });
+                            }
+                        });
+            },
+            focus: function () {
+                const _input = that.#_resetFuxcelObject(fx(this));
+                if (configObject.config.showPassword && _passwordToggle.length)
+                    if (_input.isPasswordField)
+                        _passwordToggle.hasFocus.then((focused) => {
+                            if (!focused && _input.value()?.length) {
+                                _passwordToggle.dataAttrib('require-refill', 'true');
+                                refillRequired = parseBool(_passwordToggle.dataAttrib('require-refill'));
+                            }
+                        });
+            },
+            input: function () {
+                const _input = that.#_resetFuxcelObject(fx(this));
+                const fxId = _input.dataAttrib('fx-id') && _input.dataAttrib('id').toLowerCase();
+                const fxRole = _input.dataAttrib('fx-role') && _input.dataAttrib('role').toLowerCase();
+                const elementId = _input.attrib('id') && _input.attrib('id').toLowerCase();
+                const elementType = _input.attrib('type') && _input.attrib('type').toLowerCase();
+                const filterField = new Set(['name', 'username', 'card_cvv', 'card_number']);
+                const filterFieldType = new Set(['date', 'datetime', 'email', 'month']);
+                if (_input.canBeValidated) {
+                    if (!filterFieldType.has(elementType) && !filterFieldType.has(fxRole) && !filterField.has(elementId) && !filterField.has(fxRole) && !filterField.has(fxId))
+                        if (_input.isPasswordField)
+                            _input.#_validatePasswordFields();
+                        else
+                            _input.validateField();
+                    if (_input.isEmailField)
+                        configObject.config.validateEmail ? _input.validateEmail(configObject.regExp.email, configObject.texts.emailFormat ?? null) : _input.toggleValidation();
+                    if (_input.isNameField)
+                        !configObject.config.validateName ? _input.validateName(configObject.regExp.name, configObject.texts.nameFormat ?? null) : _input.toggleValidation();
+                    if (_input.isPhoneField)
+                        configObject.config.validatePhone ? _input.validatePhone(configObject.regExp.phone, configObject.texts.phoneFormat ?? null) : _input.toggleValidation();
+                    if (_input.isUsernameField)
+                        configObject.config.validateUsername ? _input.validateUsername(configObject.regExp.username, configObject.texts.usernameFormat ?? null) : _input.toggleValidation();
+                    if (configObject.config.validateCard) {
+                        if (elementId?.includes('card_cvv') || fxRole?.includes('card_cvv') || fxId?.includes('card_cvv'))
+                            _input.validateCardCVV(configObject.regExp.cardCVV);
+                        if (elementId?.includes('card_number') || fxRole?.includes('card_number') || fxId?.includes('card_number'))
+                            _input.validateCardCVV(configObject.regExp.cardNumber);
+                    }
+                    else {
+                        if ((elementId?.includes('card_cvv') || fxRole?.includes('card_cvv') || fxId?.includes('card_cvv')) || (elementId?.includes('card_number') || fxRole?.includes('card_number') || fxId?.includes('card_number')))
+                            _input.toggleValidation();
+                    }
+                    filterFieldType.has(elementType) && elementType !== 'email' && _input.validateField();
+                }
+            },
+            keyup: function () {
+                const _input = that.#_resetFuxcelObject(fx(this));
+                if (_input.isPasswordField)
+                    if (_input.length)
+                        if (configObject.config.showPassword && _passwordToggle.length)
+                            if (refillRequired && !_input.value()?.length) {
+                                _passwordToggle.dataAttrib('require-refill', 'false');
+                                refillRequired = parseBool(_passwordToggle.dataAttrib('require-refill'));
+                            }
+                            else {
+                                if (!refillRequired && _input.value()?.length)
+                                    FuxcelValidator.#_toggleValidationIcons(hidePasswordToggle, showPasswordToggle);
+                                else {
+                                    refillRequired = parseBool(_passwordToggle.dataAttrib('require-refill'));
+                                    fx(`${showPasswordToggle}, ${hidePasswordToggle}`).style({ animation: 'fadeOut 500ms linear', display: 'none' });
+                                }
+                            }
+            }
+        });
+        _selectElement.length && _selectElement.off().upon('change', function () {
+            const _element = that.#_resetFuxcelObject(fx(this));
+            _element.canBeValidated && _element.validateField();
+        });
+        _textAreaElement.length && _textAreaElement.off().upon('input', function () {
+            const _element = that.#_resetFuxcelObject(fx(this));
+            _element.canBeValidated && _element.validateField();
+        });
     }
     #_validatePasswordFields() {
         const selected = this.toArray;
-        // @ts-ignore
         const form = selected[0].form;
-        // @ts-ignore
-        const value = selected[0].value;
-        const fieldAttribs = this.fieldAttributes;
-        const configObject = this.#_fxValidatorConfig;
-        const minLength = parseInt(this.attrib('minlength'));
-        const fieldName = fieldAttribs.id.toString().toTitleCase().replaceAll(/[_-]/gi, ' ');
+        const configObject = this.validatorConfig;
         if (configObject.config.validatePassword) {
-            if (fx(`#${configObject.config.passwordConfirmId}`, form).length) {
-                if (!value.length)
-                    this.validateField();
+            const pwdField = fx(`#${configObject.config.passwordId}`, form).formValidator;
+            const pwdFieldName = pwdField.fieldAttributes.id.toString().toTitleCase().replaceAll(/[_-]/gi, ' ');
+            const expectedCpwdField = fx(`#${configObject.config.passwordConfirmId}`, form);
+            if (configObject.regExp.password) {
+                if (expectedCpwdField.length) {
+                    const cpwdField = expectedCpwdField.formValidator;
+                    const cpwdFieldName = cpwdField.fieldAttributes.id.toString().toTitleCase().replaceAll(/[_-]/gi, ' ');
+                    if (!pwdField.value()?.length) {
+                        pwdField.validateField();
+                        cpwdField.validateField(`Check Password.`);
+                    }
+                    else {
+                        if (!cpwdField.value()?.length)
+                            cpwdField.validateField(`The ${cpwdFieldName} field is required.`);
+                        else
+                            cpwdField.validateField();
+                        pwdField.validatePassword(configObject.regExp.password, configObject.texts.passwordFormat ?? null);
+                    }
+                }
+                else
+                    pwdField.validatePassword(configObject.regExp.password, configObject.texts.passwordFormat ?? null);
+            }
+            else {
+                const minLength = parseInt(pwdField.attrib('minlength') ?? 0);
+                const maxLength = parseInt(pwdField.attrib('maxlength') ?? 0);
+                if (expectedCpwdField.length) {
+                    const cpwdField = expectedCpwdField.formValidator;
+                    const cpwdFieldName = cpwdField.fieldAttributes.id.toString().toTitleCase().replaceAll(/[_-]/gi, ' ');
+                    if (pwdField.value()?.length || cpwdField.value()?.length) {
+                        if (minLength && maxLength)
+                            if (minLength === maxLength) {
+                                if (!pwdField.value()?.length) {
+                                    pwdField.validateField();
+                                    cpwdField.validateField(`Check Password.`);
+                                }
+                                else if (pwdField.value()?.length !== maxLength) {
+                                    pwdField.validateField(`The ${pwdFieldName} field requires ${maxLength} characters.`);
+                                    if (!cpwdField.value()?.length)
+                                        cpwdField.validateField(`The ${cpwdFieldName} field is required.`);
+                                    else
+                                        cpwdField.validateField(`Check Password.`);
+                                }
+                                else {
+                                    if (!cpwdField.value()?.length)
+                                        cpwdField.validateField(`The ${cpwdFieldName} field is required.`);
+                                    else
+                                        cpwdField.validateField();
+                                    pwdField.validateField();
+                                }
+                            }
+                            else {
+                                if (pwdField.value()?.length < minLength || pwdField.value()?.length > maxLength) {
+                                    pwdField.validateField(`The ${pwdFieldName} field must be between ${minLength} and ${maxLength} characters.`);
+                                    cpwdField.validateField(`Check Password.`);
+                                }
+                                else {
+                                    if (!cpwdField.value()?.length)
+                                        cpwdField.validateField(`The ${cpwdFieldName} field is required.`);
+                                    else
+                                        cpwdField.validateField();
+                                    pwdField.validateField();
+                                }
+                            }
+                        else if (minLength) {
+                            if (pwdField.value()?.length < minLength) {
+                                pwdField.validateField(`The ${pwdFieldName} field requires ${minLength} characters.`);
+                                cpwdField.validateField(`Check Password.`);
+                            }
+                            else {
+                                pwdField.validateField();
+                                cpwdField.validateField();
+                            }
+                        }
+                        else {
+                            if (!cpwdField.value()?.length)
+                                cpwdField.validateField(`The ${cpwdFieldName} field is required.`);
+                            else
+                                cpwdField.validateField();
+                            pwdField.validateField();
+                        }
+                    }
+                    else {
+                        pwdField.validateField();
+                        cpwdField.validateField();
+                    }
+                }
                 else {
-                    if (minLength && value.length < minLength) {
-                        if (fieldAttribs.id === configObject.config.passwordId.toLowerCase())
-                            this.validateField(`The ${fieldName} requires a minimum of ${minLength} characters.`);
-                        if (fieldAttribs.id === configObject.config.passwordConfirmId.toLowerCase())
-                            this.validateField(`Check Password.`);
-                    }
-                    else if (configObject.regExp.password) {
-                    }
+                    if (minLength && maxLength && pwdField.value()?.length)
+                        if (pwdField.value()?.length < minLength || pwdField.value()?.length > maxLength)
+                            pwdField.validateField(`The ${pwdFieldName} field must be between ${minLength} and ${maxLength} characters.`);
+                        else
+                            pwdField.validateField();
+                    else
+                        pwdField.validateField();
                 }
             }
         }
+        else {
+            console.log(this);
+            this.validateField();
+        }
+    }
+    #_touchConfig(config) {
+        const validatorConfigObject = this.validatorConfig;
+        Object.keys(validatorConfigObject).forEach((key) => {
+            if (key in config && isObject(config[key])) {
+                const validatorConfigOptionObject = validatorConfigObject[key];
+                const configOptionObject = config[key];
+                if (Object.keys(configOptionObject).length)
+                    Object.keys(validatorConfigOptionObject).forEach((optionKey) => {
+                        if (optionKey in configOptionObject)
+                            if (configOptionObject[optionKey] !== '' && configOptionObject[optionKey] !== null && configOptionObject[optionKey] !== undefined)
+                                validatorConfigOptionObject[optionKey] = configOptionObject[optionKey];
+                    });
+            }
+        });
     }
     init(config = null) {
         const selected = this.toArray;
@@ -850,6 +895,7 @@ class FuxcelValidator extends Fuxcel {
         if (forms.length) {
             if (nonForms.length)
                 console.error(`${nonForms.length} non form-element${nonForms.length === 1 ? '' : 's'} passed to validator:`, nonForms);
+            config && isObject(config) && this.#_touchConfig(config);
             return this.#_initValidateForms(forms);
         }
         else {
@@ -857,9 +903,88 @@ class FuxcelValidator extends Fuxcel {
             throw (`${nonForms.length} non form-element${nonForms.length === 1 ? '' : 's'} passed to validator.`);
         }
     }
+    initSteps(config = null) {
+        const selected = this.toArray;
+        const forms = selected.filter((element) => fx(element).isElement('form'));
+        forms.forEach((form, index) => {
+            const configObject = this.validatorConfig;
+            const _currentForm = fx(form).formValidator;
+            if (!_currentForm.attrib('id'))
+                _currentForm.attrib({ id: `current-form-${index}` });
+            let formId = _currentForm.attrib('id'), formSteps = fx(`#${formId} ${FuxcelValidator.stepsClass}`).formValidator;
+            if (formSteps.length) {
+                FuxcelValidator.#_validatorErrorBag[formId] = {};
+                FuxcelValidator.#_validatorErrorCount[formId] = {};
+                this.#_initSteps = true;
+                configObject.config.nativeValidation ? _currentForm.prop({ noValidate: false }) : _currentForm.prop({ noValidate: true });
+                formSteps.toArray.forEach((step) => {
+                    step.dataset.fxStep = step.dataset.fxStep;
+                    const stepIndex = parseInt(step.dataset.fxStep);
+                    const formGroups = fx(`.form-group`, step).formValidator;
+                    FuxcelValidator.#_validatorErrorBag[formId][stepIndex] = {};
+                    FuxcelValidator.#_validatorErrorCount[formId][stepIndex] = {};
+                    if (formGroups.length) {
+                        const inputElement = 'input.form-field', selectElement = 'select.form-field', textAreaElement = 'textarea.form-field';
+                        formGroups.toArray.forEach((formGroup) => {
+                            const _fieldElement = fx(`${inputElement}, ${selectElement}, ${textAreaElement}`, formGroup).formValidator;
+                            const _labelElement = fx('label', formGroup).formValidator;
+                            if (_fieldElement.length && _labelElement.length) {
+                                if (_fieldElement.length < 2 && _labelElement.length < 2) {
+                                    if (!_fieldElement.attrib('id'))
+                                        if (_fieldElement.attrib('name'))
+                                            _fieldElement.attrib({ id: _fieldElement.attrib('name').toString().replaceAll('-', '_') });
+                                        else {
+                                            console.error(`${_fieldElement[0].tagName} element has no \`id\` or \`name\` attribute`, _fieldElement);
+                                            throw (`Field element does not have an \`id\` or \`name\` attribute`);
+                                        }
+                                    const fieldElementId = _fieldElement.attrib('id');
+                                    if (_fieldElement.prop('tagName').toString().toLowerCase() === 'input' && !_fieldElement.attrib('placeholder'))
+                                        _fieldElement.attrib({ placeholder: _fieldElement.attrib('name').toString().toTitleCase().replaceAll(/[_-]/gi, ' ') });
+                                    if (!_labelElement.attrib('for'))
+                                        _labelElement.attrib('for', fieldElementId);
+                                    const expectedFieldElement = _fieldElement[0];
+                                    const expectedLabelElement = _labelElement[0];
+                                    this.#_placeElements(configObject, form, formGroup, expectedFieldElement, expectedLabelElement, _fieldElement);
+                                    this.#_validate(this, formGroup);
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        });
+        Object.keys(this).forEach(key => FuxcelSteps.currentlySelected[key] = this[key]);
+        return new FuxcelSteps(this);
+    }
     get canBeValidated() {
         const selected = this.toArray;
         return selected.length ? (this.dataAttrib('fx-validate') ? parseBool(this.dataAttrib('fx-validate')) : true) : false;
+    }
+    get errorBag() {
+        return (this.length && this.isElement('form')) && Object.keys(FuxcelValidator.#_validatorErrorBag[this.attrib('id')]) ? FuxcelValidator.#_validatorErrorBag[this.attrib('id')] : null;
+    }
+    get errorCount() {
+        return (this.length && this.isElement('form')) && Object.keys(FuxcelValidator.#_validatorErrorCount[this.attrib('id')]) ? FuxcelValidator.#_validatorErrorCount[this.attrib('id')] : 0;
+    }
+    get getErrors() {
+        const selected = this.toArray;
+        let errors = {};
+        if (selected.length > 1) {
+            selected.forEach((element) => {
+                const _element = fx(element).formValidator;
+                if (element.tagName && _element.isElement('form')) {
+                    errors[element.id] = {
+                        count: _element.errorCount,
+                        errors: _element.errorBag
+                    };
+                }
+            });
+            return errors;
+        }
+        return this.isElement('form') ? {
+            count: this.errorCount,
+            errors: this.errorBag,
+        } : console.error('Non form element given.');
     }
     get formFieldElements() {
         const selected = this.toArray;
@@ -867,12 +992,10 @@ class FuxcelValidator extends Fuxcel {
             const elements = {};
             selected.forEach((element) => {
                 if (fx(element).isElement('form'))
-                    // @ts-ignore
                     elements[element.id] = element.elements;
             });
             return elements;
         }
-        // @ts-ignore
         return this.isElement('form') ? selected[0].elements : console.error('Non form elements given', selected);
     }
     get isEmailField() {
@@ -901,25 +1024,65 @@ class FuxcelValidator extends Fuxcel {
         const formGroup = configObject.config.initWrapper;
         const formId = `#${this.fieldAttributes.formId}`;
         const elementId = `#${this.fieldAttributes.id}`;
-        // this.validateRegex(/[-_]/, '');
         if (formId)
             return {
                 id: elementId,
                 formGroup: `${formId} ${formGroup + elementId}_group`,
                 validationField: `${formId} ${elementId}Valid`,
-                validIcon: `${formId} ${formGroup + elementId}_group .validation-icons > .valid`,
-                invalidIcon: `${formId} ${formGroup + elementId}_group .validation-icons > .invalid`,
+                validIcon: `${formId} ${formGroup + elementId}_group .validation-icons > .fx-valid-icon`,
+                invalidIcon: `${formId} ${formGroup + elementId}_group .validation-icons > .fx-invalid-icon`,
                 validationIconField: `${formId} ${formGroup + elementId}_group .validation-icons`,
             };
-        throw ('NonForm element given');
+        throw ('Non-Form element given');
+    }
+    get validatorConfig() {
+        return this.#_fxValidatorConfig;
+    }
+    get stepFromField() {
+        if (this.#_initSteps) {
+            const stepDiv = this.parents(FuxcelValidator.stepsClass);
+            return parseInt(stepDiv.dataAttrib('fx-step') ?? 0);
+        }
+        return -1;
+    }
+    get formSteps() {
+        const steps = [];
+        if (this.#_initSteps) {
+            if (this.isElement('form')) {
+                const stepDivs = fx(FuxcelValidator.stepsClass, this);
+                stepDivs.length && stepDivs.toArray.forEach((stepDiv) => {
+                    const step = stepDiv.dataset.fxStep;
+                    isString(step) && step !== undefined && steps.push(step);
+                });
+            }
+        }
+        return steps;
+    }
+    static get defaultValidatorConfig() {
+        return FuxcelValidator.defaultValidatorConfig;
+    }
+    static get passwordCapslockAlertClass() {
+        return '.capslock-alert';
+    }
+    static get passwordTogglerIconClass() {
+        return '.toggle-password-icons';
+    }
+    static get stepsClass() {
+        return FuxcelValidator.#_stepsClass;
+    }
+    static set stepsClass(stepClass) {
+        FuxcelValidator.#_stepsClass = stepClass;
+    }
+    stepErrorBag(step) {
+        return (this.length && this.isElement('form')) && Object.keys(FuxcelValidator.#_validatorErrorBag[this.attrib('id')][step]) ? FuxcelValidator.#_validatorErrorBag[this.attrib('id')][step] : null;
+    }
+    stepErrorCount(step) {
+        return (this.length && this.isElement('form')) && Object.keys(FuxcelValidator.#_validatorErrorCount[this.attrib('id')][step]) ? FuxcelValidator.#_validatorErrorCount[this.attrib('id')][step] : 0;
     }
     validateRegex(regExpOrFn, message) {
         const selected = this.toArray;
-        // @ts-ignore
         const value = selected[0].value;
-        // @ts-ignore
         (regExpOrFn && isFunction(regExpOrFn)) ? regExpOrFn(this) :
-            // @ts-ignore
             (regExpOrFn && isString(message) ? ((value.length) ? (value.match(regExpOrFn) ? this.validateField() : this.validateField(message, true)) : this.validateField()) : console.error('Function \`validateRegex()\` expects 2 arguments.'));
         return this;
     }
@@ -928,7 +1091,6 @@ class FuxcelValidator extends Fuxcel {
     }
     validateCardNumber(regExp, customFormatEx = null) {
         const selected = this.toArray;
-        // @ts-ignore
         const value = selected[0].value;
         return this.validateRegex(() => value.length ? (value.match(regExp) ?
             (passLuhnAlgo(selected[0]) ? this.validateField() : this.validateField('Check Card Number and try again.', true)) :
@@ -940,28 +1102,33 @@ class FuxcelValidator extends Fuxcel {
     validateName(regExp, customFormatEx = null) {
         return this.validateRegex(regExp, `Invalid Name format: (eg. ${customFormatEx ?? 'john doe, john doe woods'})`);
     }
+    validatePassword(regExp, customFormatEx = null) {
+        return this.validateRegex(regExp, `Invalid Password format: (${customFormatEx ?? 'Password requires a minimum of 8 characters an must contain at least 1 uppercase and 1 special character'})`);
+    }
     validatePhone(regExp, customFormatEx = null) {
         return this.validateRegex(regExp, `Invalid Phone format: (eg. ${customFormatEx ?? '+234 8156547099, +1 104 2198'})`);
     }
     validateUsername(regExp, customFormatEx = null) {
         const selected = this.toArray;
-        // @ts-ignore
         const value = selected[0].value;
         const minLength = parseInt(this.attrib('minlength') ?? 2);
-        // @ts-ignore
         const fieldName = selected[0].id.toString().toTitleCase().replaceAll(/[_-]/gi, ' ');
         return this.validateRegex(() => value.length ? (value.length > minLength ?
-            (value.match(regExp) ? this.validateField() : this.validateField(`Invalid Username format: (eg. ${customFormatEx ?? 'Username must start and end with an alphabet, and can only contain alphabets and underscores.'})`)) :
-            this.validateField(`${customFormatEx ?? 'The ' + fieldName + ' requires a minimum of 3' + ' characters.'}`)) : this.toggleValidation());
+            (value.match(regExp) ? this.validateField() : this.validateField(`Invalid Username format: (${customFormatEx ?? 'Username must start and end with an alphabet, and can only contain alphabets and underscores.'})`)) :
+            this.validateField(customFormatEx ?? `The ${fieldName} requires a minimum of 3 characters.`)) : this.toggleValidation());
     }
     validateField(message = null, isError = false) {
         const selected = this;
         const fieldAttribs = selected.fieldAttributes;
-        // @ts-ignore
+        const configObject = this.#_fxValidatorConfig.config;
         const target = selected[0];
-        let fieldValue = target.value, minLength = parseInt(selected.attrib('minlength')), fieldName = fieldAttribs.id.toString().toTitleCase().replaceAll(/[_-]/gi, ' '), finalMessage = minLength ?
-            (!isString(message) && fieldValue.length && fieldValue.length < minLength ? `The ${fieldName} requires a minimum of ${minLength} characters.` : message) :
-            (!isString(message) ? (selected.isPasswordField ? (fieldValue.length ? 'Ensure passwords.' : `The ${fieldName} field is required.`) : (!fieldValue.length ? `The ${fieldName} field is required.` : null)) : message);
+        let fieldValue = target.value, minLength = parseInt(selected.attrib('minlength') ?? 0), fieldName = fieldAttribs.id.toString().toTitleCase().replaceAll(/[_-]/gi, ' '), finalMessage = minLength ?
+            (!isString(message) && fieldValue.length && fieldValue.length < minLength ? `The ${fieldName} field requires a minimum of ${minLength} characters.` : message) :
+            (!isString(message) ?
+                (selected.isPasswordField ?
+                    ((fieldAttribs.id === configObject.passwordConfirmId && configObject.validatePassword) ? ((!fieldValue.length || fieldValue !== fx(`#${configObject.passwordId}`).value()) ? (fx(`#${configObject.passwordId}`).value()?.length ? 'Ensure passwords.' : `The ${fieldName} field is required.`) : null) : (!fieldValue.length ? `The ${fieldName} field is required.` : null)) :
+                    message) :
+                message);
         if (!fieldValue || !fieldValue.length || fieldValue.length < minLength || (selected.isPasswordField && (!fieldValue.length || finalMessage)) || isError)
             selected.showError(finalMessage);
         else
@@ -971,70 +1138,69 @@ class FuxcelValidator extends Fuxcel {
     showError(message = null) {
         const fieldAttribs = this.fieldAttributes;
         const validationProps = this.validationProps;
-        // @ts-ignore
-        const finalMessage = message ?? `The ${fieldAttribs.id?.toString().toTitleCase().replaceAll(/[_-]/gi, ' ')} field is requires=d`;
-        // @ts-ignore
-        Object.keys(validatorErrorBag).length && (validatorErrorBag[fieldAttribs.formId][fieldAttribs.id] = finalMessage);
-        this.#_fxValidatorConfig.config.showIcons && this.#_toggleValidationIcons(validationProps.validIcon, validationProps.invalidIcon);
+        const finalMessage = message ?? `The ${fieldAttribs.id?.toString().toTitleCase().replaceAll(/[_-]/gi, ' ')} field is required`;
+        Object.keys(FuxcelValidator.#_validatorErrorBag).length && (this.#_initSteps ?
+            (Object.keys(FuxcelValidator.#_validatorErrorBag[fieldAttribs.formId]).length && (FuxcelValidator.#_validatorErrorBag[fieldAttribs.formId][this.stepFromField][fieldAttribs.id] = finalMessage)) :
+            FuxcelValidator.#_validatorErrorBag[fieldAttribs.formId][fieldAttribs.id] = finalMessage);
+        this.#_fxValidatorConfig.config.showIcons && FuxcelValidator.#_toggleValidationIcons(validationProps.validIcon, validationProps.invalidIcon);
         fx(validationProps.validationField).formValidator.renderMessage(finalMessage ?? null);
         if (this.#_fxValidatorConfig.config.useDefaultStyling)
-            fx(`${validationProps.formGroup} .form-group-wrapper`).replaceClass('success', 'error');
+            fx(`${validationProps.formGroup} .form-group-wrapper`).replaceClass('fx-valid-success', 'fx-valid-error');
         else
-            fx(validationProps.formGroup).replaceClass('success', 'error');
+            fx(validationProps.formGroup).replaceClass('fx-valid-success', 'fx-valid-error');
+        Object.keys(FuxcelValidator.#_validatorErrorCount).length && (this.#_initSteps ?
+            (Object.keys(FuxcelValidator.#_validatorErrorCount[fieldAttribs.formId]).length && (FuxcelValidator.#_validatorErrorCount[fieldAttribs.formId][this.stepFromField] = Object.keys(FuxcelValidator.#_validatorErrorBag[fieldAttribs.formId][this.stepFromField]).length)) :
+            FuxcelValidator.#_validatorErrorCount[fieldAttribs.formId] = Object.keys(FuxcelValidator.#_validatorErrorBag[fieldAttribs.formId]).length);
     }
     showSuccess(message = null) {
         const fieldAttribs = this.fieldAttributes;
         const validationProps = this.validationProps;
-        // @ts-ignore
-        Object.keys(validatorErrorBag).length && delete validatorErrorBag[fieldAttribs.formId][fieldAttribs.id];
-        this.#_fxValidatorConfig.config.showIcons && this.#_toggleValidationIcons(validationProps.invalidIcon, validationProps.validIcon);
+        Object.keys(FuxcelValidator.#_validatorErrorBag).length && (this.#_initSteps ?
+            (Object.keys(FuxcelValidator.#_validatorErrorBag[fieldAttribs.formId]).length && (delete FuxcelValidator.#_validatorErrorBag[fieldAttribs.formId][this.stepFromField][fieldAttribs.id])) :
+            delete FuxcelValidator.#_validatorErrorBag[fieldAttribs.formId][fieldAttribs.id]);
+        this.#_fxValidatorConfig.config.showIcons && FuxcelValidator.#_toggleValidationIcons(validationProps.invalidIcon, validationProps.validIcon);
         fx(validationProps.validationField).formValidator.renderMessage(message ?? null);
         if (this.#_fxValidatorConfig.config.useDefaultStyling)
-            fx(`${validationProps.formGroup} .form-group-wrapper`).replaceClass('error', 'success');
+            fx(`${validationProps.formGroup} .form-group-wrapper`).replaceClass('fx-valid-error', 'fx-valid-success');
         else
-            fx(validationProps.formGroup).replaceClass('error', 'success');
+            fx(validationProps.formGroup).replaceClass('fx-valid-error', 'fx-valid-success');
+        Object.keys(FuxcelValidator.#_validatorErrorCount).length && (this.#_initSteps ?
+            (Object.keys(FuxcelValidator.#_validatorErrorCount[fieldAttribs.formId]).length && (FuxcelValidator.#_validatorErrorCount[fieldAttribs.formId][this.stepFromField] = Object.keys(FuxcelValidator.#_validatorErrorBag[fieldAttribs.formId][this.stepFromField]).length)) :
+            FuxcelValidator.#_validatorErrorCount[fieldAttribs.formId] = Object.keys(FuxcelValidator.#_validatorErrorBag[fieldAttribs.formId]).length);
     }
     undoValidation(destroyValidation = false) {
         const selected = this;
         const fieldAttribs = selected.fieldAttributes;
         const validationProps = selected.validationProps;
         if (destroyValidation) {
-            // @ts-ignore
-            delete validatorErrorBag[fieldAttribs.formId][fieldAttribs.id];
-            // @ts-ignore
-            validatorErrorCount[fieldAttribs.formId] = Object.keys(validatorErrorCount[fieldAttribs.formId]).length;
+            delete FuxcelValidator.#_validatorErrorBag[fieldAttribs.formId][fieldAttribs.id];
+            FuxcelValidator.#_validatorErrorCount[fieldAttribs.formId] = Object.keys(FuxcelValidator.#_validatorErrorCount[fieldAttribs.formId]).length;
         }
         if (selected.#_fxValidatorConfig.config.useDefaultStyling)
-            fx(`${validationProps.formGroup} .form-group-wrapper`).removeClass('error', 'success');
+            fx(`${validationProps.formGroup} .form-group-wrapper`).removeClass('fx-valid-error', 'fx-valid-success');
         else
-            fx(validationProps.formGroup).removeClass('error', 'success');
+            fx(validationProps.formGroup).removeClass('fx-valid-error', 'fx-valid-success');
         return this;
     }
     toggleValidation() {
         return this.canBeValidated ? this.validateField() : this.undoValidation();
     }
     renderMessage(message = null, renderType = null) {
-        this.insertHTML(`<small class="${renderType}">${message ?? '&nbsp;'}</small>`);
+        this.insertHTML(`<small ${renderType ? 'class="' + renderType + '"' : ''}>${message ?? '&nbsp;'}</small>`);
         return this;
     }
     renderValidationErrors(errors, message = null, callbackFn = null) {
         const selected = this;
-        // @ts-ignore
         const target = selected[0];
         if (selected.isElement('form')) {
             const fieldElements = this.formFieldElements;
-            console.log(fieldElements, this);
             if (isObject(errors))
                 Object.keys(errors).forEach((elementId) => {
-                    // @ts-ignore
                     const fieldName = elementId.toString().toTitleCase();
                     const element = fx(`#${elementId}`).formValidator;
-                    // @ts-ignore
                     if (elementId in fieldElements && (isString(errors[elementId]) && errors[elementId] !== undefined))
-                        // @ts-ignore
                         element.validateField(errors[elementId], true);
                     else {
-                        // @ts-ignore
                         if (isString(errors[elementId]) && errors[elementId] !== undefined)
                             element.validateField(`Verify ${fieldName} and try again.`, true);
                     }
@@ -1042,16 +1208,41 @@ class FuxcelValidator extends Fuxcel {
         }
     }
 }
-document.addEventListener('DOMContentLoaded', () => {
-    const body = document.querySelector('body');
-    const testElement = fx('form');
-    /*testElement.formValidator.isPasswordField;*/
-    /*testElement.formValidator.init({
-        config: {
-            useDefaultStyling: false
+class FuxcelSteps extends FuxcelValidator {
+    #that;
+    static currentlySelected = {};
+    constructor(selected) {
+        super(selected);
+        this.#that = selected;
+        return this;
+    }
+    get context() {
+        return new FuxcelSteps(FuxcelSteps.currentlySelected);
+    }
+    stepErrors(step = null) {
+        const selected = this.context.toArray;
+        let errors = {};
+        if (selected.length > 1 && step === null && false) {
+            selected.forEach((element) => {
+                const _element = fx(element).formValidator;
+                if (element.tagName && _element.isElement('form')) {
+                    const steps = fx(element).formValidator.formSteps;
+                    if (steps.length) {
+                        steps.forEach(step => {
+                            errors[element.id][step] = {
+                                count: _element.errorCount,
+                                errors: _element.errorBag
+                            };
+                        });
+                    }
+                }
+            });
+            return errors;
         }
-    });
-    fx('#test-form-1').formValidator.renderValidationErrors({password: 'Hello'});*/
-    console.log(fx('#password'));
-});
+        return this.context.isElement('form') ? {
+            count: this.context.stepErrorCount(step),
+            errors: this.context.stepErrorBag(step),
+        } : console.error('Non form element given.');
+    }
+}
 //# sourceMappingURL=fuxcel.js.map

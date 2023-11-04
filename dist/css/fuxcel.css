@@ -64,31 +64,31 @@ form .form-group.fx-default-style {
   display: flex;
   height: 100%;
 }
-form .form-group.error .form-field {
+form .form-group.fx-valid-error .form-field {
   border-color: var(--fx-error) !important;
 }
-form .form-group.error .validation-text {
+form .form-group.fx-valid-error .validation-text {
   color: var(--fx-error);
 }
-form .form-group.success .form-field {
+form .form-group.fx-valid-success .form-field {
   border-color: var(--fx-success) !important;
 }
-form .form-group.success .validation-text {
+form .form-group.fx-valid-success .validation-text {
   color: var(--fx-success);
 }
 form .form-group .form-group-wrapper {
   flex: 1 1 auto;
 }
-form .form-group .form-group-wrapper.error .input-group-wrapper {
+form .form-group .form-group-wrapper.fx-valid-error .input-group-wrapper {
   border-color: var(--fx-error) !important;
 }
-form .form-group .form-group-wrapper.error .validation-text {
+form .form-group .form-group-wrapper.fx-valid-error .validation-text {
   color: var(--fx-error);
 }
-form .form-group .form-group-wrapper.success .input-group-wrapper {
+form .form-group .form-group-wrapper.fx-valid-success .input-group-wrapper {
   border-color: var(--fx-success) !important;
 }
-form .form-group .form-group-wrapper.success .validation-text {
+form .form-group .form-group-wrapper.fx-valid-success .validation-text {
   color: var(--fx-success);
 }
 form .form-group .form-group-wrapper .input-group {
@@ -108,6 +108,7 @@ form .form-group .form-group-wrapper .input-group .input-group-wrapper {
 }
 form .form-group .form-group-wrapper .input-group .input-group-wrapper label {
   margin: 0;
+  display: none;
   text-transform: capitalize;
 }
 form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group {
@@ -126,7 +127,7 @@ form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floati
   visibility: visible;
 }
 form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group .form-field:placeholder-shown ~ label {
-  animation: slideOutDownSmall 200ms linear !important;
+  animation: slideOutDown 200ms linear !important;
   visibility: hidden;
 }
 form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group .form-field:focus ~ label {
@@ -134,10 +135,35 @@ form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floati
   visibility: visible;
 }
 form .form-group .form-group-wrapper .input-group .input-group-wrapper .form-field {
-  width: 100%;
   display: block;
-  padding: 0 0.75rem !important;
+  width: 100%;
   font-size: 0.875rem;
+  padding: 0 0.75rem !important;
+}
+form .form-group .form-group-wrapper .input-group .input-group-wrapper select {
+  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--fx-dark);
+  background-color: var(--bs-form-control-bg);
+  background-image: var(--bs-form-select-bg-img), var(--bs-form-select-bg-icon, none);
+  background-repeat: no-repeat;
+  background-position: top right;
+  background-size: 16px 12px;
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  border-radius: 0.375rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+form .form-group .form-group-wrapper .input-group .input-group-wrapper input.form-field:placeholder-shown {
+  transform: translateY(-50%);
+}
+form .form-group .form-group-wrapper .input-group .input-group-wrapper input.form-field:focus {
+  transform: translateY(0) !important;
+}
+form .form-group .form-group-wrapper .input-group .input-group-wrapper input.form-field, form .form-group .form-group-wrapper .input-group .input-group-wrapper textarea.form-field {
   font-weight: 400;
   line-height: 1.5;
   color: var(--fx-dark);
@@ -149,24 +175,20 @@ form .form-group .form-group-wrapper .input-group .input-group-wrapper .form-fie
   outline: none;
   border: none;
 }
-form .form-group .form-group-wrapper .input-group .input-group-wrapper .form-field::placeholder {
+form .form-group .form-group-wrapper .input-group .input-group-wrapper input.form-field::placeholder, form .form-group .form-group-wrapper .input-group .input-group-wrapper textarea.form-field::placeholder {
   font-size: 0.975rem;
   font-weight: 400;
   color: var(--fx-white-50);
   text-transform: capitalize;
   transition: all 300ms linear !important;
 }
-form .form-group .form-group-wrapper .input-group .input-group-wrapper .form-field:placeholder-shown {
-  transform: translateY(-50%);
-}
-form .form-group .form-group-wrapper .input-group .input-group-wrapper .form-field:not(:placeholder-shown) {
+form .form-group .form-group-wrapper .input-group .input-group-wrapper input.form-field:not(:placeholder-shown), form .form-group .form-group-wrapper .input-group .input-group-wrapper textarea.form-field:not(:placeholder-shown) {
   padding: 0.25rem 0.75rem 0.5rem;
 }
-form .form-group .form-group-wrapper .input-group .input-group-wrapper .form-field:focus {
+form .form-group .form-group-wrapper .input-group .input-group-wrapper input:focus, form .form-group .form-group-wrapper .input-group .input-group-wrapper textarea:focus {
   padding: 0.25rem 0.75rem 0.5rem;
-  transform: translateY(0) !important;
 }
-form .form-group .form-group-wrapper .input-group .input-group-wrapper .form-field:focus::placeholder {
+form .form-group .form-group-wrapper .input-group .input-group-wrapper input:focus::placeholder, form .form-group .form-group-wrapper .input-group .input-group-wrapper textarea:focus::placeholder {
   color: transparent !important;
   opacity: 0;
 }
@@ -179,6 +201,9 @@ form .form-group .validation-icons > *,
 form .form-group .toggle-password-icons > * {
   margin: auto;
   display: none;
+}
+form .form-group .toggle-password-icons {
+  cursor: pointer;
 }
 form .form-group .validation-text {
   transition: color 0.1s linear;

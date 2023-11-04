@@ -9,7 +9,7 @@ form {
       height: 100%
     }
 
-    &.error {
+    &.fx-valid-error {
       .form-field {
         border-color: var(--fx-error) !important;
       }
@@ -19,7 +19,7 @@ form {
       }
     }
 
-    &.success {
+    &.fx-valid-success {
       .form-field {
         border-color: var(--fx-success) !important;
       }
@@ -32,7 +32,7 @@ form {
     .form-group-wrapper {
       flex: 1 1 auto;
 
-      &.error {
+      &.fx-valid-error {
         .input-group-wrapper {
           border-color: var(--fx-error) !important;
         }
@@ -42,7 +42,7 @@ form {
         }
       }
 
-      &.success {
+      &.fx-valid-success {
         .input-group-wrapper {
           border-color: var(--fx-success) !important;
         }
@@ -69,6 +69,7 @@ form {
 
           label {
             margin: 0;
+            display: none;
             text-transform: capitalize;
           }
 
@@ -96,7 +97,7 @@ form {
                 // TODO: use classes and add from JS
                 &:placeholder-shown {
                   ~ label {
-                    animation: slideOutDownSmall 200ms linear !important;
+                    animation: slideOutDown 200ms linear !important;
                     visibility: hidden;
                   }
                 }
@@ -112,40 +113,68 @@ form {
           }
 
           .form-field {
-            width: 100%;
             display: block;
-            padding: 0 0.75rem !important;
+            width: 100%;
             font-size: .875rem;
+            padding: 0 0.75rem !important;
+          }
+
+          select {
+            --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
             font-weight: 400;
             line-height: 1.5;
             color: var(--fx-dark);
-            background-clip: padding-box;
+            background-color: var(--bs-form-control-bg);
+            background-image: var(--bs-form-select-bg-img), var(--bs-form-select-bg-icon, none);
+            background-repeat: no-repeat;
+            background-position: top right;
+            background-size: 16px 12px;
+            border: var(--bs-border-width) solid var(--bs-border-color);
+            border-radius: 0.375rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            box-shadow: none;
-            outline: none;
-            border: none;
+          }
 
-            &::placeholder {
-              font-size: .975rem;
-              font-weight: 400;
-              color: var(--fx-white-50);
-              text-transform: capitalize;
-              transition: all 300ms linear !important;
-            }
-
+          input.form-field {
             &:placeholder-shown {
               transform: translateY(-50%);
             }
 
-            &:not(:placeholder-shown) {
-              padding: 0.25rem 0.75rem 0.5rem;
+            &:focus {
+              transform: translateY(0) !important;
+            }
+          }
+
+          input, textarea {
+            &.form-field {
+              font-weight: 400;
+              line-height: 1.5;
+              color: var(--fx-dark);
+              background-clip: padding-box;
+              -webkit-appearance: none;
+              -moz-appearance: none;
+              appearance: none;
+              box-shadow: none;
+              outline: none;
+              border: none;
+
+              &::placeholder {
+                font-size: .975rem;
+                font-weight: 400;
+                color: var(--fx-white-50);
+                text-transform: capitalize;
+                transition: all 300ms linear !important;
+              }
+
+              &:not(:placeholder-shown) {
+                padding: 0.25rem 0.75rem 0.5rem;
+              }
             }
 
             &:focus {
               padding: 0.25rem 0.75rem 0.5rem;
-              transform: translateY(0) !important;
 
               &::placeholder {
                 color: transparent !important;
@@ -155,7 +184,6 @@ form {
           }
         }
       }
-
     }
 
     .validation-icons,
@@ -168,6 +196,10 @@ form {
         margin: auto;
         display: none;
       }
+    }
+
+    .toggle-password-icons {
+      cursor: pointer;
     }
 
     .validation-text {

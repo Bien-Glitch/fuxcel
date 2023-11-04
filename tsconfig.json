@@ -5,7 +5,8 @@
     "sourceMap": true,
     "rootDir": "src/ts",
     "outDir": "dist/js",
-    "strict": true
+    "strict": true,
+    "removeComments": true
   },
   "exclude": [
     "node_modules"

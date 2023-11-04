@@ -10,7 +10,7 @@
 
 <body>
 	<main>
-		<form action="" id="test-form">
+		<!--<form action="" id="test-form">
 			<div class="form-group">
 				<label for="title">title</label>
 				<input type="text" minlength="" id="title" placeholder="title" class="form-field">
@@ -22,21 +22,107 @@
 			</div>
 			
 			<div class="form-group">
-				<input type="email" id="email" placeholder="email" class="form-field" style="padding: 1rem">
+				<input type="email" id="email" placeholder="email" class="form-field">
 				<label for="email">email</label>
 			</div>
-		</form>
-		
-		<form action="" id="test-form-1">
+			
 			<div class="form-group">
-				<input type="password" id="password" name="password" class="form-field">
-				<label>password</label>
+				<select id="gender" class="form-field">
+					<option value="" selected>Select Gender</option>
+					<option value="male">Male</option>
+					<option value="female">Female</option>
+				</select>
+				<label for="gender">gender</label>
+			</div>
+			
+			<div class="form-group">
+				<textarea name="message" id="message" cols="30" rows="2" class="form-field" placeholder="message"></textarea>
+				<label for="message">message</label>
+			</div>
+			
+			<button type="submit">Submit</button>
+		</form>-->
+		
+		<!--<form action="" id="test-form-1">
+			<div class="form-group">
+				<input type="password" id="password" name="password" class="form-field" value="">
+				<label for="password">password</label>
 			</div>
 			
 			<div class="form-group">
 				<input type="password" id="password_confirmation" name="password_confirmation" class="form-field">
-				<label>password</label>
+				<label for="password_confirmation">confirm password</label>
 			</div>
+			
+			<button type="submit">Submit</button>
+		</form>-->
+		
+		<form action="" id="test-step">
+			<div class="fx-step" data-fx-step="2">
+				<div class="form-group">
+					<input type="text" name="occupation" id="occupation" class="form-field"/>
+					<label for="occupation">Occupation</label>
+				</div>
+				
+				<div class="form-group">
+					<input type="password" id="password" name="password" class="form-field"/>
+					<label for="password">password</label>
+				</div>
+				
+				<div class="form-group">
+					<input type="password" id="password_confirmation" name="password_confirmation" class="form-field"/>
+					<label for="password_confirmation">confirm password</label>
+				</div>
+			</div>
+			<div class="fx-step" data-fx-step="1">
+				<div class="form-group">
+					<input type="text" name="service" id="service" class="form-field"/>
+					<label for="service">Service</label>
+				</div>
+			</div>
+			<div class="fx-step" data-fx-step="3">
+				<div class="form-group">
+					<input type="text" name="pay" id="pay" class="form-field"/>
+					<label for="pay">Pay</label>
+				</div>
+			</div>
+			
+			<button type="button" data-action="prev">Prev</button>
+			<button type="button" data-action="next">Next</button>
+		</form>
+		
+		<form action="" id="test-step-1">
+			<div class="fx-step" data-fx-step="2">
+				<div class="form-group">
+					<input type="text" name="occupation" id="occupation-1" class="form-field"/>
+					<label for="occupation">Occupation</label>
+				</div>
+				
+				<div class="form-group">
+					<input type="password" id="password-1" name="password" class="form-field"/>
+					<label for="password">password</label>
+				</div>
+				
+				<div class="form-group">
+					<input type="password" id="password_confirmation-1" name="password_confirmation" class="form-field"/>
+					<label for="password_confirmation">confirm password</label>
+				</div>
+			</div>
+			<div class="fx-step" data-fx-step="1">
+				<div class="form-group">
+					<input type="text" name="service" id="service-1" class="form-field"/>
+					<label for="service">Service</label>
+				</div>
+			</div>
+			<div class="fx-step" data-fx-step="3">
+				<div class="form-group">
+					<input type="text" name="pay" id="pay-1" class="form-field"/>
+					<label for="pay">Pay</label>
+				</div>
+			</div>
+			
+			<button type="button" data-action="prev">Prev</button>
+			<button type="button" data-action="next">Next</button>
 		</form>
 		
 		<a href="" class="drop" style="display:flex;position:relative;">
@@ -44,5 +130,71 @@
 			<div style="position: absolute;top: 100%;display: none">Menu</div>
 		</a>
 	</main>
+	
+	<script defer>
+		document.addEventListener('DOMContentLoaded', () => {
+			// fx('#test-form-1').formValidator.init();
+			const testStep = fx('form');
+			const stepValidator = testStep.formValidator.initSteps();
+			
+			
+			testStep.toArray.forEach(stepForm => {
+				const stepsArray = [];
+				const steps = fx('.fx-step', stepForm);
+				
+				const btnNext = fx('button[data-action="next"]', stepForm);
+				const btnPrev = fx('button[data-action="prev"]', stepForm);
+				
+				steps.toArray.forEach(step => {
+					fx(step).style({display: 'none'});
+					stepsArray.push(step.dataset.fxStep);
+				});
+				
+				stepsArray.sort();
+				const minStep = stepsArray[0];
+				localStorage.setItem(`fx-current-step-${stepForm.id}`, minStep);
+				fx(`.fx-step[data-fx-step="${minStep}"]`).style({display: 'block'});
+				btnPrev.prop({disabled: true});
+				
+				btnNext.off().upon('click', function (e) {
+					e.preventDefault();
+					let currentStepStorage = localStorage.getItem(`fx-current-step-${stepForm.id}`),
+						currentStep = parseInt(currentStepStorage),
+						assumedNextStep = currentStep + 1;
+					
+					if (assumedNextStep <= stepsArray.length) {
+						const stepErrors = stepValidator.stepErrors(currentStep);
+						if (!stepErrors.count) {
+							steps.style({display: 'none'});
+							fx(`.fx-step[data-fx-step="${assumedNextStep}"]`, stepForm).style({display: 'block'});
+							localStorage.setItem(`fx-current-step-${stepForm.id}`, `${assumedNextStep}`);
+							btnPrev.prop({disabled: false});
+							
+							if (assumedNextStep + 1 > stepsArray.length)
+								fx(this).prop({disabled: true})
+						}
+					}
+				});
+				
+				btnPrev.off().upon('click', function (e) {
+					e.preventDefault();
+					let currentStepStorage = localStorage.getItem(`fx-current-step-${stepForm.id}`),
+						currentStep = parseInt(currentStepStorage),
+						assumedPrevStep = currentStep - 1;
+					
+					if (assumedPrevStep > 0) {
+						console.log(stepValidator.stepErrors(currentStep));
+						steps.style({display: 'none'});
+						fx(`.fx-step[data-fx-step="${assumedPrevStep}"]`, stepForm).style({display: 'block'});
+						localStorage.setItem(`fx-current-step-${stepForm.id}`, `${assumedPrevStep}`);
+						btnNext.prop({disabled: false});
+						
+						if (assumedPrevStep - 1 === 0)
+							fx(this).prop({disabled: true});
+					}
+				});
+			});
+		});
+	</script>
 </body>
 </html>
