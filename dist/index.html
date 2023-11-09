@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">
 	<title>Fuxcel</title>
-	
+
 	<link rel="stylesheet" href="css/fuxcel.css">
 	<script defer src="js/fuxcel.js"></script>
+	<script defer src="app.js"></script>
 </head>
 
 <body>
@@ -15,17 +17,17 @@
 				<label for="title">title</label>
 				<input type="text" minlength="" id="title" placeholder="title" class="form-field">
 			</div>
-			
+
 			<div class="form-group">
 				<label for="name">name</label>
 				<input type="text" id="name" placeholder="name" class="form-field">
 			</div>
-			
+
 			<div class="form-group">
 				<input type="email" id="email" placeholder="email" class="form-field">
 				<label for="email">email</label>
 			</div>
-			
+
 			<div class="form-group">
 				<select id="gender" class="form-field">
 					<option value="" selected>Select Gender</option>
@@ -34,29 +36,29 @@
 				</select>
 				<label for="gender">gender</label>
 			</div>
-			
+
 			<div class="form-group">
 				<textarea name="message" id="message" cols="30" rows="2" class="form-field" placeholder="message"></textarea>
 				<label for="message">message</label>
 			</div>
-			
+
 			<button type="submit">Submit</button>
 		</form>
-		
+
 		<form action="" id="test-form-1">
 			<div class="form-group">
 				<input type="password" id="password" name="password" class="form-field" value="">
 				<label for="password">password</label>
 			</div>
-			
+
 			<div class="form-group">
 				<input type="password" id="password_confirmation" name="password_confirmation" class="form-field">
 				<label for="password_confirmation">confirm password</label>
 			</div>
-			
+
 			<button type="submit">Submit</button>
 		</form>
-		
+
 		<button id="button" type="button">Submit</button>
 		<!--<form action="" id="test-step">
 			<div class="fx-step" data-fx-step="2">
@@ -125,93 +127,12 @@
 			<button type="button" data-action="prev">Prev</button>
 			<button type="button" data-action="next">Next</button>
 		</form>-->
-		
+
 		<a href="" class="drop" style="display:flex;position:relative;">
 			Dropdown Link
 			<div style="position: absolute;top: 100%;display: none">Menu</div>
 		</a>
 	</main>
-	
-	<script defer>
-		document.addEventListener('DOMContentLoaded', () => {
-				console.log(password)
-			/*const form = fx('#test-form').formValidator;
-			console.log(fx('#test-form-1'), form);
-			form.init({
-				config: {
-					showPassword: false
-				}
-			}).upon('submit', function (e) {
-				e.preventDefault();
-				
-				if (form.getErrors.count) {
-					form.renderValidationErrors(form.getErrors.errors);
-				}
-			});*/
-			/*const testStep = fx('form');
-			const stepValidator = testStep.formValidator.initSteps();
-			
-			
-			testStep.toArray.forEach(stepForm => {
-				const stepsArray = [];
-				const steps = fx('.fx-step', stepForm);
-				
-				const btnNext = fx('button[data-action="next"]', stepForm);
-				const btnPrev = fx('button[data-action="prev"]', stepForm);
-				
-				steps.toArray.forEach(step => {
-					fx(step).style({display: 'none'});
-					stepsArray.push(step.dataset.fxStep);
-				});
-				
-				stepsArray.sort();
-				const minStep = stepsArray[0];
-				localStorage.setItem(`fx-current-step-${stepForm.id}`, minStep);
-				fx(`.fx-step[data-fx-step="${minStep}"]`).style({display: 'block'});
-				btnPrev.prop({disabled: true});
-				
-				btnNext.off().upon('click', function (e) {
-					e.preventDefault();
-					let currentStepStorage = localStorage.getItem(`fx-current-step-${stepForm.id}`),
-						currentStep = parseInt(currentStepStorage),
-						assumedNextStep = currentStep + 1;
-					
-					if (assumedNextStep <= stepsArray.length) {
-						const stepErrors = stepValidator.stepErrors(currentStep);
-						console.log(stepErrors);
-						if (!stepErrors.count) {
-							steps.style({display: 'none'});
-							fx(`.fx-step[data-fx-step="${assumedNextStep}"]`, stepForm).style({display: 'block'});
-							localStorage.setItem(`fx-current-step-${stepForm.id}`, `${assumedNextStep}`);
-							btnPrev.prop({disabled: false});
-							
-							if (assumedNextStep + 1 > stepsArray.length)
-								fx(this).prop({disabled: true})
-						} else
-							console.log(stepErrors.errors);
-					}
-				});
-				
-				btnPrev.off().upon('click', function (e) {
-					e.preventDefault();
-					let currentStepStorage = localStorage.getItem(`fx-current-step-${stepForm.id}`),
-						currentStep = parseInt(currentStepStorage),
-						assumedPrevStep = currentStep - 1;
-					
-					if (assumedPrevStep > 0) {
-						console.log(stepValidator.stepErrors(), stepValidator.formSteps);
-						// console.log(stepValidator.stepErrors(currentStep));
-						steps.style({display: 'none'});
-						fx(`.fx-step[data-fx-step="${assumedPrevStep}"]`, stepForm).style({display: 'block'});
-						localStorage.setItem(`fx-current-step-${stepForm.id}`, `${assumedPrevStep}`);
-						btnNext.prop({disabled: false});
-						
-						if (assumedPrevStep - 1 === 0)
-							fx(this).prop({disabled: true});
-					}
-				});
-			});*/
-		});
-	</script>
 </body>
+
 </html>

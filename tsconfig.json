@@ -6,7 +6,10 @@
     "rootDir": "src/ts",
     "outDir": "dist/js",
     "strict": true,
-    "removeComments": true
+    "removeComments": false,
+    "declaration": true,
+    "declarationMap": true,
+
   },
   "exclude": [
     "node_modules"
