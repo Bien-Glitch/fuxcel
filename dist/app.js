@@ -1,18 +1,26 @@
-const form = fx('#test-form').formValidator;
+/*const form = fx('#test-step-1').formValidator;
 
 console.log(form)
-form.init({
+form.initSteps({
 	config: {
-		showPassword: false
+		showPassword: true
 	}
 }).upon('submit', function (e) {
+	e.preventDefault();
 	if (form.errorCount) {
-		e.preventDefault();
-		form.renderValidationErrors(form.errorBag, null, () => {
+		form.renderValidationErrors(form.errorBag, () => {
 			console.log(true, 'boss');
 		})
-	}
-});
+	} else
+		form.handleFormSubmit({
+			dataType: 'json'
+		}).then(response => console.log(response)).catch(error => console.log(error))
+});*/
+
+document.addEventListener('DOMContentLoaded', () => {
+	// const modal = new FuxcelModal(document.querySelector('#test-modal'));
+	// modal.show()
+})
 /*.upon('submit', function (e) {
 e.preventDefault();
 	
@@ -20,10 +28,14 @@ if (form.getErrors.count)
 	form.renderValidationErrors(form.getErrors.errors);
 });*/
 
-/*const testStep = fx('form');
+fx.modal();
+
+const testStep = fx('form');
 const stepValidator = testStep.formValidator.initSteps();
-	
-	
+
+// testStep.fadeout(5000).then(element => element.fadein(2000).then(element => element.slideoutup(3000)));
+
+
 testStep.toArray.forEach(stepForm => {
 	const stepsArray = [];
 	const steps = fx('.fx-step', stepForm);
@@ -50,7 +62,7 @@ testStep.toArray.forEach(stepForm => {
 		
 		if (assumedNextStep <= stepsArray.length) {
 			const stepErrors = stepValidator.stepErrors(currentStep);
-			console.log(stepErrors);
+			console.log(currentStep, stepErrors);
 			if (!stepErrors.count) {
 				steps.style({display: 'none'});
 				fx(`.fx-step[data-fx-step="${assumedNextStep}"]`, stepForm).style({display: 'block'});
@@ -60,7 +72,7 @@ testStep.toArray.forEach(stepForm => {
 				if (assumedNextStep + 1 > stepsArray.length)
 					fx(this).prop({disabled: true})
 			} else
-				console.log(stepErrors.errors);
+				stepValidator.renderValidationErrors(stepErrors.errors);
 		}
 	});
 	
@@ -82,4 +94,4 @@ testStep.toArray.forEach(stepForm => {
 				fx(this).prop({disabled: true});
 		}
 	});
-});*/
+});

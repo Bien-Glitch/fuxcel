@@ -3,15 +3,25 @@
   --fx-error: #e54242;
   --fx-success: #3bb24f;
   --fx-white-50: #808080;
-  --fx-border-color: #454545;
+  --fx-border-dark: #454545;
+  --fx-border-light: #d1c9c9;
   --fx-border-width: 1px;
 }
 
+.fx-text-border {
+  color: var(--fx-border-dark);
+}
+.fx-text-dark {
+  color: var(--fx-dark);
+}
 .fx-text-error {
   color: var(--fx-error);
 }
 .fx-text-success {
   color: var(--fx-success);
+}
+.fx-text-white-50 {
+  color: var(--fx-white-50);
 }
 
 @keyframes fadeIn {
@@ -37,7 +47,7 @@
 @keyframes slideInUp {
   from {
     transform: translate3d(0, 100%, 0);
-    visibility: visible;
+    visibility: hidden;
   }
   to {
     transform: translate3d(0, 0, 0);
@@ -104,7 +114,7 @@ form .form-group .form-group-wrapper .input-group .input-group-wrapper {
   align-items: center;
   transition: border-color 0.3s linear;
   background-color: var(--bs-form-control-bg);
-  border: var(--fx-border-width) solid var(--fx-border-color);
+  border: var(--fx-border-width) solid var(--fx-border-dark);
 }
 form .form-group .form-group-wrapper .input-group .input-group-wrapper label {
   margin: 0;
@@ -209,6 +219,106 @@ form .form-group .validation-text {
   transition: color 0.1s linear;
 }
 
+.fx-modal {
+  display: none;
+  font-family: Candara, Calibri, serif;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  padding: 1rem;
+  overflow-y: auto;
+}
+.fx-modal.filter:before {
+  position: fixed;
+  content: "";
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  backdrop-filter: blur(0.08rem);
+  background: linear-gradient(10deg, rgba(0, 0, 0, 0.5), rgba(50, 50, 60, 0.5)) rgba(0, 0, 0, 0.3) no-repeat;
+}
+.fx-modal .fx-modal-dialog {
+  position: relative;
+  display: flex;
+  z-index: 1000;
+  height: 100%;
+  width: 100%;
+}
+.fx-modal .fx-modal-dialog.fx-dialog-scrollable > .fx-modal-content {
+  overflow: hidden;
+}
+.fx-modal .fx-modal-dialog.fx-dialog-scrollable .fx-modal-header,
+.fx-modal .fx-modal-dialog.fx-dialog-scrollable .fx-modal-footer {
+  max-height: 15vh;
+}
+.fx-modal .fx-modal-dialog.fx-dialog-scrollable .fx-modal-body {
+  max-height: 60vh;
+}
+.fx-modal .fx-modal-dialog.fx-dialog-centered > .fx-modal-content {
+  margin: auto;
+}
+.fx-modal .fx-modal-dialog .fx-modal-content {
+  display: none;
+  min-width: 100%;
+  background: #fafafa;
+  width: max-content;
+  border-radius: 0.3rem;
+  transition: all ease-in-out 200ms;
+}
+.fx-modal .fx-modal-dialog .fx-modal-content > * {
+  padding: 0 0.5rem;
+}
+@media (min-width: 576px) {
+  .fx-modal .fx-modal-dialog .fx-modal-content {
+    min-width: 85%;
+  }
+}
+@media (min-width: 768px) {
+  .fx-modal .fx-modal-dialog .fx-modal-content {
+    min-width: 70%;
+  }
+}
+@media (min-width: 992px) {
+  .fx-modal .fx-modal-dialog .fx-modal-content {
+    min-width: 55%;
+  }
+}
+@media (min-width: 1200px) {
+  .fx-modal .fx-modal-dialog .fx-modal-content {
+    min-width: 40%;
+  }
+}
+.fx-modal .fx-modal-dialog .fx-modal-content .fx-modal-header {
+  display: flex;
+  flex: 1 0 auto;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  background-color: #f5efef;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--fx-border-light);
+}
+.fx-modal .fx-modal-dialog .fx-modal-content .fx-modal-header .title {
+  font-size: larger;
+}
+.fx-modal .fx-modal-dialog .fx-modal-content .fx-modal-footer {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  border-top: 1px solid var(--fx-border-light);
+}
+.fx-modal .fx-modal-dialog .fx-modal-content .fx-modal-body {
+  min-height: auto;
+  height: max-content;
+  overflow: hidden;
+  overflow-y: auto;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
 *,
 *:before,
 *:after {
@@ -220,6 +330,25 @@ body {
 }
 body main {
   padding: 0 0.75rem;
+}
+
+.close[data-fx-action=close]:after {
+  border: 1px solid #e54242;
+  background-color: #e54242;
+  -webkit-appearance: button;
+  justify-content: center;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 50%;
+  cursor: pointer;
+  content: "X";
+  min-height: 30px;
+  min-width: 30px;
+  color: white;
+}
+.close[data-fx-action=close]:hover:after {
+  border-color: #d51f1f;
+  background-color: #d51f1f;
 }
 
 /*# sourceMappingURL=fuxcel.css.map */

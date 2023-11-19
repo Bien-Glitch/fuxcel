@@ -2,6 +2,7 @@
 @import "fuxcel.color";
 @import "fuxcel.animation";
 @import "fuxcel.form";
+@import "fuxcel.modal";
 
 *,
 *:before,
@@ -14,5 +15,29 @@ body {
 
   main {
     padding: 0 0.75rem;
+  }
+}
+
+.close[data-fx-action="close"] {
+  &:after {
+    border: 1px solid #e54242;
+    background-color: #e54242;
+    -webkit-appearance: button;
+    justify-content: center;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 50%;
+    cursor: pointer;
+    content: "X";
+    min-height: 30px;
+    min-width: 30px;
+    color: white;
+  }
+
+  &:hover {
+    &:after {
+      border-color: #d51f1f;
+      background-color: #d51f1f;
+    }
   }
 }

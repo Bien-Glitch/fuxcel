@@ -1,8 +1,17 @@
 .fx- {
+  &text-border {
+    color: var(--fx-border-dark);
+  }
+  &text-dark {
+    color: var(--fx-dark);
+  }
   &text-error {
     color: var(--fx-error);
   }
   &text-success {
     color: var(--fx-success);
+  }
+  &text-white-50 {
+    color: var(--fx-white-50);
   }
 }
