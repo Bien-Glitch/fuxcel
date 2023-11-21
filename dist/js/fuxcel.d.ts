@@ -4,7 +4,7 @@ declare type FieldAttributes = { id: any, type: StringOrNull | undefined, fxId: 
 
 declare type FuxcelOrString<T extends string | object, U extends boolean | string | null = null> = T extends object ? Fuxcel : (T extends string ? (U extends string ? Fuxcel : (U extends boolean ? Fuxcel : string)) : string);
 
-declare type ModalInit = { title: string, content: string, id: string, hasFooter: boolean };
+declare type ModalInit = { title: StringOrNull, content: string, id: string, hasFooter: boolean };
 
 declare type FXAnimation = {
 	name: string;
@@ -26,19 +26,20 @@ declare type FXModalType = {
 	confirmButtonText?: StringOrNull,
 	cancelButtonText?: StringOrNull,
 	html?: boolean,
-	onConfirm?: Function | null,
-	onCancel?: Function | null,
+	onConfirm?: ((e: CustomEvent, modal: FuxcelModal) => void) | null,
+	onCancel?: ((e: CustomEvent, modal: FuxcelModal) => void) | null,
+	onEsc?: ((e: CustomEvent, modal: FuxcelModal) => void) | null,
 };
 
 declare type FXRequestType = {
 	uri?: StringOrNull,
 	method?: StringOrNull,
-	data?: object | null,
+	data?: BodyInit | object | null,
 	dataType?: ('html' | 'json' | 'jsonp' | 'script' | 'text' | 'xml'),
 	beforeSend?: Function | null,
-	onComplete?: Function | null,
-	onError?: Function | null,
-	onSuccess?: Function | null,
+	onComplete?: ((response: ResponseData, status: number, statusText: string) => void) | null,
+	onError?: ((error: any, status: number, statusText: string) => void) | null,
+	onSuccess?: ((response: ResponseData, status: number, statusText: string) => void) | null,
 };
 
 declare type FXFormSubmitType = {
@@ -140,15 +141,15 @@ declare interface FuxcelInterface {
 	
 	hasScrollBar(direction: string): boolean;
 	
-	insertHTML(value: string, position: StringOrNull): Fuxcel;
+	insertHTML(value: string, position: ('affix' | 'prefix' | 'postfix' | 'suffix' | null)): Fuxcel;
 	
 	isElement(tagName: string): boolean;
 	
 	matchSelector(selector: Selector): boolean;
 	
-	off(event?: StringOrNull): Fuxcel;
+	off(...events: string[]): Fuxcel;
 	
-	upon(events: string | object, listener?: Function | boolean, option?: boolean): Fuxcel;
+	upon(events: string | string[] | object, listener?: Function | boolean, option?: boolean): Fuxcel;
 	
 	value(value: StringOrNull): Fuxcel | string | null;
 	
@@ -232,7 +233,7 @@ declare interface FuxcelStepsInterface {
 declare interface FuxcelModalInterface {
 	hide(): void;
 	
-	show(): void;
+	show(escKey?: boolean): void;
 	
 	toggle(): void;
 }

@@ -1,13 +1,45 @@
 :root {
   --fx-dark: #232323;
-  --fx-error: #e54242;
+  --fx-error: #b03131;
+  --fx-error-dark: #a41818;
+  --fx-primary: #145388;
+  --fx-primary-dark: #0f3d64;
   --fx-success: #3bb24f;
+  --fx-success-dark: #308c3f;
+  --fx-warning: #ff8503;
+  --fx-warning-dark: #d77206;
   --fx-white-50: #808080;
   --fx-border-dark: #454545;
   --fx-border-light: #d1c9c9;
   --fx-border-width: 1px;
+  --fx-select-bg-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+  --fx-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }
 
+.fx-bg-border {
+  background-color: var(--fx-border-dark);
+}
+.fx-bg-dark {
+  background-color: var(--fx-dark);
+}
+.fx-bg-error {
+  background-color: var(--fx-error);
+}
+.fx-bg-error-dark {
+  background-color: var(--fx-error-dark);
+}
+.fx-bg-primary {
+  background-color: var(--fx-primary);
+}
+.fx-bg-primary-dark {
+  background-color: var(--fx-primary-dark);
+}
+.fx-bg-success {
+  background-color: var(--fx-success);
+}
+.fx-bg-white-50 {
+  background-color: var(--fx-white-50);
+}
 .fx-text-border {
   color: var(--fx-border-dark);
 }
@@ -16,6 +48,12 @@
 }
 .fx-text-error {
   color: var(--fx-error);
+}
+.fx-text-primary {
+  color: var(--fx-primary);
+}
+.fx-text-primary-dark {
+  color: var(--fx-primary-dark);
 }
 .fx-text-success {
   color: var(--fx-success);
@@ -151,16 +189,15 @@ form .form-group .form-group-wrapper .input-group .input-group-wrapper .form-fie
   padding: 0 0.75rem !important;
 }
 form .form-group .form-group-wrapper .input-group .input-group-wrapper select {
-  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
   font-weight: 400;
   line-height: 1.5;
   color: var(--fx-dark);
-  background-color: var(--bs-form-control-bg);
-  background-image: var(--bs-form-select-bg-img), var(--bs-form-select-bg-icon, none);
+  background-color: transparent;
+  background-image: var(--fx-select-bg-img), var(fx-select-bg-icon, none);
   background-repeat: no-repeat;
   background-position: top right;
   background-size: 16px 12px;
-  border: var(--bs-border-width) solid var(--bs-border-color);
+  border: var(--fx-border-width) solid var(--fx-border-dark);
   border-radius: 0.375rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   -webkit-appearance: none;
@@ -219,6 +256,134 @@ form .form-group .validation-text {
   transition: color 0.1s linear;
 }
 
+.fx-btn {
+  --fx-btn-padding-x: 0.75rem;
+  --fx-btn-padding-y: 0.375rem;
+  --fx-btn-font-size: 1rem;
+  --fx-btn-font-weight: 400;
+  --fx-btn-color: var(--fx-dark);
+  --fx-btn-bg: transparent;
+  --fx-btn-border-color: transparent;
+  --fx-btn-border-radius: 0.3rem;
+  --fx-btn-hover-border-color: transparent;
+  --fx-btn-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 1px rgba(0, 0, 0, 0.075);
+  --fx-btn-disabled-opacity: 0.65;
+  --fx-btn-focus-box-shadow: 0 0 0 0.25rem rgba(var(--bs-btn-focus-shadow-rgb), .5);
+  display: inline-block;
+  padding: var(--fx-btn-padding-y) var(--fx-btn-padding-x);
+  font-size: var(--fx-btn-font-size);
+  font-weight: var(--fx-btn-font-weight);
+  color: var(--fx-btn-color);
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  border: var(--fx-border-width) solid var(--bs-btn-border-color);
+  border-radius: var(--fx-btn-border-radius);
+  background-color: var(--fx-btn-bg);
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+.fx-btn:hover {
+  color: var(--fx-btn-hover-color);
+  background-color: var(--fx-btn-hover-bg);
+  border-color: var(--fx-btn-hover-border-color);
+}
+.fx-btn:focus-visible {
+  color: var(--bs-btn-hover-color);
+  background-color: var(--bs-btn-hover-bg);
+  border-color: var(--bs-btn-hover-border-color);
+  outline: 0;
+  box-shadow: var(--bs-btn-focus-box-shadow);
+}
+.fx-btn.fx-btn-sm {
+  --fx-btn-font-size: .8rem;
+  --fx-btn-padding-x: 0.55rem;
+  --fx-btn-padding-y: 0.3rem;
+}
+.fx-btn.fx-btn-lg {
+  --fx-btn-font-size: 1.2rem;
+  --fx-btn-padding-x: 0.95rem;
+  --fx-btn-padding-y: 0.45rem;
+}
+.fx-btn.fx-btn-primary {
+  --fx-btn-color: #fff;
+  --fx-btn-bg: var(--fx-primary);
+  --fx-btn-border-color: var(--fx-primary);
+  --fx-btn-hover-color: #fff;
+  --fx-btn-hover-bg: var(--fx-primary-dark);
+  --fx-btn-hover-border-color: var(--fx-primary-dark);
+  --fx-btn-focus-shadow-rgb: 49, 132, 253;
+  --fx-btn-active-color: #fff;
+  --fx-btn-active-bg: var(--fx-primary-dark);
+  --fx-btn-active-border-color: var(--fx-primary-dark);
+  --fx-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --fx-btn-disabled-color: #fff;
+  --fx-btn-disabled-bg: var(--fx-primary);
+  --fx-btn-disabled-border-color: var(--fx-primary);
+}
+.fx-btn.fx-btn-error {
+  --fx-btn-color: #fff;
+  --fx-btn-bg: var(--fx-error);
+  --fx-btn-border-color: var(--fx-error);
+  --fx-btn-hover-color: #fff;
+  --fx-btn-hover-bg: var(--fx-error-dark);
+  --fx-btn-hover-border-color: var(--fx-error-dark);
+  --fx-btn-focus-shadow-rgb: 49, 132, 253;
+  --fx-btn-active-color: #fff;
+  --fx-btn-active-bg: var(--fx-error-dark);
+  --fx-btn-active-border-color: var(--fx-error-dark);
+  --fx-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --fx-btn-disabled-color: #fff;
+  --fx-btn-disabled-bg: var(--fx-error);
+  --fx-btn-disabled-border-color: var(--fx-error);
+}
+.fx-btn.fx-btn-success {
+  --fx-btn-color: #fff;
+  --fx-btn-bg: var(--fx-success);
+  --fx-btn-border-color: var(--fx-success);
+  --fx-btn-hover-color: #fff;
+  --fx-btn-hover-bg: var(--fx-success-dark);
+  --fx-btn-hover-border-color: var(--fx-success-dark);
+  --fx-btn-focus-shadow-rgb: 49, 132, 253;
+  --fx-btn-active-color: #fff;
+  --fx-btn-active-bg: var(--fx-success-dark);
+  --fx-btn-active-border-color: var(--fx-success-dark);
+  --fx-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --fx-btn-disabled-color: #fff;
+  --fx-btn-disabled-bg: var(--fx-success);
+  --fx-btn-disabled-border-color: var(--fx-success);
+}
+.fx-btn.fx-btn-warning {
+  --fx-btn-color: #fff;
+  --fx-btn-bg: var(--fx-warning);
+  --fx-btn-border-color: var(--fx-warning);
+  --fx-btn-hover-color: #fff;
+  --fx-btn-hover-bg: var(--fx-warning-dark);
+  --fx-btn-hover-border-color: var(--fx-warning-dark);
+  --fx-btn-focus-shadow-rgb: 49, 132, 253;
+  --fx-btn-active-color: #fff;
+  --fx-btn-active-bg: var(--fx-warning-dark);
+  --fx-btn-active-border-color: var(--fx-warning-dark);
+  --fx-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --fx-btn-disabled-color: #fff;
+  --fx-btn-disabled-bg: var(--fx-warning);
+  --fx-btn-disabled-border-color: var(--fx-warning);
+}
+
+/*
+.fx-btn:disabled,
+.fx-btn.disabled,
+fieldset:disabled .fx-btn {
+  color: var(--bs-btn-disabled-color);
+  pointer-events: none;
+  background-color: var(--bs-btn-disabled-bg);
+  border-color: var(--bs-btn-disabled-border-color);
+  opacity: var(--bs-btn-disabled-opacity);
+}
+*/
 .fx-modal {
   display: none;
   font-family: Candara, Calibri, serif;
@@ -317,6 +482,19 @@ form .form-group .validation-text {
   overflow-y: auto;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+}
+.fx-modal .fx-modal-dialog .fx-modal-content .fx-modal-body .fx-modal-alert-icon {
+  margin-bottom: 1.5rem;
+  visibility: hidden;
+  width: 84px;
+}
+.fx-modal .fx-modal-dialog .fx-modal-content .fx-modal-body .fx-modal-alert-buttons {
+  display: flex;
+  margin-top: 1.5rem;
+  align-items: center;
+}
+.fx-modal .fx-modal-dialog .fx-modal-content .fx-modal-body .fx-modal-alert-buttons > .fx-btn:not(:first-child) {
+  margin-left: 0.3rem;
 }
 
 *,

@@ -13,6 +13,7 @@ const fxModalHideEvent = new CustomEvent('fx.modal.hide', {
 		interface: 'FuxcelModalInterface'
 	},
 });
+const fxModalCancelButtonClick = new Event('click');
 
 const animations = ({timeout = 300, iterations = 1}) => {
 	return {
@@ -302,9 +303,7 @@ class FuxcelBase implements FuxcelBaseInterface {
 }
 
 class Fuxcel extends FuxcelBase implements FuxcelInterface {
-	static pluginPath: string = './';
-	static #_ongoingAnimations: Promise<any>[] = [];
-	#_ongoingAnimationCount: object[] = [];
+	static #_pluginPath: string = './';
 	
 	constructor(selector: string | Iterable<any> | any, context?: string | Iterable<any> | any) {
 		super(selector, context);
@@ -565,7 +564,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	 * Get the Plugin path.
 	 */
 	static get path() {
-		return Fuxcel.pluginPath.replace(/\/$/, '');
+		return Fuxcel.#_pluginPath.replace(/\/$/, '');
 	}
 	
 	/**
@@ -574,7 +573,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	 * @param path {string} the relative path.
 	 */
 	static set path(path: string) {
-		Fuxcel.pluginPath = path;
+		Fuxcel.#_pluginPath = path;
 	}
 	
 	/**
@@ -933,7 +932,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	 * @param position {('affix'|'prefix'|'postfix'|'suffix'|null)} Position to place given HTML string.
 	 * @return {Fuxcel} Fuxcel Object of the selected element
 	 */
-	insertHTML(value: string, position: StringOrNull = null): Fuxcel {
+	insertHTML(value: string, position: ('affix' | 'prefix' | 'postfix' | 'suffix' | null) = null): Fuxcel {
 		const selected: ElementReturn = this.toArray;
 		const positions: { affix: string, prefix: string, postfix: string, suffix: string } = {
 			affix: 'beforebegin',
@@ -977,29 +976,31 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		throw (`Function \`matchSelector()\` expects 1 argument. 0 given`);
 	}
 	
-	off(event?: string): Fuxcel
+	// off(...event: string[]): Fuxcel
 	/**
 	 * Remove Event Listener(s) from the selected element.
 	 *
-	 * _Removes the given event f the event parameter is given._
+	 * _Removes the given event(s) from the selected element if the event parameter is given._
 	 *
 	 * _Removes all previous Event Listeners from the selected element._
 	 *
-	 * @param event {StringOrNull} Particular event to remove
+	 * @param events {string[]} Particular event to remove
 	 * @return {Fuxcel} Fuxcel Object of the selected element
 	 */
-	off(event?: StringOrNull): Fuxcel {
+	off(...events: string[]): Fuxcel {
 		const selected: ElementReturn = this.toArray;
 		
 		selected.forEach((element: HTMLElement) => {
 			// @ts-ignore
 			(element.listeners) && element.listeners.forEach((listener: { event: string, listener: any, option: any }, index) => {
-				if (isString(event)) {
-					if (listener.event.toLowerCase() === event?.toLowerCase()) {
-						element.removeEventListener(listener.event, listener.listener, listener.option)
-						// @ts-ignore
-						element.listeners.splice(index, 1);
-					}
+				if (events.length) {
+					events.forEach((event: string) => {
+						if (listener.event.toLowerCase() === event?.toLowerCase()) {
+							element.removeEventListener(listener.event, listener.listener, listener.option)
+							// @ts-ignore
+							element.listeners.splice(index, 1);
+						}
+					});
 				} else {
 					element.removeEventListener(listener.event, listener.listener, listener.option)
 					// @ts-ignore
@@ -1011,6 +1012,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	}
 	
 	upon(events: string, listener: Function, option?: boolean): Fuxcel
+	upon(events: string[], listener: Function, option?: boolean): Fuxcel
 	upon(events: object, listener?: boolean): Fuxcel
 	/**
 	 * Add Event Listener(s) to the selected element.
@@ -1032,7 +1034,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	 * @param  {boolean} [listener] Optional boolean parameter to set CAPTURING_PHASE of the event listener to either true or false.
 	 * @return {Fuxcel} Fuxcel Object of the selected element
 	 */
-	upon(events: string | object, listener?: Function | boolean, option: boolean = true): Fuxcel {
+	upon(events: string | string[] | object, listener?: Function | boolean, option: boolean = true): Fuxcel {
 		const selected: ElementReturn = this.toArray;
 		
 		if (isObject(events) && listener === undefined)
@@ -1052,10 +1054,19 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 					element.listeners.push({element: element, listener: events[event], event: event, option: listener});
 				});
 			else {
-				// @ts-ignore
-				element.addEventListener(events, listener, option);
-				// @ts-ignore
-				element.listeners.push({element: element, listener: listener, event: events, option: option});
+				if (Array.isArray(events) && events.length)
+					events.forEach((event: string) => {
+						// @ts-ignore
+						element.addEventListener(event, listener, option);
+						// @ts-ignore
+						element.listeners.push({element: element, listener: listener, event: event, option: option});
+					});
+				else {
+					// @ts-ignore
+					element.addEventListener(events, listener, option);
+					// @ts-ignore
+					element.listeners.push({element: element, listener: listener, event: events, option: option});
+				}
 			}
 		});
 		return this;
@@ -2564,6 +2575,7 @@ class FuxcelSteps extends FuxcelValidator implements FuxcelStepsInterface {
 
 class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
 	modalTriggers = fx('*[data-fx-target="modal"]');
+	#_isHiding = false;
 	
 	static #_modalTarget: Fuxcel;
 	static #_openModals: FuxcelModal[] = [];
@@ -2612,7 +2624,7 @@ class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
 	 * @param hasFooter {boolean} If the Modal should be created with a footer.
 	 * @return {HTMLElement} Generated Modal.
 	 */
-	static init({title, content, id, hasFooter}: ModalInit): HTMLElement {
+	static init({title = null, content, id, hasFooter}: ModalInit): HTMLElement {
 		const fxModal = document.createElement('div');
 		const modalDialog = document.createElement('div');
 		const modalContent = document.createElement('div');
@@ -2626,7 +2638,7 @@ class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
 		fxModal.id = id;
 		fxModal.classList.add('fx-modal', 'filter');
 		
-		modalTitle.innerHTML = title;
+		title && (modalTitle.innerHTML = title);
 		modalBody.innerHTML = content;
 		
 		modalCloseButton.dataset.fxAction = 'close';
@@ -2647,8 +2659,17 @@ class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
 		modalDialog.append(modalContent);
 		fxModal.append(modalDialog);
 		
+		!title && modalContent.removeChild(modalHeader);
 		!hasFooter && modalContent.removeChild(modalFooter);
 		return fxModal;
+	}
+	
+	/**
+	 * Destroy selected modal.
+	 */
+	destroy(): void {
+		// @ts-ignore
+		this[0].remove()
 	}
 	
 	/**
@@ -2657,34 +2678,41 @@ class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
 	hide(): void {
 		const modalContent = fx('.fx-modal-content', this);
 		
-		modalContent.fadeout(500).then(() => this.fadeout(500).then(() => {
-			const index = FuxcelModal.#_openModals.indexOf(this);
-			
-			if (index !== -1)
-				FuxcelModal.#_openModals.splice(index, 1);
-			
-			// @ts-ignore
-			this[0].dispatchEvent(fxModalHideEvent);
-		}));
+		if (!this.#_isHiding) {
+			this.#_isHiding = true;
+			modalContent.fadeout(500).then(() => this.fadeout(500).then(() => {
+				const index = FuxcelModal.#_openModals.indexOf(this);
+				
+				if (index !== -1)
+					FuxcelModal.#_openModals.splice(index, 1);
+				
+				// @ts-ignore
+				this[0].dispatchEvent(fxModalHideEvent);
+				this.#_isHiding = false;
+			}));
+		}
 	}
 	
 	/**
 	 * Open selected modal.
+	 *
+	 * @param escKey {boolean=true} Allow closing the modal using the Escape on the KeyBoard if set to true. True by default.
 	 */
-	show(): void {
+	show(escKey = true): void {
 		const modalContent = fx('.fx-modal-content', this);
 		
 		this.style({pointerEvents: 'none'}).fadein(500).then(() => modalContent.fadein(500).then(() => {
 			FuxcelModal.#_openModals.push(this);
 			this.style({pointerEvents: 'unset'});
 			
-			fx(document).off('keyup').upon('keyup', (e: KeyboardEvent) => {
-				const key = e.key.toLowerCase();
-				
-				if (key === 'escape' || key === 'esc')
-					if (FuxcelModal.hasOpenModals)
-						FuxcelModal.currentModal?.hide();
-			});
+			if (escKey)
+				fx(document).off('keyup').upon('keyup', (e: KeyboardEvent) => {
+					const key = e.key.toLowerCase();
+					
+					if (key === 'escape' || key === 'esc')
+						if (FuxcelModal.hasOpenModals)
+							FuxcelModal.currentModal?.hide();
+				});
 			
 			// @ts-ignore
 			this[0].dispatchEvent(fxModalShowEvent)
@@ -2710,11 +2738,11 @@ class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
  * @param data {StringOrNull = null}
  * @param dataType {('html'|'json'|'jsonp'|'script'|'text'|'xml'|null)}
  * @param beforeSend {Function|null = null}
- * @param onComplete {Function|null = null}
- * @param onError {Function|null = null}
- * @param onSuccess {Function|null = null}
+ * @param onComplete {(response: ResponseData, status: number, statusText: string)|null = null}
+ * @param onError {(error: any, status: number, statusText: string)|null = null}
+ * @param onSuccess {(response: ResponseData, status: number, statusText: string)|null = null}
  */
-fx.constructor.prototype.areq = function ({uri = '', method = 'get', data = null, dataType = 'json', beforeSend = null, onComplete = null, onError = null, onSuccess = null}) {
+fx.constructor.prototype.areq = function ({uri = '', method = 'get', data = null, dataType = 'json', beforeSend = null, onComplete = null, onError = null, onSuccess = null}: FXRequestType = {}) {
 	const allowedErrorStatuses = new Set([401, 402, 422, 423, 426, 451, 511]);
 	let status: number,
 		statusText: string,
@@ -2726,7 +2754,7 @@ fx.constructor.prototype.areq = function ({uri = '', method = 'get', data = null
 	
 	fetch(<string>uri, {
 		method: <string>method,
-		body: data,
+		body: <BodyInit | null>data,
 	}).then(response => {
 		responseData = response;
 		status = responseData.status;
@@ -2755,23 +2783,72 @@ fx.constructor.prototype.areq = function ({uri = '', method = 'get', data = null
 /**
  * Create quick simple modal with callbacks.
  *
- * @param title {StringOrNull} Title of the Modal.
+ * @param title {StringOrNull}.
  * @param type {('success' | 'warning' | 'error')} Modal Type.
  * @param content {StringOrNull} Body Content of Modal.
  * @param confirmButtonText {StringOrNull} Text for Confirm Button.
  * @param cancelButtonText {StringOrNull} Text for Cancel Button.
  * @param html {boolean} Use HTML content? else use Text content.
- * @param onConfirm {Function | null} Callback on confirm button click.
- * @param onCancel {Function | null} callback on cancel button click.
+ * @param onConfirm {(CustomEvent, FuxcelModal) | null} Callback on confirm button click.
+ * @param onCancel {(CustomEvent, FuxcelModal) | null} callback on cancel button click.
+ * @param onEsc {(CustomEvent, FuxcelModal) | null} callback on Escape key used. Only works when cancel button is not available. [i.e. cancelButtonText is null].
  */
-fx.constructor.prototype.modal = function ({title = 'Fuxcel Modal Alert', type = 'success', content = 'Alert Content', confirmButtonText = 'Ok', cancelButtonText = 'Cancel', html = true, onConfirm = null, onCancel = null} = {}) {
-	const initialModal = FuxcelModal.init({title: title, content: content, id: 'init', hasFooter: !!(confirmButtonText || cancelButtonText)});
+fx.constructor.prototype.modal = function ({title = null, type = 'success', content = 'Alert Content', confirmButtonText = null, cancelButtonText = null, html = true, onConfirm = null, onCancel = null, onEsc = null}: FXModalType = {}) {
+	let alertIconPath;
+	const initialModal = FuxcelModal.init({title: title, content: <string>content, id: 'init', hasFooter: false});
+	const modalBody = fx('.fx-modal-body', initialModal);
 	const body = document.querySelector('body');
 	
+	alertIconPath = type === 'success' ?
+		`${Fuxcel.path}/images/ok-24.svg` :
+		(type === 'error' ? `${Fuxcel.path}/images/cancel-24.svg` : `${Fuxcel.path}/images/warning-24.svg`);
+	
+	const alertIcon = `<img src="${alertIconPath}" alt="${type}" class="fx-modal-alert-icon">`;
+	const buttonsWrapper = (buttons: string): string => `<div class="fx-modal-alert-buttons">${buttons}</div>`;
+	
+	const buttons = confirmButtonText && cancelButtonText ?
+		`<button type="button" id="fx-modal-cancel" class="fx-btn fx-btn-error">${cancelButtonText}</button><button type="button" id="fx-modal-confirm" class="fx-btn fx-btn-primary">${confirmButtonText}</button>` :
+		(confirmButtonText ? `<button type="button" id="fx-modal-confirm" class="fx-btn fx-btn-primary">${confirmButtonText}</button>` : (cancelButtonText && `<button type="button" id="fx-modal-cancel" class="fx-btn fx-btn-error">${cancelButtonText}</button>`));
+	
+	modalBody.style({display: 'flex', flexDirection: 'column', alignItems: 'center'}).insertHTML(alertIcon, 'prefix')
+	buttons && modalBody.insertHTML(buttonsWrapper(buttons), 'suffix');
+	
 	body?.append(initialModal);
+	fx('.fx-modal-alert-icon', initialModal).style({visibility: 'visible'}).fadein(2000);
 	
 	const modal = new FuxcelModal(initialModal);
-	modal.show();
+	modal.show(!cancelButtonText);
+	
+	if (cancelButtonText || confirmButtonText) {
+		// Trigger the onEsc() function if available and cancel button is not displayed.
+		if (!cancelButtonText)
+			modal.off().upon('fx.modal.hide', (e: CustomEvent) => typeof onEsc === 'function' ? onEsc(e, modal) : null);
+		
+		modal.off('click').upon('click', function (e: KeyboardEvent) {
+			const clickedTarget = fx(e.target);
+			const isCancel = clickedTarget.matchSelector('#fx-modal-cancel');
+			const isConfirm = clickedTarget.matchSelector('#fx-modal-confirm');
+			
+			// Hide modal if mouse is left-clicked outside the modal content [Trigger clicking on either buttons if any is available].
+			fx('.fx-modal-content', modal).hasFocus.then(focused => {
+				if (!focused)
+					cancelButtonText ?
+						document.querySelector('#fx-modal-cancel')?.dispatchEvent(fxModalCancelButtonClick) :
+						document.querySelector('#fx-modal-confirm')?.dispatchEvent(fxModalCancelButtonClick);
+			});
+			
+			if (isCancel || isConfirm) {
+				modal.hide();
+				modal.off().upon('fx.modal.hide', (e: CustomEvent) => isCancel && typeof onCancel === 'function' ? onCancel(e, modal) : (isConfirm && typeof onConfirm === 'function' ? onConfirm(e, modal) : null));
+			}
+		});
+	} else {
+		// Trigger the onEsc() function if available and cancel button is not displayed.
+		if (!cancelButtonText)
+			modal.off().upon('fx.modal.hide', (e: CustomEvent) => typeof onEsc === 'function' ? onEsc(e, modal) : null);
+	}
+	
+	return modal;
 };
 
 /**

@@ -1,16 +1,60 @@
 .fx- {
+  &bg-border {
+    background-color: var(--fx-border-dark);
+  }
+
+  &bg-dark {
+    background-color: var(--fx-dark);
+  }
+
+  &bg-error {
+    background-color: var(--fx-error);
+  }
+
+  &bg-error-dark {
+    background-color: var(--fx-error-dark);
+  }
+
+  &bg-primary {
+    background-color: var(--fx-primary);
+  }
+
+  &bg-primary-dark {
+    background-color: var(--fx-primary-dark);
+  }
+
+  &bg-success {
+    background-color: var(--fx-success);
+  }
+
+  &bg-white-50 {
+    background-color: var(--fx-white-50);
+  }
+
   &text-border {
     color: var(--fx-border-dark);
   }
+
   &text-dark {
     color: var(--fx-dark);
   }
+
   &text-error {
     color: var(--fx-error);
   }
+
+  &text-primary {
+    color: var(--fx-primary);
+  }
+
+  &text-primary-dark {
+    color: var(--fx-primary-dark);
+  }
+
   &text-success {
     color: var(--fx-success);
   }
+
   &text-white-50 {
     color: var(--fx-white-50);
   }

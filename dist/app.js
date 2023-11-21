@@ -27,14 +27,17 @@ e.preventDefault();
 if (form.getErrors.count)
 	form.renderValidationErrors(form.getErrors.errors);
 });*/
-
-fx.modal();
-
+fx.areq({
+	onComplete: function (response, status, statusText) {
+	
+	}
+});
+fx.modal()
 const testStep = fx('form');
 const stepValidator = testStep.formValidator.initSteps();
 
 // testStep.fadeout(5000).then(element => element.fadein(2000).then(element => element.slideoutup(3000)));
-
+testStep.off().upon()
 
 testStep.toArray.forEach(stepForm => {
 	const stepsArray = [];

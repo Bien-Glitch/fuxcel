@@ -107,6 +107,24 @@
         overflow-y: auto;
         padding-top: .5rem;
         padding-bottom: .5rem;
+
+        .fx-modal-alert-icon {
+          margin-bottom: 1.5rem;
+          visibility: hidden;
+          width: 84px;
+        }
+
+        .fx-modal-alert-buttons {
+          display: flex;
+          margin-top: 1.5rem;
+          align-items: center;
+
+          & > .fx-btn {
+            &:not(:first-child) {
+              margin-left: .3rem;
+            }
+          }
+        }
       }
     }
   }
