@@ -2436,13 +2436,13 @@ class FuxcelSteps extends FuxcelValidator implements FuxcelStepsInterface {
 		super(selected);
 		this.#that = selected;
 		
-		/*try {
+		try {
 			if (Steps.constructor.name.length && selected.validatorConfig.stepForm.plugin)
 				// @ts-ignore
 				new Steps(selected[0]).init({step: '.fx-step'});
 		} catch (e) {
 		
-		}*/
+		}
 		
 		return this;
 	}
