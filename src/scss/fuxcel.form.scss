@@ -56,6 +56,7 @@ form {
         display: flex;
         align-items: stretch;
         background-color: white;
+        border-radius: .25rem;
 
         .input-group-wrapper {
           width: 100%;
@@ -63,13 +64,14 @@ form {
           flex-wrap: nowrap;
           position: relative;
           align-items: center;
+          border-radius: .25rem;
           transition: border-color .3s linear;
-          background-color: var(--bs-form-control-bg);
+          background-color: transparent;
           border: var(--fx-border-width) solid var(--fx-border-dark);
 
           label {
             margin: 0;
-            display: none;
+            //display: none;
             text-transform: capitalize;
           }
 
@@ -81,33 +83,75 @@ form {
               flex-direction: column-reverse;
 
               label {
-                font-size: .675rem;
-                visibility: hidden;
-                transition: all .1s ease-in-out;
-                padding: 0.05055rem 0.75rem 0.01685rem;
+                border-radius: .25rem;
+                //font-size: .75rem;
+                //visibility: hidden;
+                //transition: all .1s ease-in-out;
+                //padding: 0.05055rem 0.75rem 0.01685rem;
               }
 
               .form-field {
+                //height: 100%;
+                border-radius: .25rem;
+                background-color: transparent;
+                transform: translateY(50%);
+
+                ~ span {
+                  top: 50%;
+                  font-size: .75rem;
+                  position: absolute;
+                  transform: translateY(-50%);
+                  left: 0.75rem !important;
+                  //padding: 0 .25rem;
+                  transition: all .2s;
+                }
+
+                &::placeholder {
+                  opacity: 0;
+                }
+
+                &:focus,
                 &:not(:placeholder-shown) {
-                  ~ label {
-                    visibility: visible;
+                  ~ span {
+                    top: 0;
+                    font-size: .8rem;
+
+                    &:after {
+                      left: -.25rem;
+                      right: -.25rem;
+                      top: 50%;
+                      height: 3px;
+                      content: " ";
+                      display: block;
+                      padding: 0 .25rem;
+                      position: absolute;
+                      background-color: white;
+                      transform: translateY(-50%);
+                      z-index: -1;
+                    }
                   }
                 }
 
+                /*&:not(:placeholder-shown) {
+                  ~ label {
+                    visibility: visible;
+                  }
+                }*/
+
                 // TODO: use classes and add from JS
-                &:placeholder-shown {
+                /*&:placeholder-shown {
                   ~ label {
                     animation: slideOutDown 200ms linear !important;
                     visibility: hidden;
                   }
-                }
+                }*/
 
-                &:focus {
+                /*&:focus {
                   ~ label {
                     animation: slideInUp 200ms linear !important;
                     visibility: visible;
                   }
-                }
+                }*/
               }
             }
           }
@@ -124,19 +168,20 @@ form {
             line-height: 1.5;
             color: var(--fx-dark);
             background-color: transparent;
-            background-image: var(--fx-select-bg-img), var(fx-select-bg-icon, none);
+            background-image: var(--fx-select-bg-img);
             background-repeat: no-repeat;
-            background-position: top right;
+            background-position: center right;
             background-size: 16px 12px;
-            border: var(--fx-border-width) solid var(--fx-border-dark);
-            border-radius: 0.375rem;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            border: none;
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
+            //border: var(--fx-border-width) solid var(--fx-border-dark);
+            //transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            //border-radius: 0.375rem;
           }
 
-          input.form-field {
+          /*input.form-field {
             &:placeholder-shown {
               transform: translateY(-50%);
             }
@@ -144,7 +189,7 @@ form {
             &:focus {
               transform: translateY(0) !important;
             }
-          }
+          }*/
 
           input, textarea {
             &.form-field {

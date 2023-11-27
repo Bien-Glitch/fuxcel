@@ -6,13 +6,18 @@
 	<title>Fuxcel</title>
 	
 	<link rel="stylesheet" href="css/fuxcel.css">
+	
+	<noscript>
+		<meta http-equiv="refresh" content="0;url=./noscript.html">
+	</noscript>
+	
 	<script defer src="js/fuxcel.js"></script>
 	<script defer src="app.js"></script>
 </head>
 
 <body>
 	<main>
-		<!--<form action="" id="test-form">
+		<form action="" id="test-form">
 			<div class="form-group">
 				<label for="title">title</label>
 				<input type="text" minlength="" id="title" placeholder="title" class="form-field">
@@ -45,8 +50,7 @@
 			<button type="submit">Submit</button>
 		</form>
 		
-		<button id="button" type="button">Submit</button>
-		<form action="" id="test-step">
+		<!--<form action="" id="test-step">
 			<div class="fx-step" data-fx-step="2">
 				<div class="form-group">
 					<input type="text" name="occupation" id="occupation" class="form-field"/>
@@ -78,6 +82,40 @@
 			
 			<button type="button" data-action="prev">Prev</button>
 			<button type="button" data-action="next">Next</button>
+		</form>
+		
+		<form action="" id="test-step-1">
+			<div class="fx-step" data-fx-step="2">
+				<div class="form-group">
+					<input type="text" name="occupation" id="occupation-1" class="form-field"/>
+					<label for="occupation-1">Occupation</label>
+				</div>
+				
+				<div class="form-group">
+					<input type="password" id="password" name="password" class="form-field"/>
+					<label for="password">password</label>
+				</div>
+				
+				<div class="form-group">
+					<input type="password" id="password_confirmation" name="password_confirmation" class="form-field"/>
+					<label for="password_confirmation">confirm password</label>
+				</div>
+			</div>
+			<div class="fx-step" data-fx-step="1">
+				<div class="form-group">
+					<input type="text" name="service" id="service-1" class="form-field"/>
+					<label for="service-1">Service</label>
+				</div>
+			</div>
+			<div class="fx-step" data-fx-step="3">
+				<div class="form-group">
+					<input type="text" name="pay" id="pay-1" class="form-field"/>
+					<label for="pay-1">Pay</label>
+				</div>
+			</div>
+			
+			<button type="button" class="fx-btn fx-btn-primary" data-action="prev">Prev</button>
+			<button type="button" class="fx-btn fx-btn-primary fx-btn-sm" data-action="next">Next</button>
 		</form>-->
 		
 		<form action="" id="test-step-1">
@@ -111,7 +149,7 @@
 			</div>
 			
 			<button type="button" class="fx-btn fx-btn-primary" data-action="prev">Prev</button>
-			<button type="button" class="fx-btn fx-btn-primary fx-btn-lg" data-action="next">Next</button>
+			<button type="button" class="fx-btn fx-btn-primary fx-btn-sm" data-action="next">Next</button>
 		</form>
 		
 		<!--<form action="" id="test-form-1">
@@ -128,14 +166,14 @@
 			<button type="submit">Submit</button>
 		</form>-->
 		
-		<a href="" class="drop" style="display:flex;position:relative;">
+		<!--<a href="" class="drop" style="display:flex;position:relative;">
 			Dropdown Link
 			<div style="position: absolute;top: 100%;display: none">Menu</div>
-		</a>
+		</a>-->
 		<button type="button" data-fx-target="modal" data-fx-modal="test-modal">Show</button>
 	</main>
 	
-	<div class="fx-modal filter" id="test-modal">
+	<div class="fx-modal filter" id="test-modal" data-fx-static="true">
 		<div class="fx-modal-dialog fx-dialog-centered fx-dialog-scrollable">
 			<div class="fx-modal-content">
 				<div class="fx-modal-header">
@@ -144,11 +182,11 @@
 				</div>
 				<div class="fx-modal-body">
 					<button type="button" class="fx-btn fx-btn-primary" data-fx-target="modal" data-fx-modal="test-modal-1">Show</button>
-					<button type="button" class="fx-btn fx-btn-warning" data-fx-target="modal" data-fx-modal="test-modal">Hide</button>
+					<button type="button" class="fx-btn fx-btn-success" data-fx-target="modal" data-fx-modal="test-modal">Hide</button>
 				</div>
-				<!--<div class="fx-modal-footer">
-					Hello
-				</div>-->
+				<div class="fx-modal-footer">
+					Example Footer
+				</div>
 			</div>
 		</div>
 	</div>

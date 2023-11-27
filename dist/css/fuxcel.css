@@ -2,6 +2,7 @@
   --fx-dark: #232323;
   --fx-error: #b03131;
   --fx-error-dark: #a41818;
+  --fx-purple: #5151d9;
   --fx-primary: #145388;
   --fx-primary-dark: #0f3d64;
   --fx-success: #3bb24f;
@@ -143,6 +144,7 @@ form .form-group .form-group-wrapper .input-group {
   display: flex;
   align-items: stretch;
   background-color: white;
+  border-radius: 0.25rem;
 }
 form .form-group .form-group-wrapper .input-group .input-group-wrapper {
   width: 100%;
@@ -150,13 +152,22 @@ form .form-group .form-group-wrapper .input-group .input-group-wrapper {
   flex-wrap: nowrap;
   position: relative;
   align-items: center;
+  border-radius: 0.25rem;
   transition: border-color 0.3s linear;
-  background-color: var(--bs-form-control-bg);
+  background-color: transparent;
   border: var(--fx-border-width) solid var(--fx-border-dark);
+  /*input.form-field {
+    &:placeholder-shown {
+      transform: translateY(-50%);
+    }
+
+    &:focus {
+      transform: translateY(0) !important;
+    }
+  }*/
 }
 form .form-group .form-group-wrapper .input-group .input-group-wrapper label {
   margin: 0;
-  display: none;
   text-transform: capitalize;
 }
 form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group {
@@ -166,21 +177,57 @@ form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floati
   flex-direction: column-reverse;
 }
 form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group label {
-  font-size: 0.675rem;
-  visibility: hidden;
-  transition: all 0.1s ease-in-out;
-  padding: 0.05055rem 0.75rem 0.01685rem;
+  border-radius: 0.25rem;
 }
-form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group .form-field:not(:placeholder-shown) ~ label {
-  visibility: visible;
+form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group .form-field {
+  border-radius: 0.25rem;
+  background-color: transparent;
+  transform: translateY(50%);
+  /*&:not(:placeholder-shown) {
+    ~ label {
+      visibility: visible;
+    }
+  }*/
+  /*&:placeholder-shown {
+    ~ label {
+      animation: slideOutDown 200ms linear !important;
+      visibility: hidden;
+    }
+  }*/
+  /*&:focus {
+    ~ label {
+      animation: slideInUp 200ms linear !important;
+      visibility: visible;
+    }
+  }*/
 }
-form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group .form-field:placeholder-shown ~ label {
-  animation: slideOutDown 200ms linear !important;
-  visibility: hidden;
+form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group .form-field ~ span {
+  top: 50%;
+  font-size: 0.75rem;
+  position: absolute;
+  transform: translateY(-50%);
+  left: 0.75rem !important;
+  transition: all 0.2s;
 }
-form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group .form-field:focus ~ label {
-  animation: slideInUp 200ms linear !important;
-  visibility: visible;
+form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group .form-field::placeholder {
+  opacity: 0;
+}
+form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group .form-field:focus ~ span, form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group .form-field:not(:placeholder-shown) ~ span {
+  top: 0;
+  font-size: 0.8rem;
+}
+form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group .form-field:focus ~ span:after, form .form-group .form-group-wrapper .input-group .input-group-wrapper.fx-floating-label .field-group .form-field:not(:placeholder-shown) ~ span:after {
+  left: -0.25rem;
+  right: -0.25rem;
+  top: 50%;
+  height: 3px;
+  content: " ";
+  display: block;
+  padding: 0 0.25rem;
+  position: absolute;
+  background-color: white;
+  transform: translateY(-50%);
+  z-index: -1;
 }
 form .form-group .form-group-wrapper .input-group .input-group-wrapper .form-field {
   display: block;
@@ -193,22 +240,14 @@ form .form-group .form-group-wrapper .input-group .input-group-wrapper select {
   line-height: 1.5;
   color: var(--fx-dark);
   background-color: transparent;
-  background-image: var(--fx-select-bg-img), var(fx-select-bg-icon, none);
+  background-image: var(--fx-select-bg-img);
   background-repeat: no-repeat;
-  background-position: top right;
+  background-position: center right;
   background-size: 16px 12px;
-  border: var(--fx-border-width) solid var(--fx-border-dark);
-  border-radius: 0.375rem;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  border: none;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-}
-form .form-group .form-group-wrapper .input-group .input-group-wrapper input.form-field:placeholder-shown {
-  transform: translateY(-50%);
-}
-form .form-group .form-group-wrapper .input-group .input-group-wrapper input.form-field:focus {
-  transform: translateY(0) !important;
 }
 form .form-group .form-group-wrapper .input-group .input-group-wrapper input.form-field, form .form-group .form-group-wrapper .input-group .input-group-wrapper textarea.form-field {
   font-weight: 400;
@@ -505,6 +544,7 @@ fieldset:disabled .fx-btn {
 
 body {
   margin: 0;
+  font-family: Nunito, sans-serif;
 }
 body main {
   padding: 0 0.75rem;
