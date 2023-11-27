@@ -82,6 +82,10 @@ declare type ValidatorConfigObject = {
 		passwordId: string,
 		initWrapper: string,
 	},
+	stepForm: {
+		use: boolean,
+		plugin: boolean,
+	}
 	texts: {
 		capslock: string,
 		emailFormat: string | null,
@@ -149,7 +153,7 @@ declare interface FuxcelInterface {
 	
 	off(...events: string[]): Fuxcel;
 	
-	upon(events: string | string[] | object, listener?: Function | boolean, option?: boolean): Fuxcel;
+	upon(events: string | string[] | object, listener?: ((e: CustomEvent | Event) => any) | boolean, option?: boolean): Fuxcel;
 	
 	value(value: StringOrNull): Fuxcel | string | null;
 	
@@ -185,11 +189,9 @@ declare interface FuxcelValidatorInterface {
 	
 	init(config: Object | null): FuxcelValidator;
 	
-	initSteps(config: Object | number | null): FuxcelSteps;
-	
 	renderMessage(message: StringOrNull, renderType: StringOrNull): FuxcelValidator;
 	
-	renderValidationErrors(errors: object, message: StringOrNull, callbackFn: Function | null): void;
+	renderValidationErrors(errors: object, messageOrCallbackFn: ((fx: FuxcelValidator, e?: CustomEvent) => any) | StringOrNull, callbackFn: ((fx: FuxcelValidator, e?: CustomEvent) => any) | null): void;
 	
 	showError(message: StringOrNull): void;
 	
@@ -241,11 +243,13 @@ declare interface FuxcelModalInterface {
 declare interface FXInterface {
 	(selector: string | Iterable<any> | any, context?: string | Iterable<any> | any): Fuxcel;
 	
-	passLuhnAlgo?: (input: any | string | number) => boolean;
-	
 	areq?: ({uri, method, data, dataType, beforeSend, onComplete, onError, onSuccess}: FXRequestType) => void;
 	
 	modal?: ({title, type, content, confirmButtonText, cancelButtonText, html, onConfirm, onCancel}: FXModalType) => void;
+	
+	onDocumentLoad?: ((listener: (e: Event) => void) => void)
+	
+	passLuhnAlgo?: (input: any | string | number) => boolean;
 }
 
 declare interface ResponseData extends Response {
