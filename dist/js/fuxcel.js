@@ -980,7 +980,7 @@ class Fuxcel extends FuxcelBase {
                 const formData = new FormData(element);
                 // @ts-ignore
                 data && Object.keys(data).length && Object.keys(data).forEach(key => formData.append(key, data[key]));
-                !form.errorCount ? typeof fx.areq === 'function' && fx.areq({
+                !form.errorCount ? typeof fx.req === 'function' && fx.req({
                     uri: uri,
                     method: method,
                     data: formData,
@@ -1048,7 +1048,7 @@ class FuxcelValidator extends Fuxcel {
             validatePhone: false,
             validateUsername: false,
             nativeValidation: false,
-            useDefaultStyling: true,
+            useDefaultStyling: false,
             passwordConfirmId: 'password_confirmation',
             passwordId: 'password',
             initWrapper: '.form-group',
@@ -2386,7 +2386,7 @@ class FuxcelModal extends Fuxcel {
  * @param onError {((error: any, status: number, statusText: string) => void)|null = null}
  * @param onSuccess {((response: ResponseData, status: number, statusText: string) => void)|null = null}
  */
-fx.constructor.prototype.areq = function ({ uri = '', method = 'get', data = null, dataType = 'json', beforeSend = null, onComplete = null, onError = null, onSuccess = null } = {}) {
+fx.constructor.prototype.req = function ({ uri = '', method = 'get', data = null, dataType = 'json', beforeSend = null, onComplete = null, onError = null, onSuccess = null } = {}) {
     const allowedErrorStatuses = new Set([401, 402, 422, 423, 426, 451, 511]);
     let status, statusText, responseData;
     // @ts-ignore
