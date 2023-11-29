@@ -457,8 +457,8 @@ Read through this documentation on how to set it up, and you're ready to go. It'
 
 ## Creator
 
-<a href="https://github.com/Bien-Glitch" title="Bien Nwinate">
 ![avatar](https://avatars.githubusercontent.com/u/51288549?s=96&v=4&h=300&w=300&fit=cover&mask=circle&maxage=7d)
+<a href="https://github.com/Bien-Glitch" title="Bien Nwinate">
 	<img alt="Bien Nwinate" title="Bien Nwinate" src="https://avatars.githubusercontent.com/u/51288549?s=96&v=4&mask=circle" style="border-radius: 50%;height: 45px;width: 45px;object-fit: cover">
 </a>
 
