@@ -1765,9 +1765,10 @@ class FuxcelValidator extends Fuxcel implements FuxcelValidatorInterface {
 					
 					if (configObject.config.showPassword && _passwordToggle.length)
 						_passwordToggle.off().upon('click', (e) => {
-							let clicked = e.target,
+							let  clicked = e.target,
 								_clicked = fx(clicked),
-								_passwordField = fx(_element, _passwordToggle.prevSiblings('.field-group'));
+								_formGroup = _passwordToggle.parents('.form-group'),
+								_passwordField = fx(_element, _formGroup);
 							
 							// @ts-ignore
 							if (_clicked[0] === fx(showPasswordToggle)[0]) {

@@ -1549,7 +1549,7 @@ class FuxcelValidator extends Fuxcel {
                     const elementType = _element.attrib('type') && _element.attrib('type').toLowerCase();
                     if (configObject.config.showPassword && _passwordToggle.length)
                         _passwordToggle.off().upon('click', (e) => {
-                            let clicked = e.target, _clicked = fx(clicked), _passwordField = fx(_element, _passwordToggle.prevSiblings('.field-group'));
+                            let clicked = e.target, _clicked = fx(clicked), _formGroup = _passwordToggle.parents('.form-group'), _passwordField = fx(_element, _formGroup);
                             // @ts-ignore
                             if (_clicked[0] === fx(showPasswordToggle)[0]) {
                                 FuxcelValidator.#_toggleValidationIcons(showPasswordToggle, hidePasswordToggle);
