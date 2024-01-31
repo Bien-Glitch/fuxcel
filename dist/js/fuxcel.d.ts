@@ -4,7 +4,7 @@ declare type FieldAttributes = { id: any, type: StringOrNull | undefined, fxId: 
 
 declare type FuxcelOrString<T extends string | object, U extends boolean | string | null = null> = T extends object ? Fuxcel : (T extends string ? (U extends string ? Fuxcel : (U extends boolean ? Fuxcel : string)) : string);
 
-declare type ModalInit = { title: StringOrNull, content: string, id: string, hasFooter: boolean };
+declare type ModalInit = { title: StringOrNull, html: boolean, content: string, id: string, hasFooter: boolean };
 
 declare type FXAnimation = {
 	name: string;
@@ -20,79 +20,91 @@ declare type FXAnimation = {
 }
 
 declare type FXModalType = {
-	title?: StringOrNull,
-	type?: ('success' | 'warning' | 'error'),
-	content?: StringOrNull,
-	confirmButtonText?: StringOrNull,
-	cancelButtonText?: StringOrNull,
-	html?: boolean,
-	onConfirm?: ((e: CustomEvent, modal: FuxcelModal) => void) | null,
-	onCancel?: ((e: CustomEvent, modal: FuxcelModal) => void) | null,
-	onEsc?: ((e: CustomEvent, modal: FuxcelModal) => void) | null,
+	/*** _Modal Title._ ***/ title?: StringOrNull,
+	/*** _Modal type._ ***/ type?: ('success' | 'warning' | 'error'),
+	/*** _Body Content of Modal._ ***/ content?: StringOrNull,
+	/*** _Text for Confirm Button._ ***/ confirmButtonText?: StringOrNull,
+	/*** _Text for Cancel Button._ ***/ cancelButtonText?: StringOrNull,
+	/*** _Use HTML content? else use Text content._ ***/ html?: boolean,
+	/*** _Callback on confirm button click._ ***/ onConfirm?: ((e: CustomEvent, modal: FuxcelModal) => void) | null,
+	/*** _Callback on cancel button click._ ***/ onCancel?: ((e: CustomEvent, modal: FuxcelModal) => void) | null,
+	/*** _Callback on Escape key used. Only works when cancel button is not available. [i.e. cancelButtonText is null]._ ***/ onEsc?: ((e: CustomEvent, modal: FuxcelModal) => void) | null,
 };
 
 declare type FXRequestType = {
-	uri?: StringOrNull,
-	method?: StringOrNull,
-	data?: BodyInit | object | null,
-	dataType?: ('html' | 'json' | 'jsonp' | 'script' | 'text' | 'xml'),
-	beforeSend?: Function | null,
-	onComplete?: ((response: ResponseData, status: number, statusText: string) => void) | null,
-	onError?: ((error: any, status: number, statusText: string) => void) | null,
-	onSuccess?: ((response: ResponseData, status: number, statusText: string) => void) | null,
+	/*** _Request URL._ ***/ uri: string,
+	/*** _Request method._ ***/ method?: ('get' | 'post' | 'put' | 'patch' | 'delete' | null),
+	/*** _Additional request data._ ***/ data?: BodyInit | object | null,
+	/*** _Expected return data type._ ***/ dataType?: ('html' | 'json' | 'jsonp' | 'script' | 'text' | 'xml'),
+	/*** _Before request is sent._ ***/ beforeSend?: Function | null,
+	/*** _Once request is completed._ ***/ onComplete?: ((response: ResponseData, status: number, statusText: string) => void) | null,
+	/*** _If request has errors._ ***/ onError?: ((error: any, status: number, statusText: string) => void) | null,
+	/*** _If request is successful._ ***/ onSuccess?: ((response: ResponseData, status: number, statusText: string) => void) | null,
 };
 
 declare type FXFormSubmitType = {
-	uri: StringOrNull,
-	method: StringOrNull,
-	data: object | null,
-	dataType: ('html' | 'json' | 'jsonp' | 'script' | 'text' | 'xml'),
-	beforeSend: Function | null,
+	/*** _Submission URL._ ***/ uri?: StringOrNull,
+	/*** _Submission method._ ***/ method?: ('get' | 'post' | 'put' | 'patch' | 'delete'),
+	/*** _Additional submission data._ ***/ data?: object | null,
+	/*** _Expected return data type_ ***/ dataType?: ('html' | 'json' | 'jsonp' | 'script' | 'text' | 'xml'),
+	/*** _Before request is sent._ ***/ beforeSend?: Function | null,
 };
 
 declare type Selector = StringOrNull;
 
 declare type StringOrNull = string | null;
 
-declare type ValidationProps = { id: string, formGroup: string, validationField: string, validIcon: string, invalidIcon: string, validationIconField: string };
+declare type ValidationProps = {
+	/*** _id attribute of selected form field._ ***/ id: string,
+	/*** _selector of the form group element for selected form field._ ***/ formGroup: string,
+	/*** _selector of the validation field for selected form field._ ***/ validationField: string,
+	/*** _selector of the validation valid icon for the selected form field._ ***/ validIcon: string,
+	/*** _selector of the validation invalid icon for the selected form field._ ***/ invalidIcon: string,
+	/*** _selector of the validation icons field for the selected form field._ ***/ validationIconField: string
+};
 
 declare type ValidatorConfigObject = {
-	regExp: {
-		cardCVV: RegExp | null,
-		cardNumber: RegExp | null,
-		email: RegExp | null,
-		name: RegExp | null,
-		phone: RegExp | null,
-		password: RegExp | null,
-		username: RegExp | null,
+	regExp?: {
+		cardCVV?: RegExp | null,
+		cardNumber?: RegExp | null,
+		email?: RegExp | null,
+		name?: RegExp | null,
+		phone?: RegExp | null,
+		password?: RegExp | null,
+		username?: RegExp | null,
 	},
-	config: {
-		capslockAlert: boolean,
-		showIcons: boolean,
-		showPassword: boolean,
-		validateCard: boolean,
-		validateEmail: boolean,
-		validateName: boolean,
-		validatePassword: boolean,
-		validatePhone: boolean,
-		validateUsername: boolean,
-		nativeValidation: boolean,
-		useDefaultStyling: boolean,
-		passwordConfirmId: string,
-		passwordId: string,
-		initWrapper: string,
+	config?: {
+		capslockAlert?: boolean,
+		showIcons?: boolean,
+		showPassword?: boolean,
+		validateCard?: boolean,
+		validateEmail?: boolean,
+		validateName?: boolean,
+		validatePassword?: boolean,
+		validatePhone?: boolean,
+		validateUsername?: boolean,
+		nativeValidation?: boolean,
+		useDefaultStyling?: boolean,
+		passwordConfirmId?: string,
+		passwordId?: string,
+		initWrapper?: string,
 	},
-	stepForm: {
-		use: boolean,
-		plugin: boolean,
+	stepForm?: {
+		use?: boolean,
+		plugin?: boolean,
+		config?: {
+			slides?: boolean,
+			step?: string,
+			switch?: string,
+		}
 	}
-	texts: {
-		capslock: string,
-		emailFormat: string | null,
-		nameFormat: string | null,
-		phoneFormat: string | null,
-		passwordFormat: string | null,
-		usernameFormat: string | null,
+	texts?: {
+		capslock?: string,
+		emailFormat?: string | null,
+		nameFormat?: string | null,
+		phoneFormat?: string | null,
+		passwordFormat?: string | null,
+		usernameFormat?: string | null,
 	}
 };
 
@@ -143,21 +155,29 @@ declare interface FuxcelInterface {
 	
 	siblings(selector: Selector): Fuxcel;
 	
-	hasScrollBar(direction: string): boolean;
+	disable(disabled: boolean): Fuxcel;
+	
+	handleFormSubmit({uri, method, data, dataType, beforeSend}: FXFormSubmitType): void;
+	
+	hasScrollBar(direction: ('horizontal' | 'vertical' | null)): boolean;
 	
 	insertHTML(value: string, position: ('affix' | 'prefix' | 'postfix' | 'suffix' | null)): Fuxcel;
 	
-	isElement(tagName: string): boolean;
+	isElement(tagName: string | HTMLElementTagNameMap): boolean;
 	
 	matchSelector(selector: Selector): boolean;
 	
 	off(...events: string[]): Fuxcel;
 	
+	toggleButtonLoadState(isLoading: boolean): void;
+	
+	toggleFormSubmitButtonState(isLoading: boolean): void;
+	
+	trigger(event: string): Fuxcel;
+	
 	upon(events: string | string[] | object, listener?: ((e: CustomEvent | Event) => any) | boolean, option?: boolean): Fuxcel;
 	
 	value(value: StringOrNull): Fuxcel | string | null;
-	
-	handleFormSubmit({uri, method, data, dataType, beforeSend}: FXFormSubmitType): void;
 }
 
 declare interface FuxcelValidatorInterface {
@@ -187,7 +207,7 @@ declare interface FuxcelValidatorInterface {
 	
 	get validatorConfig(): ValidatorConfigObject;
 	
-	init(config: Object | null): FuxcelValidator;
+	init(config: ValidatorConfigObject | null): FuxcelValidator;
 	
 	renderMessage(message: StringOrNull, renderType: StringOrNull): FuxcelValidator;
 	
@@ -233,7 +253,7 @@ declare interface FuxcelStepsInterface {
 }
 
 declare interface FuxcelModalInterface {
-	hide(): void;
+	hide(destroy: boolean): void;
 	
 	show(escKey?: boolean): void;
 	
@@ -243,7 +263,7 @@ declare interface FuxcelModalInterface {
 declare interface FXInterface {
 	(selector: string | Iterable<any> | any, context?: string | Iterable<any> | any): Fuxcel;
 	
-	areq?: ({uri, method, data, dataType, beforeSend, onComplete, onError, onSuccess}: FXRequestType) => void;
+	fetch?: ({uri, method, data, dataType, beforeSend, onComplete, onError, onSuccess}: FXRequestType) => void;
 	
 	modal?: ({title, type, content, confirmButtonText, cancelButtonText, html, onConfirm, onCancel}: FXModalType) => void;
 	

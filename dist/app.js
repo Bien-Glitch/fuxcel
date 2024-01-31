@@ -8,6 +8,7 @@ fx.onDocumentLoad((e) => {
 	const stepValidator = testStep.formValidator.init({stepForm: {use: true, plugin: false}});
 	fx('#test-form').formValidator.init({config: {useDefaultStyling: true}, stepForm: {use: false}});
 	
+	// testStep.fadeout(5000).then(element => element.fadein(2000).then(element => element.slideoutup(3000)));
 	/*testStep.fadeout(5000).then(element => element.fadein(2000).then(element => element.slideoutup(3000)));
 	testStep.off().upon()*/
 	
@@ -73,5 +74,19 @@ fx.onDocumentLoad((e) => {
 					fx(this).prop({disabled: true});
 			}
 		});
+	});
+	
+	fx.modal({
+		title: 'Test Modal',
+		type: 'success',
+		content: 'Welcome to the test Modal',
+		confirmButtonText: 'Ok',
+		onConfirm: (e) => {
+			console.log(e, 'Confirmed');
+		},
+		onEsc: (e, modal) => {
+			alert('Escaped');
+			console.log(e, modal);
+		}
 	});
 });

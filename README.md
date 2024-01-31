@@ -185,28 +185,69 @@ Fuxcel also provides you with Utilities (Functions & Methods) for manipulating D
 <p>Each of these functions and methods have specific functionalities and are outlined in this section of the documentation.</p>
 
 > ### Utility Functions:
-  > - ### `fx(selector, context)`:
+  > - #### `fx(selector, context)`:
   >   Instantiates new Fuxcel Object with selected element..<br>
   >   It takes two parameters:
   >   - `selector {string|Iterable<any>|any} (required)`: Selectable string or iterable.
   >   - `context {string|Iterable<any>|any} (optional)`: Context to select from.
   >
   >   <br> 
+  >    
   >   Returns New Fuxcel Object.
   >
   >   ```javascript
   >    // Usage example:
-  >    fx('#login-form');
+  >    console.log(fx('body'));
   >   ```   
   >
-  > <br>
+  >   <br>
   >
-  > - ### `isFunction(value)`:
+  >
+  > - #### `isBool(value)`:
+  >   Checks if the given value is of type boolean.<br>
+  >   It takes one parameter:
+  >   - `value {any} (required)`: Value to check.
+  >
+  >   <br>
+  >   
+  >   Returns true if the given value is of type boolean; false otherwise.
+  >
+  >   ```javascript
+  >    // Usage example:
+  >    const check = true;
+  >
+  >    console.log(isBool(check)); // Logs `true` to the console
+  >   ```
+  >
+  >   <br>
+  >   
+  >   
+  > - #### `isDefined(value)`:
+  >   Checks if the given value is defined (not null && not undefined && not an empty string).<br>
+  >   It takes one parameter:
+  >   - `value {any} (required)`: Value to check.
+  >
+  >   <br>
+  >   
+  >   Returns true if the given value is defined; false otherwise.
+  >
+  >   ```javascript
+  >    // Usage example:
+  >    const check = '';
+  >
+  >    console.log(isDefined(check)); // Logs `true` to the console
+  >   ```
+  >   
+  >   <br>
+  > 
+  > 
+  > - #### `isFunction(value)`:
   >   Checks if the given value is of type function.<br>
   >   It takes one parameter:
   >   - `value {any} (required)`: Value to check.
   >
   >   <br> 
+  >    
   >   Returns true if the given value is of type function; false otherwise.
   >
   >   ```javascript
@@ -216,31 +257,16 @@ Fuxcel also provides you with Utilities (Functions & Methods) for manipulating D
   >    console.log(isFunction(myFunc)); // Logs `true` to the console
   >   ```
   >
-  > <br>
-  >
-  > - ### `isString(value)`:
-  >   Checks if the given value is of type string.<br>
-  >   It takes one parameter:
-  >   - `value {any} (required)`: Value to check.
-  >
-  >   <br> 
-  >   Returns true if the given value is of type string; false otherwise.
-  >
-  >   ```javascript
-  >    // Usage example:
-  >    const name = 'John Doe';
-  >   
-  >    console.log(isString(name)); // Logs `true` to the console
-  >   ```
-  >
-  > <br>
-  >
-  > - ### `isObject(value)`:
+  >   <br>
+  >  
+  >  
+  > - #### `isObject(value)`:
   >   Checks if the given value is of type object.<br>
   >   It takes one parameter:
   >   - `value {any} (required)`: Value to check.
   >
   >   <br> 
+  >    
   >   Returns true if the given value is of type string; false otherwise.
   >
   >   ```javascript
@@ -253,62 +279,117 @@ Fuxcel also provides you with Utilities (Functions & Methods) for manipulating D
   >   
   >    console.log(isObject(user_details)); // Logs `true` to the console
   >   ```
+  >   
+  >   <br>
   >
-  > <br>
   >
-  > - ### `checkLuhn(input)`:
-  >   This function checks if a given input string passes the Luhn algorithm validation; The Luhn algorithm is commonly used to validate credit card numbers and other identification numbers.<br>
+  > - #### `isString(value)`:
+  >   Checks if the given value is of type string.<br>
   >   It takes one parameter:
-  >   - `input (required)`: It represents the input string to be checked using the Luhn algorithm.
+  >   - `value {any} (required)`: Value to check.
   >
   >   <br> 
-  >   It returns a boolean value indicating whether the given input passes the Luhn Algorithm validation. If it passes, it returns true; otherwise, it returns false.
-  >
+  >  
+  >   Returns true if the given value is of type string; false otherwise.
+  > 
   >   ```javascript
   >    // Usage example:
-  >    const cardNumber = '452619383218234';
-  >    const cardNumberIsValid = checkLuhn(cardNumber);
+  >    const name = 'John Doe';
   >   
-  >    console.log(cardNumberIsValid); // Logs `true` to the console if the input is valid; otherwise it logs `false`
+  >    console.log(isString(name)); // Logs `true` to the console
   >   ```
   >
-  > <br>
+  >   <br>
   >
-  > - ### `parseBool(value)`:
+  >
+  > - #### `parseBool(value)`:
   >   Parse the given value and get its boolean value.<br>
   >   It takes one parameter:
-  >   - `value {any} (required)`: Value to parse.
+  >   - `value {any} (required)`: Value to check.
   >
-  >   <br> 
-  >   Returns its boolean value; true or false.
+  >   <br>
+  >
+  >   Returns the boolean value of the given value (`true` or `false`).
   >
   >   ```javascript
   >    // Usage example:
   >    const bool = parseBool('yes');
   >   
   >    console.log(bool); // Logs `true` to the console
+  >    /** 
+  >     * Only returns true if the value is any of the following:
+  >     * 1
+  >     * '1'
+  >     * 'yes'
+  >     * 'true'
+  >     * true
+  >     */
   >   ```
+  >
+  >
+  >   ### Fx Interface utility methods:
+  >   The Fx interface also has some utility methods. They are used by calling the `fx` interface followed by the method.
+  >   <br>
+  >   
+  >
+  > - #### `fx.onDocumentLoad(listener)`:
+  >   On document DOMContentLoaded event listener callback.<br>
+  >   It takes one parameter:
+  >   - `listener (required)`: Callback function to execute on DOMContentLoaded.
+  >
+  >   <br> 
+  >    
+  >   Perform given actions on DOMContentLoaded.
+  >
+  >   ```javascript
+  >    // Usage example:
+  >    fx.onDocumentLoad((e) => {
+  >        console.log(e, 'Document Loaded!!!');
+  >    });
+  >   ```
+  >
   >   <br>
   >
-  > - ### `fetchReq(config)`:
+  >
+  > - #### `fx.passLuhnAlgo(input)`:
+  >   Check if given input passes the Luhn Algorithm Test.<br>
+  >   It takes one parameter:
+  >   - `input (required)`: Input string to be checked using the Luhn algorithm.
+  >
+  >   <br> 
+  >    
+  >   Returns true if the given input passes the Luhn Algorithm validation; false otherwise.
+  >
+  >   ```javascript
+  >    // Usage example:
+  >    const cardNumber = '452619383218234';
+  >    const cardNumberIsValid = fx.passLuhnAlgo(cardNumber);
+  >   
+  >    console.log(cardNumberIsValid); // Logs `true` to the console if the input is valid; otherwise it logs `false`
+  >   ```
+  >
+  >   <br>
+  >
+  >
+  > - #### `fx.fetch(config)`:
   >   Perform a fetch request using the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API). It provides a convenient way to make fetch requests with various options and callbacks.<br>
   >   It supports different HTTP methods, request data, response data types, and allows for the execution of custom functions before sending the request, after completion, on success, and on error.<br>
   >   It takes an Object as its parameter, which contains the following properties:
-  >   - `uri`: It represents the URI (Uniform Resource Identifier) or URL of the request.
+  >   - `uri`: It represents the URI (Uniform Resource Identifier) or URL (Uniform Resource Locator) of the request.
   >   - `method`: It specifies the HTTP method to be used for the request. The default value is `'get'`.
   >   - `data`: It represents the data to be sent with the request. The default value is `null`.
   >   - `dataType`: It specifies the type of data expected in the response. The default value is `'json'`.
-  >   - `beforeSend`: It is an optional function that can be executed before sending the request.
-  >   - `onSuccess`: It is an optional function that can be executed when the request is successful.
-  >   - `onError`: It is an optional function that can be executed when the request encounters an error.
-  >   - `onComplete`: It is an optional function that can be executed when the request is completed.
+  >   - `beforeSend`: It is an optional function that is executed before sending the request; if available.
+  >   - `onSuccess`: It is an optional function that is executed when the request is successful; if available.
+  >   - `onError`: It is an optional function that is executed when the request encounters an error; if available.
+  >   - `onComplete`: It is an optional function that is executed when the request is completed; if available.
   >
   >    <br>
   >
   >    - The `beforeSend` function is executed before the request is sent.
   >    - The `onSuccess` function is executed if the response status code falls within the range `200-299`, and the function is provided.
   >    - The `onError` function is executed if the response status code falls outside the status codes specified in the `onSuccess` && `onComplete` functions, and the function is provided.
-  >    - The `onComplete` function is executed once the request is completed; if the response status code falls within the range `200-299`, or `401, 402, 422, 423, 426, 451, 511`, and the function is provided.
+  >    - The `onComplete` function is executed once the request is completed; if the response status code falls within the range `200-299`, or `308, 401, 402, 422, 423, 426, 451, 500, 511`, and the function is provided.
   >
   >    <br>
   >
@@ -320,7 +401,7 @@ Fuxcel also provides you with Utilities (Functions & Methods) for manipulating D
   >    <br>
   >
   >    - The `responseData` argument returns the servers' `respond data` in whatever format is giving while sending the request.
-  >    - The `err` argument returns the `err` data if the server returns an error.
+  >    - The `error` argument returns the `err` data if the server returns an error.
   >    - The `status` argument returns the `HTTP status code` of the servers' response.
   >    - The `statusText` argument returns the `HTTP status text` of the servers' response.
   >
@@ -329,10 +410,52 @@ Fuxcel also provides you with Utilities (Functions & Methods) for manipulating D
   >    const openWeatherAPIKey = '{put_your_api_key_here}', city = 'Port Harcourt';
   >    // Signup on https://openweathermap.org to get you API Key
   >   
-  >    fetchReq({
-  >    	uri: `https://api.openweathermap.org/geo/1.0/direct?q=${city}&appid=${openWeatherAPIKey}`,
-  >    	beforeSend: () => console.log(`Fetching Weather Report for ${city} city.`),
-  >    	onSuccess: (xhr, status, statusText) => console.log(xhr, status, statusText) // Logs the weather report response data, status and status text
+  >    fx.fetch({
+  >        uri: `https://api.openweathermap.org/geo/1.0/direct?q=${city}&appid=${openWeatherAPIKey}`,
+  >        beforeSend: () => console.log(`Fetching Weather Report for ${city} city.`),
+  >        onSuccess: (xhr, status, statusText) => console.log(xhr, status, statusText) // Logs the weather report response data, status and status text
+  >    });
+  >   ```
+  > 
+  >   <br>
+  >
+  >
+  > - #### `fx.modal(config)`:
+  >   Create quick simple modal with callbacks.<br>
+  >   It takes an Object as its parameter, which contains the following properties:
+  >   - `title`: Modal Title. The default value is `null`.
+  >   - `type`: Modal Type. The default value is `'success'`.
+  >   - `content`: Body Content of the Modal. The default value is `'Alert Content'`.
+  >   - `confirmButtonText`: Text for Confirm Button.
+  >   - `cancelButtonText`: Text for Cancel Button.
+  >   - `html`: Use HTML content? else use Text content.
+  >   - `onConfirm`: It is an optional function that is executed on confirm button click; if available.
+  >   - `onCancel`: It is an optional function that is executed on cancel button click; if available.
+  >   - `onEsc`: It is an optional function that is executed on Escape key use. Only works when cancel button is not available. [i.e. cancelButtonText is null]; if available.
+  >
+  >    <br>
+  >
+  >    - The `onConfirm` function is executed after the modal is hidden; if the confirm button is clicked.
+  >    - The `onCancel` function is executed after the modal is hidden; if the cancel button is clicked.
+  >    - The `onEsc` function is executed after the modal is hidden; if the Escape key on the keyboard is used.
+  >
+  >    <br>
+  >
+  >    **N.B:**
+  >    `onConfirm()`, `onCancel()`, and `onEsc()` has two arguments.<br>
+  >    `onConfirm()`, `onCancel()`, and `onEsc()` has :- `e`, and `modal`, while;<br>
+  >
+  >    <br>
+  >
+  >    - The `e` argument returns the modal hide event information.
+  >    - The `modal` argument returns the `FuxcelModal` object of the modal.
+  >
+  >   ```javascript
+  >    // Usage example:
+  >    fx.modal({
+  >        type: 'warning',
+  >        content: '<h1>Test Alert</h1>',
+  >        onEsc: (e, modal) => console.log('Modal closed using escape key.', e, modal),
   >    });
   >   ```
 
@@ -371,7 +494,7 @@ Fuxcel also provides you with Utilities (Functions & Methods) for manipulating D
 > | Key              | Configurable Values                  | Default Value       | Description                                                  |
 > | ---------------- | ------------------------------------ | ------------------- | ------------------------------------------------------------ |
 > | _use_            | **_boolean <br> `true` or `false`_** | `true`              | boolean to toggle initializing form validator for step-form. |
-> | _plugin_         | **_boolean <br> `true` or `false`_** | `false`              | Use the xsteps form wizard plugin (if available).            |
+> | _plugin_         | **_boolean <br> `true` or `false`_** | `false`             | Use the xsteps form wizard plugin (if available).            |
 >
 > These configuration options are accessible via the `stepForm` sub Object and can be configured as follows:
 >
@@ -382,6 +505,11 @@ Fuxcel also provides you with Utilities (Functions & Methods) for manipulating D
 >   stepForm: {
 >       use: value,
 >       plugin: value,
+>       config: {
+>           step: '.fx-step',
+>           slides: false,
+>           switch: '[data-step]'
+>       }
 >   }
 > }
 > ```
@@ -450,7 +578,7 @@ Fuxcel also provides you with Utilities (Functions & Methods) for manipulating D
 
 ## About
 
-Fuxcel & Form Validator is an easy-to-use JS plugin for front-end form validation and miscellaneous utilities which requires little or no knowledge of JavaScript.<br>
+Fuxcel Form Validator &amp; DOM Utitlity Plugin is an easy-to-use JS plugin for front-end form validation and miscellaneous utilities which requires little or no knowledge of JavaScript.<br>
 The Fusion Utility & Form Validator is focused on providing utility functions for form validation, manipulating DOM elements, handling events, AJAX requests, and other common web development tasks.<br>
 By incorporating this plugin into your projects, you simplify and streamline your development process; It offers an abstraction layer over standard JavaScript APIs, making it easier to perform common operations and tasks.
 Read through this documentation on how to set it up, and you're ready to go. It's fun to use and hassle-free.
@@ -489,7 +617,8 @@ Read through this documentation on how to set it up, and you're ready to go. It'
 
 Thanks to God Almighty for making this project a possible. Also, a huge thanks to:
 
-- [Guereella Innovations](https://github.com/Ginn-ng)
+[//]: # (- [Guereella Innovations]&#40;https://github.com/Ginn-ng&#41;)
+- [Xcella](https://github.com/xcella)
 - [ScaletFox ltd](https://github.com/scaletfoxltd)
 - [David Jaja](https://github.com/mrokojaja)
 - [Great Ben](https://github.com/Ben-Chanan008)
@@ -501,7 +630,7 @@ Thanks to God Almighty for making this project a possible. Also, a huge thanks t
 
 ## Feedback
 
-If you discover a vulnerability or bug within the Fusion Utility and Form Validator, or have an improvement,
+If you discover a vulnerability or bug within the plugin, or have an improvement,
 Please [open an issue on the GitHub page](https://github.com/Bien-Glitch/fusion.form.validator/issues) or send an e-mail to Bien Nwinate via [fusionboltinc@gmail.com](mailto:fusionboltinc@gmail.com).
 All issues will be promptly addressed.
 
