@@ -1,8 +1,8 @@
 "use strict";
-/*jshint esversion: 7 */
+/*jshint esversion: 6 */
 const fxModalCancelButtonClick = new Event('click');
 const fxModalShowEvent = new CustomEvent('fx.modal.show', {
-    bubbles: true,
+    bubbles: false,
     detail: {
         plugins: 'Fuxcel',
         interface: 'FuxcelModalInterface'
@@ -2494,7 +2494,7 @@ class FuxcelModal extends Fuxcel {
      */
     show(escKey = true) {
         const modalContent = fx('.fx-modal-content', this);
-        this.style({ pointerEvents: 'none' }).fadein(500).then(() => modalContent.fadein(500).then(() => {
+        this.style({ pointerEvents: 'none' }).fadein(300).then(() => modalContent.fadein(500).then(() => {
             FuxcelModal.#_openModals.push(this);
             this.style({ pointerEvents: 'unset' });
             if (!parseBool(this.dataAttrib('fx-static')))
