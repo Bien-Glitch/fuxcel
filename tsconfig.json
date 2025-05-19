@@ -1,14 +1,15 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "ES2022",
-    "sourceMap": true,
+    "module": "ESNext",
+    "target": "ESNext",
+    "sourceMap": false,
     "rootDir": "src/ts",
     "outDir": "dist/js",
-    "strict": true,
     "removeComments": false,
-    "declaration": true,
-    "declarationMap": true
+    "strict": true,
+    "useDefineForClassFields": true
+    // "declaration": true,
+    // "declarationMap": true
   },
   "exclude": [
     "node_modules"

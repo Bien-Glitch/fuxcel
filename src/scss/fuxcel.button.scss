@@ -10,7 +10,7 @@
   --fx-btn-hover-border-color: transparent;
   --fx-btn-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 1px rgba(0, 0, 0, 0.075);
   --fx-btn-disabled-opacity: 0.65;
-  --fx-btn-focus-box-shadow: 0 0 0 0.25rem rgba(var(--bs-btn-focus-shadow-rgb), .5);
+  --fx-btn-focus-box-shadow: 0 0 0 0.25rem rgba(var(--fx-btn-focus-shadow-rgb), .5);
   display: inline-block;
   padding: var(--fx-btn-padding-y) var(--fx-btn-padding-x);
   font-size: var(--fx-btn-font-size);
@@ -23,7 +23,7 @@
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
-  border: var(--fx-border-width) solid var(--bs-btn-border-color);
+  border: var(--fx-border-width) solid var(--fx-btn-border-color);
   border-radius: var(--fx-btn-border-radius);
   background-color: var(--fx-btn-bg);
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
@@ -35,11 +35,11 @@
   }
 
   &:focus-visible {
-    color: var(--bs-btn-hover-color);
-    background-color: var(--bs-btn-hover-bg);
-    border-color: var(--bs-btn-hover-border-color);
+    color: var(--fx-btn-hover-color);
+    background-color: var(--fx-btn-hover-bg);
+    border-color: var(--fx-btn-hover-border-color);
     outline: 0;
-    box-shadow: var(--bs-btn-focus-box-shadow);
+    box-shadow: var(--fx-btn-focus-box-shadow);
   }
 
   &.fx-btn-sm {
@@ -128,10 +128,10 @@
 .fx-btn:disabled,
 .fx-btn.disabled,
 fieldset:disabled .fx-btn {
-  color: var(--bs-btn-disabled-color);
+  color: var(--fx-btn-disabled-color);
   pointer-events: none;
-  background-color: var(--bs-btn-disabled-bg);
-  border-color: var(--bs-btn-disabled-border-color);
-  opacity: var(--bs-btn-disabled-opacity);
+  background-color: var(--fx-btn-disabled-bg);
+  border-color: var(--fx-btn-disabled-border-color);
+  opacity: var(--fx-btn-disabled-opacity);
 }
 */

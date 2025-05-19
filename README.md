@@ -372,7 +372,7 @@ Fuxcel also provides you with Utilities (Functions & Methods) for manipulating D
   >
   >
   > - #### `fx.fetch(config)`:
-  >   Perform a fetch request using the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API). It provides a convenient way to make fetch requests with various options and callbacks.<br>
+  >   Perform a fetch request using the JavaScript [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API). It provides a convenient way to make fetch requests with various options and callbacks.<br>
   >   It supports different HTTP methods, request data, response data types, and allows for the execution of custom functions before sending the request, after completion, on success, and on error.<br>
   >   It takes an Object as its parameter, which contains the following properties:
   >   - `uri`: It represents the URI (Uniform Resource Identifier) or URL (Uniform Resource Locator) of the request.
