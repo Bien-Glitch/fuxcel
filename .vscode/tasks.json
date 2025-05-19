@@ -17,7 +17,7 @@
     {
       "label": "build-and-minify-ts",
       "type": "shell",
-      "command": "npx esbuild ${file} --bundle --minify --outfile=dist/${fileBasenameNoExtension}.min.js",
+      "command": "npx esbuild ${file} --bundle --minify --outfile=dist/js/${fileBasenameNoExtension}.min.js",
       "group": "build",
       "problemMatcher": []
     }
