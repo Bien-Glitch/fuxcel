@@ -7,6 +7,7 @@ fx.onDocumentLoad((e) => {
 	const stepValidator = testStep.formValidator.init({config: {useDefaultStyling: true}, stepForm: {use: true, plugin: false}});
 	fx('#test-form').formValidator.init({config: {useDefaultStyling: true}, stepForm: {use: false}});
 
+	console.log(fx('input'));
 	// testStep.fadeout(5000).then(element => element.fadein(2000).then(element => element.slideoutup(3000)));
 	/*testStep.fadeout(5000).then(element => element.fadein(2000).then(element => element.slideoutup(3000)));
 	testStep.off().upon()*/

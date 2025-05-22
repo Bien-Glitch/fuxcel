@@ -1,26 +1,12 @@
 "use strict";
-const fxModalCancelButtonClick = new Event('click');
-const fxModalShowEvent = new CustomEvent('fx.modal.show', {
-    bubbles: true,
-    detail: {
-        plugins: 'Fuxcel',
-        interface: 'FuxcelModalInterface'
-    },
-});
-const fxModalHideEvent = new CustomEvent('fx.modal.hide', {
-    bubbles: true,
-    detail: {
-        plugins: 'Fuxcel',
-        interface: 'FuxcelModalInterface'
-    },
-});
 /**
  *
- * @param timeout
- * @param iteration
- * @param display
+ * @param timeout {number|string}
+ * @param iteration {number}
+ * @param display {string}
+ * @returns {FXAnimationType}
  */
-const animations = ({ timeout = 300, iterations = 1, display = '' }) => {
+const animations = ({ timeout = 300, iterations = 1, display = 'unset' }) => {
     return {
         fadeIn: {
             name: 'fadein',
@@ -254,8 +240,6 @@ class FuxcelBase {
         const INSTANCE = this;
         const selectedElements = init();
         const documentDOMArray = INSTANCE.#_toArray(document);
-        // INSTANCE.length = 0;
-        // INSTANCE.prev = { length: 0 };
         documentDOMArray.forEach((value, key) => {
             INSTANCE.prev[key] = value;
             INSTANCE.prev.length++;
@@ -325,7 +309,7 @@ class FuxcelBase {
      * @return {boolean} Returns true if the element is iterable; false otherwise.
      */
     #_isIterable(element) {
-        return !!FuxcelBase.#_constructors.iterable.filter(value => value === element.constructor.name.toLowerCase()).length || Array.isArray(element);
+        return !!FuxcelBase.#_constructors.iterable.filter(value => element.constructor.name.toLowerCase().includes('collection') || value === element.constructor.name.toLowerCase()).length || Array.isArray(element);
     }
     /**
      * Checks if the given selected element is an HTML Element.
@@ -377,8 +361,8 @@ class FuxcelBase {
      * @return {Array}
      */
     get toArray() {
-        if (!this.length)
-            console.trace('No element selected');
+        /* if (!this.length)
+            console.trace('No element selected'); */
         return this.#_toArray(this);
     }
     static get #_constructors() {
@@ -430,7 +414,7 @@ class Fuxcel extends FuxcelBase {
     }
     #_setAttrib(name, value) {
         const selected = this.toArray;
-        if (isString(name) && isString(value)) {
+        if (isString(name) && (isString(value) || isDefined(value))) {
             selected.forEach((element) => element.setAttribute(name, value));
         }
         else if (isObject(name)) {
@@ -446,7 +430,7 @@ class Fuxcel extends FuxcelBase {
     }
     #_setDataAttrib(name, value) {
         const selected = this.toArray;
-        if (isString(name) && isString(value)) {
+        if (isString(name) && (isString(value) || isDefined(value))) {
             selected.forEach((element) => element.dataset[name] = value);
         }
         else if (isObject(name)) {
@@ -468,7 +452,7 @@ class Fuxcel extends FuxcelBase {
     }
     #_setProp(name, value) {
         const selected = this.toArray;
-        if (isString(name) && (isString(value) || isBool(value))) {
+        if (isString(name) && (isString(value) || isBool(value) || isDefined(value))) {
             selected.forEach((element) => element[name] = value);
         }
         else if (isObject(name)) {
@@ -486,7 +470,7 @@ class Fuxcel extends FuxcelBase {
     }
     #_setStyle(name, value) {
         const selected = this.toArray;
-        if (isString(name) && (isString(value) || isBool(value))) {
+        if (isString(name) && (isString(value) || isBool(value) || isDefined(value))) {
             selected.forEach((element) => element.style[name] = value);
         }
         else if (isObject(name)) {
@@ -946,10 +930,14 @@ class Fuxcel extends FuxcelBase {
         let parentNode = selected[0].parentNode;
         while (parentNode) {
             if (isString(selector)) {
-                if (fx(parentNode).matchSelector(selector)) {
-                    parents.push(parentNode);
-                    break;
+                if (parentNode.constructor.name.toLowerCase().includes('element')) {
+                    if (fx(parentNode).matchSelector(selector)) {
+                        parents.push(parentNode);
+                        break;
+                    }
                 }
+                else
+                    break;
             }
             else {
                 if (parentNode !== selected[0])
@@ -2537,19 +2525,51 @@ class FuxcelModal extends Fuxcel {
     #_isHiding = false;
     static #_modalTarget;
     static #_openModals = [];
+    static fxModalCancelButtonClick = new Event('click');
+    /**
+     * @returns {CustomEvent} modal show event - fx.modal.show event
+     */
+    static fxModalShowEvent = new CustomEvent('fx.modal.show', {
+        bubbles: true,
+        detail: {
+            plugins: 'Fuxcel',
+            interface: 'FuxcelModalInterface'
+        },
+    });
+    /**
+     * @returns {CustomEvent} modal hide event - fx.modal.hide event
+     */
+    static fxModalHideEvent = new CustomEvent('fx.modal.hide', {
+        bubbles: true,
+        detail: {
+            plugins: 'Fuxcel',
+            interface: 'FuxcelModalInterface'
+        },
+    });
+    /**
+     *
+     */
     constructor(selector, context, autoActions = true) {
         super(selector, context);
         if (FuxcelModal.modalTriggers.length) {
-            FuxcelModal.modalTriggers.off().upon('click', function (e) {
+            FuxcelModal.modalTriggers.off('click').upon('click', function (e) {
                 e.preventDefault();
                 const currentTrigger = fx(e.currentTarget);
-                const modalAction = currentTrigger.dataAttrib('fx-action')?.toString().toLowerCase() ?? 'open';
-                FuxcelModal.#_modalTarget = currentTrigger.parents('.fx-modal');
-                if (autoActions)
-                    if (modalAction === 'close')
-                        FuxcelModal.#_modalTarget.modal.hide();
-                    else
-                        FuxcelModal.#_modalTarget.modal.toggle();
+                const modalAction = currentTrigger.dataAttrib('fx-action')?.toLowerCase() ?? 'open';
+                const modalTarget = currentTrigger.dataAttrib('fx-action')?.length ?
+                    (currentTrigger.parents('.fx-modal').length ? currentTrigger.parents('.fx-modal') : null) :
+                    fx(`#${currentTrigger.dataAttrib('fx-modal')}`);
+                const triggerModal = () => {
+                    if (modalTarget) {
+                        FuxcelModal.#_modalTarget = modalTarget;
+                        if (autoActions)
+                            if (modalAction === 'close')
+                                FuxcelModal.#_modalTarget.modal.hide();
+                            else
+                                FuxcelModal.#_modalTarget.modal.toggle();
+                    }
+                };
+                (currentTrigger.parents('.fx-modal').length && !currentTrigger.parents('.fx-modal').attrib('id')?.includes('init')) ? triggerModal() : (!currentTrigger.parents('.fx-modal').length && triggerModal());
             });
         }
         else
@@ -2559,13 +2579,13 @@ class FuxcelModal extends Fuxcel {
      * @return {FuxcelModal | null} FuxcelModal object of Current open modal.
      */
     static get currentModal() {
-        return this.hasOpenModals ? this.#_openModals[this.#_openModals.length - 1] : null;
+        return this.hasOpenModals ? FuxcelModal.#_openModals[FuxcelModal.#_openModals.length - 1] : null;
     }
     /**
      * @return {boolean} true if any modal is open. False otherwise.
      */
     static get hasOpenModals() {
-        return !!this.#_openModals.length;
+        return !!FuxcelModal.#_openModals.length;
     }
     /**
      * @return {Fuxcel}
@@ -2634,7 +2654,7 @@ class FuxcelModal extends Fuxcel {
                 if (index !== -1)
                     FuxcelModal.#_openModals.splice(index, 1);
                 // @ts-ignore
-                this[0].dispatchEvent(fxModalHideEvent);
+                this[0].dispatchEvent(FuxcelModal.fxModalHideEvent);
                 destroy && this.destroy();
                 this.#_isHiding = false;
             }));
@@ -2654,7 +2674,7 @@ class FuxcelModal extends Fuxcel {
                 // Hide modal if mouse is left-clicked outside the modal content [Trigger clicking on either buttons if any is available].
                 this.upon('click', () => modalContent.hasFocus.then((focused) => !focused ? this.hide() : null));
             if (escKey)
-                fx(document).off('keyup').upon('keyup', (e) => {
+                fx(document). /* off('keyup'). */upon('keyup', (e) => {
                     const event = e;
                     const key = event.key.toLowerCase();
                     if (key === 'escape' || key === 'esc')
@@ -2662,7 +2682,7 @@ class FuxcelModal extends Fuxcel {
                             FuxcelModal.currentModal?.hide(true);
                 });
             // @ts-ignore
-            this[0].dispatchEvent(fxModalShowEvent);
+            this[0].dispatchEvent(FuxcelModal.fxModalShowEvent);
         }));
     }
     /**
@@ -2761,7 +2781,7 @@ fx.modal = function ({ title = null, type = 'success', content = 'Alert Content'
     const alertIcon = `<img src="${alertIconPath}" alt="${altAlertIcon}" class="fx-modal-alert-icon">`;
     const buttonsWrapper = (buttons) => `<div class="fx-modal-alert-buttons">${buttons}</div>`;
     const cancelButton = (content) => `<button type="button" id="fx-modal-cancel" class="fx-btn fx-btn-error" data-fx-action="close" data-fx-target="modal">${content}</button>`;
-    const confirmButton = (content) => `<button type="button" id="fx-modal-confirm" class="fx-btn fx-btn-primary" data-fx-target="modal">${content}</button>`;
+    const confirmButton = (content) => `<button type="button" id="fx-modal-confirm" class="fx-btn fx-btn-primary" data-fx-target="modal" data-fx-modal="init">${content}</button>`;
     const buttons = confirmButtonText && cancelButtonText ?
         cancelButton(cancelButtonText) + confirmButton(confirmButtonText) :
         (confirmButtonText ? confirmButton(confirmButtonText) : (cancelButtonText && cancelButton(cancelButtonText)));
@@ -2783,8 +2803,8 @@ fx.modal = function ({ title = null, type = 'success', content = 'Alert Content'
             fx('.fx-modal-content', modal).hasFocus.then((focused) => {
                 if (!focused)
                     cancelButtonText ?
-                        document.querySelector('#fx-modal-cancel')?.dispatchEvent(fxModalCancelButtonClick) :
-                        document.querySelector('#fx-modal-confirm')?.dispatchEvent(fxModalCancelButtonClick);
+                        document.querySelector('#fx-modal-cancel')?.dispatchEvent(FuxcelModal.fxModalCancelButtonClick) :
+                        document.querySelector('#fx-modal-confirm')?.dispatchEvent(FuxcelModal.fxModalCancelButtonClick);
             });
             if (isCancel || isConfirm) {
                 modal.hide(true);
@@ -2820,5 +2840,7 @@ fx.passLuhnAlgo = (input) => {
         .map((value, index) => index % 2 !== 0 ? digitSum(value * 2) : 2)
         .reduce((previous, current) => previous + current) % 10 === 0;
 };
+// Expose plugin to Window
 pushPropToWindow('fuxcel', Fuxcel);
+// Automatically initialize modal if triggers are available
 FuxcelModal.modalTriggers.length && new FuxcelModal('*');

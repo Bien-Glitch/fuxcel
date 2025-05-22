@@ -1,27 +1,11 @@
-const fxModalCancelButtonClick = new Event('click');
-const fxModalShowEvent = new CustomEvent('fx.modal.show', {
-	bubbles: true,
-	detail: {
-		plugins: 'Fuxcel',
-		interface: 'FuxcelModalInterface'
-	},
-
-});
-const fxModalHideEvent = new CustomEvent('fx.modal.hide', {
-	bubbles: true,
-	detail: {
-		plugins: 'Fuxcel',
-		interface: 'FuxcelModalInterface'
-	},
-});
-
 /**
  *
- * @param timeout
- * @param iteration
- * @param display
+ * @param timeout {number|string}
+ * @param iteration {number}
+ * @param display {string}
+ * @returns {FXAnimationType}
  */
-const animations: FXAnimation = ({ timeout = 300, iterations = 1, display = '' }) => {
+const animations: FXAnimation = ({ timeout = 300, iterations = 1, display = 'unset' }) => {
 	return {
 		fadeIn: {
 			name: 'fadein',
@@ -271,8 +255,6 @@ class FuxcelBase implements FuxcelBaseInterface {
 		const selectedElements: IterableElement | NodeListOf<HTMLElement> | undefined = <HTMLElement[] | NodeListOf<HTMLElement>>init();
 		const documentDOMArray: IterableElement = <Document[]>INSTANCE.#_toArray(document);
 
-		// INSTANCE.length = 0;
-		// INSTANCE.prev = { length: 0 };
 		documentDOMArray.forEach((value: any, key: number) => {
 			(<any>INSTANCE.prev)[key] = value;
 			INSTANCE.prev.length++;
@@ -352,7 +334,7 @@ class FuxcelBase implements FuxcelBaseInterface {
 	 * @return {boolean} Returns true if the element is iterable; false otherwise.
 	 */
 	#_isIterable(element: any): boolean {
-		return !!FuxcelBase.#_constructors.iterable.filter(value => value === element.constructor.name.toLowerCase()).length || Array.isArray(element);
+		return !!FuxcelBase.#_constructors.iterable.filter(value => element.constructor.name.toLowerCase().includes('collection') || value === element.constructor.name.toLowerCase()).length || Array.isArray(element);
 	}
 
 	/**
@@ -410,8 +392,8 @@ class FuxcelBase implements FuxcelBaseInterface {
 	 * @return {Array}
 	 */
 	get toArray(): IterableElement {
-		if (!this.length)
-			console.trace('No element selected');
+		/* if (!this.length)
+			console.trace('No element selected'); */
 		return this.#_toArray(this);
 	}
 
@@ -474,7 +456,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	#_setAttrib(name: string | object, value?: string): Fuxcel {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 
-		if (isString(name) && isString(value)) {
+		if (isString(name) && (isString(value) || isDefined(value))) {
 			selected.forEach((element: HTMLElement) => element.setAttribute(<string>name, <string>value));
 		} else if (isObject(name)) {
 			Object.keys(name).forEach(key =>
@@ -491,7 +473,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	#_setDataAttrib(name: string | object, value?: string): Fuxcel {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 
-		if (isString(name) && isString(value)) {
+		if (isString(name) && (isString(value) || isDefined(value))) {
 			selected.forEach((element: HTMLElement) => element.dataset[<any>name] = value);
 		} else if (isObject(name)) {
 			Object.keys(name).forEach(key => {
@@ -514,7 +496,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	#_setProp(name: string | object, value?: string): Fuxcel {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 
-		if (isString(name) && (isString(value) || isBool(value))) {
+		if (isString(name) && (isString(value) || isBool(value) || isDefined(value))) {
 			selected.forEach((element: HTMLElement) => (<any>element)[<any>name] = value);
 		} else if (isObject(name)) {
 			Object.keys(name).forEach(key => {
@@ -532,7 +514,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	#_setStyle(name: string | object, value?: string): Fuxcel {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 
-		if (isString(name) && (isString(value) || isBool(value))) {
+		if (isString(name) && (isString(value) || isBool(value) || isDefined(value))) {
 			selected.forEach((element: HTMLElement) => (<any>element.style)[<any>name] = value);
 		} else if (isObject(name)) {
 			Object.keys(name).forEach(key => {
@@ -1055,10 +1037,13 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 
 		while (parentNode) {
 			if (isString(selector)) {
-				if (fx(parentNode).matchSelector(selector)) {
-					parents.push(<HTMLElement>parentNode);
+				if (parentNode.constructor.name.toLowerCase().includes('element')) {
+					if (fx(parentNode).matchSelector(selector)) {
+						parents.push(<HTMLElement>parentNode);
+						break;
+					}
+				} else
 					break;
-				}
 			} else {
 				if (parentNode !== selected[0])
 					parents.push(<HTMLElement>parentNode);
@@ -2874,22 +2859,58 @@ class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
 
 	static #_modalTarget: Fuxcel;
 	static #_openModals: FuxcelModal[] = [];
+	static fxModalCancelButtonClick = new Event('click');
 
+	/**
+	 * @returns {CustomEvent} modal show event - fx.modal.show event
+	 */
+	static fxModalShowEvent = new CustomEvent('fx.modal.show', {
+		bubbles: true,
+		detail: {
+			plugins: 'Fuxcel',
+			interface: 'FuxcelModalInterface'
+		},
+
+	});
+
+	/**
+	 * @returns {CustomEvent} modal hide event - fx.modal.hide event
+	 */
+	static fxModalHideEvent = new CustomEvent('fx.modal.hide', {
+		bubbles: true,
+		detail: {
+			plugins: 'Fuxcel',
+			interface: 'FuxcelModalInterface'
+		},
+	});
+
+	/**
+	 * 
+	 */
 	constructor(selector: string | Iterable<any> | any, context?: string | Iterable<any> | any, autoActions: boolean = true) {
 		super(selector, context);
 
 		if (FuxcelModal.modalTriggers.length) {
-			FuxcelModal.modalTriggers.off().upon('click', function (e) {
+			FuxcelModal.modalTriggers.off('click').upon('click', function (e) {
 				e.preventDefault();
 				const currentTrigger = fx(e.currentTarget);
-				const modalAction = currentTrigger.dataAttrib('fx-action')?.toString().toLowerCase() ?? 'open';
+				const modalAction = currentTrigger.dataAttrib('fx-action')?.toLowerCase() ?? 'open';
+				const modalTarget = currentTrigger.dataAttrib('fx-action')?.length ?
+					(currentTrigger.parents('.fx-modal').length ? currentTrigger.parents('.fx-modal') : null) :
+					fx(`#${currentTrigger.dataAttrib('fx-modal')}`);
 
-				FuxcelModal.#_modalTarget = currentTrigger.parents('.fx-modal');
-				if (autoActions)
-					if (modalAction === 'close')
-						FuxcelModal.#_modalTarget.modal.hide();
-					else
-						FuxcelModal.#_modalTarget.modal.toggle();
+				const triggerModal = () => {
+					if (modalTarget) {
+						FuxcelModal.#_modalTarget = modalTarget;
+						if (autoActions)
+							if (modalAction === 'close')
+								FuxcelModal.#_modalTarget.modal.hide();
+							else
+								FuxcelModal.#_modalTarget.modal.toggle();
+					}
+				}
+				(currentTrigger.parents('.fx-modal').length && !currentTrigger.parents('.fx-modal').attrib('id')?.includes('init')) ? triggerModal() : (!currentTrigger.parents('.fx-modal').length && triggerModal());
+
 			});
 		} else
 			console.error('Target modal not found.');
@@ -2899,14 +2920,14 @@ class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
 	 * @return {FuxcelModal | null} FuxcelModal object of Current open modal.
 	 */
 	static get currentModal(): FuxcelModal | null {
-		return this.hasOpenModals ? this.#_openModals[this.#_openModals.length - 1] : null;
+		return this.hasOpenModals ? FuxcelModal.#_openModals[FuxcelModal.#_openModals.length - 1] : null;
 	}
 
 	/**
 	 * @return {boolean} true if any modal is open. False otherwise.
 	 */
 	static get hasOpenModals(): boolean {
-		return !!this.#_openModals.length
+		return !!FuxcelModal.#_openModals.length
 	}
 
 	/**
@@ -2991,7 +3012,7 @@ class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
 					FuxcelModal.#_openModals.splice(index, 1);
 
 				// @ts-ignore
-				this[0].dispatchEvent(fxModalHideEvent);
+				this[0].dispatchEvent(FuxcelModal.fxModalHideEvent);
 				destroy && this.destroy();
 
 				this.#_isHiding = false;
@@ -3016,7 +3037,7 @@ class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
 				this.upon('click', () => modalContent.hasFocus.then((focused: boolean) => !focused ? this.hide() : null))
 
 			if (escKey)
-				fx(document).off('keyup').upon('keyup', (e: Event) => {
+				fx(document)./* off('keyup'). */upon('keyup', (e: Event) => {
 					const event = <KeyboardEvent>e;
 					const key = event.key.toLowerCase();
 
@@ -3026,7 +3047,7 @@ class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
 				});
 
 			// @ts-ignore
-			this[0].dispatchEvent(fxModalShowEvent)
+			this[0].dispatchEvent(FuxcelModal.fxModalShowEvent)
 		}));
 	}
 
@@ -3138,7 +3159,7 @@ fx.modal = function ({ title = null, type = 'success', content = 'Alert Content'
 	const buttonsWrapper = (buttons: string): string => `<div class="fx-modal-alert-buttons">${buttons}</div>`;
 
 	const cancelButton = (content: string) => `<button type="button" id="fx-modal-cancel" class="fx-btn fx-btn-error" data-fx-action="close" data-fx-target="modal">${content}</button>`;
-	const confirmButton = (content: string) => `<button type="button" id="fx-modal-confirm" class="fx-btn fx-btn-primary" data-fx-target="modal">${content}</button>`;
+	const confirmButton = (content: string) => `<button type="button" id="fx-modal-confirm" class="fx-btn fx-btn-primary" data-fx-target="modal" data-fx-modal="init">${content}</button>`;
 
 	const buttons = confirmButtonText && cancelButtonText ?
 		cancelButton(cancelButtonText) + confirmButton(confirmButtonText) :
@@ -3167,8 +3188,8 @@ fx.modal = function ({ title = null, type = 'success', content = 'Alert Content'
 			fx('.fx-modal-content', modal).hasFocus.then((focused: boolean) => {
 				if (!focused)
 					cancelButtonText ?
-						document.querySelector('#fx-modal-cancel')?.dispatchEvent(fxModalCancelButtonClick) :
-						document.querySelector('#fx-modal-confirm')?.dispatchEvent(fxModalCancelButtonClick);
+						document.querySelector('#fx-modal-cancel')?.dispatchEvent(FuxcelModal.fxModalCancelButtonClick) :
+						document.querySelector('#fx-modal-confirm')?.dispatchEvent(FuxcelModal.fxModalCancelButtonClick);
 			});
 
 			if (isCancel || isConfirm) {
@@ -3208,7 +3229,8 @@ fx.passLuhnAlgo = (input: any | string | number): boolean => {
 		.map((value: number, index: number) => index % 2 !== 0 ? digitSum(value * 2) : 2)
 		.reduce((previous: number, current: number) => previous + current) % 10 === 0;
 }
-
+// Expose plugin to Window
 pushPropToWindow('fuxcel', Fuxcel);
 
+// Automatically initialize modal if triggers are available
 FuxcelModal.modalTriggers.length && new FuxcelModal('*');
