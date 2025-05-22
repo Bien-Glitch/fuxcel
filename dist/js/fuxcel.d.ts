@@ -46,6 +46,7 @@ declare type FXAnimationType = {
 }
 
 declare type FXAnimation = (args: FXAnimationType) => {
+	blink: FXAnimationOptions,
 	fadeIn: FXAnimationOptions,
 	fadeOut: FXAnimationOptions,
 	slideInDown: FXAnimationOptions,
@@ -55,6 +56,7 @@ declare type FXAnimation = (args: FXAnimationType) => {
 	slideInRight: FXAnimationOptions,
 	slideOutLeft: FXAnimationOptions,
 	slideOutRight: FXAnimationOptions,
+	zoomIn: FXAnimationOptions,
 };
 
 declare type FXModalType = {

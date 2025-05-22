@@ -7,6 +7,15 @@
  */
 const animations: FXAnimation = ({ timeout = 300, iterations = 1, display = 'unset' }) => {
 	return {
+		blink: {
+			name: 'blink',
+			onBegin: {},
+			onFinished: {},
+			options: {
+				keyFrames: [{ opacity: 1 }, { opacity: 0.8 }, { opacity: 0.5 }, { opacity: 0.3 }, { opacity: 0.1 }, { opacity: 0.3 }, { opacity: 0.5 }, { opacity: 0.8 }, { opacity: 1 }],
+				timing: { duration: timeout, iterations: iterations }
+			}
+		},
 		fadeIn: {
 			name: 'fadein',
 			onBegin: { display: display },
@@ -85,15 +94,6 @@ const animations: FXAnimation = ({ timeout = 300, iterations = 1, display = 'uns
 			onFinished: { display: 'none' },
 			options: {
 				keyFrames: [{ transform: 'translate3d(0, 0, 0)' }, { visibility: 'hidden', transform: 'translate3d(100%, 0, 0)' }],
-				timing: { duration: timeout, iterations: iterations }
-			}
-		},
-		blink: {
-			name: 'blink',
-			onBegin: {},
-			onFinished: {},
-			options: {
-				keyFrames: [{ opacity: 1 }, { opacity: 0.8 }, { opacity: 0.5 }, { opacity: 0.3 }, { opacity: 0.1 }, { opacity: 0.3 }, { opacity: 0.5 }, { opacity: 0.8 }, { opacity: 1 }],
 				timing: { duration: timeout, iterations: iterations }
 			}
 		},
@@ -649,6 +649,132 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		}
 
 		const animation: FXAnimationOptions = animations({ timeout: timeout, iterations: <number>iteration, display: display }).slideOutUp;
+		return this.#_animate(animation);
+	}
+
+	/**
+	 * Perform a Slidein-left animation on selected element.
+	 *
+	 * @param timeout {number} Animation duration.
+	 * @param iteration
+	 * @param display
+	 * @return {Promise<Fuxcel>}
+	 */
+	slideinleft(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel> {
+		if (typeof timeout === 'string') {
+			display = timeout;
+			timeout = 300;
+		} else if (timeout && typeof iteration === 'string') {
+			display = iteration;
+			iteration = 1;
+		}
+
+		const animation: FXAnimationOptions = animations({ timeout: timeout, iterations: <number>iteration, display: display }).slideInLeft;
+		return this.#_animate(animation);
+	}
+
+	/**
+	 * Perform a Slideout-left animation on selected element.
+	 *
+	 * @param timeout {number} Animation duration.
+	 * @param iteration
+	 * @param display
+	 * @return {Promise<Fuxcel>}
+	 */
+	slideoutleft(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel> {
+		if (typeof timeout === 'string') {
+			display = timeout;
+			timeout = 300;
+		} else if (timeout && typeof iteration === 'string') {
+			display = iteration;
+			iteration = 1;
+		}
+
+		const animation: FXAnimationOptions = animations({ timeout: timeout, iterations: <number>iteration, display: display }).slideOutLeft;
+		return this.#_animate(animation);
+	}
+
+	/**
+	 * Perform a Slidein-right animation on selected element.
+	 *
+	 * @param timeout {number} Animation duration.
+	 * @param iteration
+	 * @param display
+	 * @return {Promise<Fuxcel>}
+	 */
+	slideinright(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel> {
+		if (typeof timeout === 'string') {
+			display = timeout;
+			timeout = 300;
+		} else if (timeout && typeof iteration === 'string') {
+			display = iteration;
+			iteration = 1;
+		}
+
+		const animation: FXAnimationOptions = animations({ timeout: timeout, iterations: <number>iteration, display: display }).slideInRight;
+		return this.#_animate(animation);
+	}
+
+	/**
+	 * Perform a Slideout-right animation on selected element.
+	 *
+	 * @param timeout {number} Animation duration.
+	 * @param iteration
+	 * @param display
+	 * @return {Promise<Fuxcel>}
+	 */
+	slideoutright(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel> {
+		if (typeof timeout === 'string') {
+			display = timeout;
+			timeout = 300;
+		} else if (timeout && typeof iteration === 'string') {
+			display = iteration;
+			iteration = 1;
+		}
+
+		const animation: FXAnimationOptions = animations({ timeout: timeout, iterations: <number>iteration, display: display }).slideOutRight;
+		return this.#_animate(animation);
+	}
+
+	/**
+	 * Perform a blink animation on selected element.
+	 *
+	 * @param timeout {number} Animation duration.
+	 * @param iteration
+	 * @param display
+	 * @return {Promise<Fuxcel>}
+	 */
+	blink(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel> {
+		if (typeof timeout === 'string') {
+			display = timeout;
+			timeout = 300;
+		} else if (timeout && typeof iteration === 'string') {
+			display = iteration;
+			iteration = 1;
+		}
+
+		const animation: FXAnimationOptions = animations({ timeout: timeout, iterations: <number>iteration, display: display }).blink;
+		return this.#_animate(animation);
+	}
+
+	/**
+	 * Perform a Zoom-in animation on selected element.
+	 *
+	 * @param timeout {number} Animation duration.
+	 * @param iteration
+	 * @param display
+	 * @return {Promise<Fuxcel>}
+	 */
+	zoomin(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel> {
+		if (typeof timeout === 'string') {
+			display = timeout;
+			timeout = 300;
+		} else if (timeout && typeof iteration === 'string') {
+			display = iteration;
+			iteration = 1;
+		}
+
+		const animation: FXAnimationOptions = animations({ timeout: timeout, iterations: <number>iteration, display: display }).zoomIn;
 		return this.#_animate(animation);
 	}
 
