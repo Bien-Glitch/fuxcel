@@ -1,0 +1,135 @@
+.fx-modal {
+  display: none;
+  font-family: Calibri, serif;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  padding: 1rem;
+  overflow-y: auto;
+
+  &.filter {
+    &:before {
+      position: fixed;
+      content: "";
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      backdrop-filter: blur(.08rem);
+      background: linear-gradient(10deg, rgba(0, 0, 0, 0.5), rgba(50, 50, 60, 0.5)) rgba(0, 0, 0, 0.3) no-repeat;
+    }
+  }
+
+  .fx-modal-dialog {
+    position: relative;
+    display: flex;
+    z-index: 1000;
+    height: 100%;
+    width: 100%;
+
+    &.fx-dialog-scrollable {
+      & > .fx-modal-content {
+        overflow: hidden;
+      }
+
+      .fx-modal-header,
+      .fx-modal-footer {
+        max-height: 15vh;
+      }
+
+      .fx-modal-body {
+        max-height: 60vh;
+      }
+    }
+
+    &.fx-dialog-centered {
+      & > .fx-modal-content {
+        margin: auto;
+      }
+    }
+
+    .fx-modal-content {
+      display: none;
+      width: 100%;
+      background: #fafafa;
+      //width: max-content;
+      border-radius: 0.3rem;
+      transition: all ease-in-out 200ms;
+
+      & > * {
+        padding: 0 0.5rem;
+      }
+
+      @media (min-width: 576px) {
+        width: 75%;
+      }
+
+      @media (min-width: 768px) {
+        width: 60%;
+      }
+
+      @media (min-width: 992px) {
+        width: 45%;
+      }
+
+      @media (min-width: 1200px) {
+        width: 30%;
+      }
+
+      @media (min-width: 1600px) {
+        width: 20%;
+      }
+
+      .fx-modal-header {
+        display: flex;
+        flex: 1 0 auto;
+        padding: 1rem 1.5rem;
+        background-color: #f6f6f6;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--fx-border-light);
+
+        .title {
+          font-size: larger;
+        }
+      }
+
+      .fx-modal-footer {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        border-top: 1px solid var(--fx-border-light);
+      }
+
+      .fx-modal-body {
+        min-height: auto;
+        height: max-content;
+        overflow: hidden;
+        overflow-y: auto;
+        text-align: center;
+        padding-top: .5rem;
+        padding-bottom: .5rem;
+
+        .fx-modal-alert-icon {
+          margin-bottom: 1.5rem;
+          visibility: hidden;
+          width: 84px;
+        }
+
+        .fx-modal-alert-buttons {
+          display: flex;
+          margin-top: 1.5rem;
+          align-items: center;
+
+          & > .fx-btn {
+            &:not(:first-child) {
+              margin-left: .3rem;
+            }
+          }
+        }
+      }
+    }
+  }
+}
