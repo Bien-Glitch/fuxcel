@@ -1174,9 +1174,6 @@ class Fuxcel extends FuxcelBase {
                         if (dataType === 'json') {
                             response = xhr.responseJSON;
                             if ((status > 199 && status < 300) || status === 308) {
-                                /*if (status === 308)
-                                    setTimeout(() => location.href = response.redirect, 2000);
-                                else*/
                                 resolve({ JSON: response, text: xhr.responseText, status: status, form: form });
                             }
                             else {
@@ -1344,11 +1341,17 @@ class Fuxcel extends FuxcelBase {
      * Trigger a new event on the selected element(s).
      *
      * @param event {string}
+     * @param type {('mouse'|'keyboard'|null)}
      * @return {Fuxcel}
      */
-    trigger(event) {
+    trigger(event, type = null) {
         const selected = this.toArray;
-        const newEvent = new Event(event, {
+        const matchEvent = {
+            mouse: MouseEvent,
+            keyboard: KeyboardEvent,
+        };
+        const InitEvent = !type ? Event : matchEvent[type.toLowerCase()];
+        const newEvent = new InitEvent(event, {
             bubbles: true,
             cancelable: true
         });
@@ -2834,7 +2837,7 @@ class FuxcelModal extends Fuxcel {
  */
 fx.fetch = function ({ uri = '', method = 'get', data = null, dataType = 'json', headers = null, beforeSend = null, onComplete = null, onError = null, onSuccess = null }) {
     let status, statusText, responseData;
-    const allowedErrorStatuses = new Set([301, 308, 401, 402, 422, 423, 426, 451, 500, 511]);
+    const allowedErrorStatuses = new Set([301, 308, 401, 402, 419, 422, 423, 426, 451, 500, 511]);
     const defaultHeaders = {
         'X-Requested-With': 'XMLHttpRequest'
     };
@@ -2964,3 +2967,4 @@ fx.passLuhnAlgo = (input) => {
 pushPropToWindow('fuxcel', Fuxcel);
 // Automatically initialize modal if triggers are available
 FuxcelModal.modalTriggers.length && new FuxcelModal('*');
+//# sourceMappingURL=fuxcel.js.map
