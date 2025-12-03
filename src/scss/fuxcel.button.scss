@@ -121,6 +121,14 @@
     --fx-btn-disabled-bg: var(--fx-warning);
     --fx-btn-disabled-border-color: var(--fx-warning);
   }
+
+  &:disabled, &.disabled {
+    //color: var(--fx-btn-disabled-color);
+    pointer-events: none;
+    //background-color: var(--fx-btn-disabled-bg);
+    border-color: var(--fx-btn-disabled-border-color);
+    opacity: var(--fx-btn-disabled-opacity);
+  }
 }
 
 

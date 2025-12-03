@@ -2,17 +2,15 @@ declare type IterableElement = HTMLCollection | HTMLElement[] | HTMLScriptElemen
 declare type SingleElement = HTMLElement | HTMLFormElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | Document;
 declare type Direction = 'horizontal' | 'vertical';
 declare type Position = 'affix' | 'prefix' | 'postfix' | 'suffix';
+declare type EventInterfaces = AnimationEvent | ClipboardEvent | CompositionEvent | CustomEvent | DragEvent | ErrorEvent | Event | FocusEvent | HashChangeEvent | InputEvent | KeyboardEvent | MouseEvent | PointerEvent | PopStateEvent | ProgressEvent | SubmitEvent | StorageEvent | TouchEvent | TransitionEvent | UIEvent | WheelEvent;
 declare type FieldAttributes = {
     id: string | any;
+    fxName: string | undefined;
     type: StringOrNull | undefined;
     fxId: StringOrNull | undefined;
     fxRole: StringOrNull | undefined;
     formId: StringOrNull;
 };
-declare type FuxcelOrString<T extends string | object, U extends boolean | string | null = null> = T extends object ? Fuxcel : (T extends string ? (U extends string ? Fuxcel : (U extends boolean ? Fuxcel : string)) : string);
-declare type AnimationComplete = <T extends string, U extends number | null = 300, V extends number | null = 1>(display: T, timeout: U, iterations: V) => Promise<Fuxcel>;
-declare type AnimationPartial = <T extends number | null = 300, U extends number | null = 1>(display: string, timeout: T, iterations: U) => Promise<Fuxcel>;
-declare type FuxcelAnimation = AnimationPartial | AnimationComplete;
 declare type HTMLListenerArray = Array<{
     element: HTMLElement;
     listener: EventListenerOrEventListenerObject | boolean | undefined;
@@ -22,6 +20,7 @@ declare type HTMLListenerArray = Array<{
 declare type ModalInit = {
     title: StringOrNull;
     html: boolean;
+    isStatic: boolean;
     content: string;
     id: string;
     hasFooter: boolean;
@@ -43,26 +42,33 @@ declare type FXAnimationType = {
     iterations?: number;
     display?: string;
 };
-declare type FXAnimation = (args: FXAnimationType) => {
+declare type FXAnimationReturn = {
     blink: FXAnimationOptions;
     fadeIn: FXAnimationOptions;
     fadeOut: FXAnimationOptions;
     slideInDown: FXAnimationOptions;
+    slideInUp: FXAnimationOptions;
     slideOutDown: FXAnimationOptions;
     slideOutUp: FXAnimationOptions;
     slideInLeft: FXAnimationOptions;
     slideInRight: FXAnimationOptions;
     slideOutLeft: FXAnimationOptions;
     slideOutRight: FXAnimationOptions;
+    spaceLettersBig: FXAnimationOptions;
+    spaceLettersSmall: FXAnimationOptions;
+    unspaceLetters: FXAnimationOptions;
     zoomIn: FXAnimationOptions;
 };
+declare type FXAnimation = (args: FXAnimationType) => FXAnimationReturn;
 declare type FXModalType = {
     /*** _Modal Title._ ***/ title?: StringOrNull;
     /*** _Modal type._ ***/ type?: ('success' | 'warning' | 'error');
     /*** _Body Content of Modal._ ***/ content?: StringOrNull;
     /*** _Text for Confirm Button._ ***/ confirmButtonText?: StringOrNull;
     /*** _Text for Cancel Button._ ***/ cancelButtonText?: StringOrNull;
+    /*** _Close the modal immediately after on confirm button click and no onConfirm callback?_ ***/ closeOnConfirm?: boolean;
     /*** _Use HTML content? else use Text content._ ***/ html?: boolean;
+    /*** _Is Modal Static?_ ***/ isStatic?: boolean;
     /*** _Callback on confirm button click._ ***/ onConfirm?: ((e: CustomEvent, modal: FuxcelModal) => void) | null;
     /*** _Callback on cancel button click._ ***/ onCancel?: ((e: CustomEvent, modal: FuxcelModal) => void) | null;
     /*** _Callback on Escape key used. Only works when cancel button is not available. [i.e. cancelButtonText is null]._ ***/ onEsc?: ((e: CustomEvent, modal: FuxcelModal) => void) | null;
@@ -74,6 +80,7 @@ declare type FXRequestType = {
     /*** _Expected return data type._ ***/ dataType?: ('html' | 'json' | 'jsonp' | 'script' | 'text' | 'xml');
     /*** _Additional Headers to be sent along the request._ ***/ headers?: Object | Headers | null;
     /*** _Before request is sent._ ***/ beforeSend?: Function | null;
+    /*** _Request Timeout._ ***/ timeout?: number;
     /*** _Once request is completed._ ***/ onComplete?: ((response: ResponseData, status: number, statusText: string) => void) | null;
     /*** _If request has errors._ ***/ onError?: ((error: any, status: number, statusText: string) => void) | null;
     /*** _If request is successful._ ***/ onSuccess?: ((response: ResponseData, status: number, statusText: string) => void) | null;
@@ -85,6 +92,7 @@ declare type FXFormSubmitType = {
     /*** _Expected return data type_ ***/ dataType?: ('html' | 'json' | 'jsonp' | 'script' | 'text' | 'xml');
     /*** _Additional Headers to be sent along the request._ ***/ headers?: Object | Headers | null;
     /*** _Before request is sent._ ***/ beforeSend?: Function | null;
+    /*** _Request Timeout._ ***/ timeout?: number;
     /*** _Before request is sent._ ***/ handleError?: boolean;
 };
 declare type Selector = StringOrNull;
@@ -148,10 +156,10 @@ interface String {
     /**
      * Convert string to title cased string.
      *
-     * @param seperator {boolean}
+     * @param separator {boolean=false}
      * @returns {String} Title cased string.
      */
-    toTitleCase(seperator: boolean): string;
+    toTitleCase(separator?: boolean): string;
 }
 interface HTMLElement extends HTMLCollection {
 }
@@ -168,15 +176,38 @@ declare interface FuxcelBaseInterface {
 declare interface FuxcelInterface {
     get classes(): DOMTokenList;
     get hasFocus(): Promise<any>;
+    get innerText(): string;
+    get isDisabled(): boolean;
+    get isFormElement(): boolean;
+    get outerText(): string;
+    get innerHTML(): string;
+    get outerHTML(): string;
+    get formValidator(): FuxcelValidator;
+    get modal(): FuxcelModal;
+    fadeout(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+    fadein(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+    slideindown(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+    slideinup(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+    slideoutdown(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+    slideoutup(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+    slideinleft(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+    slideoutleft(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+    slideinright(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+    slideoutright(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+    blink(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+    zoomin(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+    hasClass(token: string): boolean;
     putClass(...tokenList: string[]): Fuxcel;
     replaceClass(oldToken: string, newToken: string): Fuxcel;
     removeClass(...tokenList: string[]): Fuxcel;
+    each(callback: ((element: Fuxcel, index: number) => void)): void;
     attrib(name: string | object, value?: boolean | string | null): Fuxcel | string;
     dataAttrib(name: string | object, value?: boolean | string | null): Fuxcel | string;
     prop(name: string | object, value?: boolean | string | null): Fuxcel | string;
     style(name: string | object, value?: boolean | string | null): Fuxcel | string;
     listAttrib(): object;
     listProp(): object;
+    remove(): void;
     removeAttrib(...name: string[]): Fuxcel;
     removeDataAttrib(...name: string[]): Fuxcel;
     removeProp(...name: string[]): Fuxcel;
@@ -186,16 +217,16 @@ declare interface FuxcelInterface {
     prevSiblings(selector: Selector): Fuxcel;
     siblings(selector: Selector): Fuxcel;
     disable(disabled: boolean): Fuxcel;
-    handleFormSubmit({ uri, method, data, dataType, beforeSend }: FXFormSubmitType): void;
+    handleFormSubmit({ uri, method, data, dataType, beforeSend, timeout, handleError }: FXFormSubmitType): void;
     hasScrollBar(direction: ('horizontal' | 'vertical' | null)): boolean;
     insertHTML(value: string, position: ('affix' | 'prefix' | 'postfix' | 'suffix' | null)): Fuxcel;
     isElement(tagName: string | HTMLElementTagNameMap): boolean;
     matchSelector(selector: Selector): boolean;
     off(...events: string[]): Fuxcel;
-    toggleButtonLoadState(isLoading: boolean): void;
-    toggleFormSubmitButtonState(isLoading: boolean): void;
+    toggleButtonLoadState(isLoading: boolean): Promise<Fuxcel>;
+    toggleFormSubmitButtonState(isLoading: boolean): Promise<Fuxcel>;
     trigger(event: string, type: ('mouse' | 'keyboard' | null)): Fuxcel;
-    upon(events: string | string[] | object, listener?: ((e: CustomEvent | Event) => any) | boolean, option?: boolean): Fuxcel;
+    upon(events: string | string[] | object, listener?: ((e: EventInterfaces) => any) | boolean, option?: boolean): Fuxcel;
     value(value: StringOrNull): Fuxcel | string | null;
 }
 declare interface FuxcelValidatorInterface {
@@ -242,9 +273,9 @@ declare interface FuxcelModalInterface {
     toggle(): void;
 }
 declare interface FXInterface {
-    (selector: string | Iterable<any> | any, context?: string | Iterable<any> | any): Fuxcel;
-    fetch: ({ uri, method, data, dataType, beforeSend, onComplete, onError, onSuccess }: FXRequestType) => void;
-    modal: ({ title, type, content, confirmButtonText, cancelButtonText, html, onConfirm, onCancel }: FXModalType) => void;
+    (selector: string | IterableElement | any, context?: string | IterableElement | any): Fuxcel;
+    fetch: ({ uri, method, data, dataType, beforeSend, timeout, onComplete, onError, onSuccess }: FXRequestType) => void;
+    modal: ({ title, type, content, confirmButtonText, cancelButtonText, closeOnConfirm, html, onConfirm, onCancel }: FXModalType) => void;
     onDocumentLoad: ((listener: (e: Event) => void) => void);
     passLuhnAlgo: (input: any | string | number) => boolean;
 }
@@ -263,15 +294,15 @@ declare interface TypeOfInterface {
  * @param timeout {number|string}
  * @param iteration {number}
  * @param display {string}
- * @returns {FXAnimationType}
+ * @returns {FXAnimationReturn}
  */
 declare const animations: FXAnimation;
 declare const pushPropToWindow: (prop: string, value: any) => void;
 /**
  * Creates new Fuxcel Object with selected element.
  *
- * @param selector {string|Iterable<any>|any} Selectable string or iterable.
- * @param context {string|Iterable<any>|any} Context to select from.
+ * @param selector {string|IterableElement|any} Selectable string or iterable.
+ * @param context {string|IterableElement|any} Context to select from.
  * @return {Fuxcel} New Fuxcel Object.
  */
 declare const fx: FXInterface;
@@ -317,6 +348,11 @@ declare const isString: TypeOfInterface;
  * @return {boolean} Its boolean value; true or false.
  */
 declare const parseBool: TypeOfInterface;
+declare class TimeoutError extends Error {
+    private status;
+    private code;
+    constructor(message?: string, status?: number, code?: string);
+}
 declare class FuxcelBase implements FuxcelBaseInterface {
     #private;
     length: number;
@@ -326,10 +362,10 @@ declare class FuxcelBase implements FuxcelBaseInterface {
     /**
      * Initialize the plugin
      *
-     * @param selector {string|Iterable<any>|any} Selectable string or iterable.
-     * @param context {string|Iterable<any>|any} Context to select from.
+     * @param selector {string|IterableElement|any} Selectable string or iterable.
+     * @param context {string|IterableElement|any} Context to select from.
      */
-    constructor(selector: string | Iterable<any> | any, context?: string | Iterable<any> | any);
+    constructor(selector: string | IterableElement | any, context?: string | IterableElement | any);
     /**
      * Returns an Object containing {FieldAttributes} attributes of the element.
      * @return {FieldAttributes}
@@ -357,106 +393,31 @@ declare class FuxcelBase implements FuxcelBaseInterface {
 }
 declare class Fuxcel extends FuxcelBase implements FuxcelInterface {
     #private;
-    constructor(selector: string | Iterable<any> | any, context?: string | Iterable<any> | any);
-    /**
-     * Perform Fadeout animation on selected element.
-     *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
-     * @return {Promise<Fuxcel>}
-     */
-    fadeout(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
-    /**
-     * Perform Fadein animation on selected element.
-     *
-     * @param timeout {number} Animation duration.
-     * @param iteration {number}
-     * @param display
-     * @return {Promise<Fuxcel>}
-     */
-    fadein(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
-    /**
-     * Perform a Slidein-down animation on selected element.
-     *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
-     * @return {Promise<Fuxcel>}
-     */
-    slideindown(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
-    /**
-     * Perform a Slideout-down animation on selected element.
-     *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
-     * @return {Promise<Fuxcel>}
-     */
-    slideoutdown(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
-    /**
-     * Perform a Slideout-up animation on selected element.
-     *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
-     * @return {Promise<Fuxcel>}
-     */
-    slideoutup(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
-    /**
-     * Perform a Slidein-left animation on selected element.
-     *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
-     * @return {Promise<Fuxcel>}
-     */
-    slideinleft(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
-    /**
-     * Perform a Slideout-left animation on selected element.
-     *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
-     * @return {Promise<Fuxcel>}
-     */
-    slideoutleft(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
-    /**
-     * Perform a Slidein-right animation on selected element.
-     *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
-     * @return {Promise<Fuxcel>}
-     */
-    slideinright(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
-    /**
-     * Perform a Slideout-right animation on selected element.
-     *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
-     * @return {Promise<Fuxcel>}
-     */
-    slideoutright(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
-    /**
-     * Perform a blink animation on selected element.
-     *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
-     * @return {Promise<Fuxcel>}
-     */
-    blink(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
-    /**
-     * Perform a Zoom-in animation on selected element.
-     *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
-     * @return {Promise<Fuxcel>}
-     */
-    zoomin(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+    constructor(selector: string | IterableElement | any, context?: string | IterableElement | any);
+    fadeout(display?: string): Promise<Fuxcel>;
+    fadeout(timeout?: number, iteration?: string): Promise<Fuxcel>;
+    fadein(display?: string): Promise<Fuxcel>;
+    fadein(timeout?: number, display?: string): Promise<Fuxcel>;
+    slideindown(display?: string): Promise<Fuxcel>;
+    slideindown(timeout?: number, display?: string): Promise<Fuxcel>;
+    slideinup(display?: string): Promise<Fuxcel>;
+    slideinup(timeout?: number, iteration?: string): Promise<Fuxcel>;
+    slideoutdown(display?: string): Promise<Fuxcel>;
+    slideoutdown(timeout?: number, iteration?: string): Promise<Fuxcel>;
+    slideoutup(display?: string): Promise<Fuxcel>;
+    slideoutup(timeout?: number, iteration?: string): Promise<Fuxcel>;
+    slideinleft(display?: string): Promise<Fuxcel>;
+    slideinleft(timeout?: number, iteration?: string): Promise<Fuxcel>;
+    slideoutleft(display?: string): Promise<Fuxcel>;
+    slideoutleft(timeout?: number, iteration?: string): Promise<Fuxcel>;
+    slideinright(display?: string): Promise<Fuxcel>;
+    slideinright(timeout?: number, iteration?: string): Promise<Fuxcel>;
+    slideoutright(display?: string): Promise<Fuxcel>;
+    slideoutright(timeout?: number, iteration?: string): Promise<Fuxcel>;
+    blink(display?: string): Promise<Fuxcel>;
+    blink(timeout?: number, iteration?: string): Promise<Fuxcel>;
+    zoomin(display?: string): Promise<Fuxcel>;
+    zoomin(timeout?: number, iteration?: string): Promise<Fuxcel>;
     /**
      * @return {DOMTokenList} The class list of an element.
      */
@@ -469,6 +430,14 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInterface {
      * @return {string} The Inner Text value of the given element.
      */
     get innerText(): string;
+    /**
+     * @return {boolean} Returns true if the selected element has the disabled property; false otherwise.
+     */
+    get isDisabled(): boolean;
+    /**
+     * @return {boolean} Returns true if the selected element is a form element.
+     */
+    get isFormElement(): boolean;
     /**
      * @return {string} The Outer Text value of the given element.
      */
@@ -522,6 +491,13 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInterface {
      */
     static set path(path: string);
     /**
+     * Checks if selected element contains given class.
+     *
+     * @param {string} token
+     * @return {boolean} true if element contains given class; false otherwise.
+     */
+    hasClass(token: string): boolean;
+    /**
      * Add class(es) to the classlist of the selected element.
      *
      * @param tokenList {string[]} Comma separated strings of class(es) to add.
@@ -542,6 +518,12 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInterface {
      * @param tokenList {string[]} Comma separated strings of class(es) to remove.
      */
     removeClass(...tokenList: string[]): Fuxcel;
+    /**
+     * Perform callback on each selected item
+     *
+     * @param callback {((element: Fuxcel, index: number) => void)}
+     */
+    each(callback: ((element: Fuxcel, index: number) => void)): void;
     attrib(name: object): Fuxcel;
     attrib(name: string): string;
     attrib(name: string, value: string | boolean): Fuxcel;
@@ -566,6 +548,12 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInterface {
      * @return {Object} An object containing the properties of the selected element.
      */
     listProp(): object;
+    /**
+     * Remove selected element(s) from DOM.
+     *
+     * @return void
+     */
+    remove(): void;
     /**
      * Removes the given [data-*] attribute(s) from the selected element.
      *
@@ -641,15 +629,16 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInterface {
     disable(disabled?: boolean): Fuxcel;
     /**
      *
-     * @param uri {string|null=null}=''} Request URL.
+     * @param uri {string|null=''} Request URL.
      * @param method {('get'|'post'|'put'|'patch'|'delete'|null)} Form Request method.
      * @param data {object|null=null} Additional form request data.
      * @param dataType {('html'|'json'|'jsonp'|'script'|'text'|'xml'|null)} Expected return data type.
      * @param headers {Object|Headers} Additional Headers to be sent along the request.
      * @param beforeSend {Function|null = null} Before request is sent.
+     * @param timeout
      * @param handleError
      */
-    handleFormSubmit({ uri, method, data, dataType, headers, beforeSend, handleError }: FXFormSubmitType): Promise<any>;
+    handleFormSubmit({ uri, method, data, dataType, headers, beforeSend, timeout, handleError }?: FXFormSubmitType): Promise<any>;
     /**
      * Check if the selected element has a scrollbar in the given direction.
      *
@@ -696,14 +685,16 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInterface {
      * Toggle the disabled state (property) of the selected element [a button preferably].
      *
      * @param isLoading {boolean} Determines the state of the button.
+     * @return {Promise<Fuxcel>} Promise of Fuxcel Object of the selected element.
      */
-    toggleButtonLoadState(isLoading?: boolean): void;
+    toggleButtonLoadState(isLoading?: boolean): Promise<Fuxcel>;
     /**
      * Toggles the submit button state of the selected form.
      *
      * @param isLoading {boolean} Determines the state of the button.
+     * @return {Promise<Fuxcel>} Promise of Fuxcel Object of the selected element.
      */
-    toggleFormSubmitButtonState(isLoading?: boolean): void;
+    toggleFormSubmitButtonState(isLoading?: boolean): Promise<Fuxcel>;
     /**
      * Trigger a new event on the selected element(s).
      *
@@ -716,20 +707,22 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInterface {
      * Add given Event Listener to the selected element.
      *
      * @param events {string} Event
-     * @param listener {((e: EventCounts)=>any)}
+     * @param listener {((e: EventInterfaces)=>any)}
      * @param option {boolean}
      */
-    upon(events: string, listener: ((e: Event) => any), option?: boolean): Fuxcel;
-    upon(events: string[], listener: ((e: Event) => any), option?: boolean): Fuxcel;
+    upon(events: string, listener: ((e: EventInterfaces) => any), option?: boolean): Fuxcel;
+    upon(events: string[], listener: ((e: EventInterfaces) => any), option?: boolean): Fuxcel;
     upon(events: EventListenerOrEventListenerObject | object, listener?: boolean): Fuxcel;
     value(): string | null;
-    value(value: string): Fuxcel;
+    value(value: any): Fuxcel;
+    testValidateAfter(formGroup: any): void;
 }
 declare class FuxcelValidator extends Fuxcel implements FuxcelValidatorInterface {
     #private;
-    constructor(selector: string | Iterable<any> | any, context?: string | Iterable<any> | any);
+    constructor(selector: string | IterableElement | any, context?: string | IterableElement | any);
+    validateFromGroup(formGroup: HTMLElement): void;
     /**
-     * Checks if the selected field element can be validated by checking that the [data-fx-validate] is not set to false.
+     * Checks if the selected field element can be validated by checking that the [data-fx-validate] is not set to false or the parent form-group is not hidden.
      *
      * @return {boolean} true if validation is possible; false otherwise
      */
@@ -838,7 +831,9 @@ declare class FuxcelValidator extends Fuxcel implements FuxcelValidatorInterface
      * @param messageOrCallbackFn {((fx: FuxcelValidator, e?: CustomEvent) => any)|StringOrNull}
      * @param callbackFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
      */
-    renderValidationErrors(errors: object, messageOrCallbackFn?: ((fx: FuxcelValidator, e?: CustomEvent) => any) | StringOrNull, callbackFn?: ((fx: FuxcelValidator, e?: CustomEvent) => any) | null): FuxcelValidator;
+    renderValidationErrors(errors?: {
+        [key: string]: any;
+    }, messageOrCallbackFn?: ((fx: FuxcelValidator, e?: CustomEvent) => any) | StringOrNull, callbackFn?: ((fx: FuxcelValidator, e?: CustomEvent) => any) | null): FuxcelValidator;
     /**
      * Show validation error for the selected field.
      *
@@ -954,7 +949,6 @@ declare class FuxcelValidator extends Fuxcel implements FuxcelValidatorInterface
     validateUsername(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidator;
 }
 declare class FuxcelSteps extends FuxcelValidator implements FuxcelStepsInterface {
-    #private;
     static currentlySelected: object;
     constructor(selected: FuxcelValidator);
     /**
@@ -996,8 +990,11 @@ declare class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
     }>;
     /**
      *
+     * @param selector {string|IterableElement|any}
+     * @param context {string|IterableElement|any}
+     * @param autoActions {boolean=true}
      */
-    constructor(selector: string | Iterable<any> | any, context?: string | Iterable<any> | any, autoActions?: boolean);
+    constructor(selector: string | IterableElement | any, context?: string | IterableElement | any, autoActions?: boolean);
     /**
      * @return {FuxcelModal | null} FuxcelModal object of Current open modal.
      */
@@ -1015,12 +1012,13 @@ declare class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
      *
      * @param title {string} The Modal title.
      * @param html {boolean} Is modal content HTML or Text.
+     * @param isStatic {boolean} Is modal Static?.
      * @param content {string} The Content for the body of the Modal.
      * @param id {string} id to use for the Modal.
      * @param hasFooter {boolean} If the Modal should be created with a footer.
      * @return {HTMLElement} Generated Modal.
      */
-    static init({ title, html, content, id, hasFooter }: ModalInit): HTMLElement;
+    static init({ title, html, isStatic, content, id, hasFooter }: ModalInit): HTMLElement;
     /**
      * Destroy selected modal.
      */

@@ -6,7 +6,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1000;
+  z-index: 10000;
   padding: 1rem;
   overflow-y: auto;
 
@@ -30,18 +30,63 @@
     height: 100%;
     width: 100%;
 
-    &.fx-dialog-scrollable {
+    &.fx-dialog-top-start {
       & > .fx-modal-content {
-        overflow: hidden;
+        margin: 0 auto auto 0;
       }
+    }
 
-      .fx-modal-header,
-      .fx-modal-footer {
-        max-height: 15vh;
+    &.fx-dialog-bottom-start {
+      & > .fx-modal-content {
+        margin: auto auto 0 0;
       }
+    }
 
-      .fx-modal-body {
-        max-height: 60vh;
+    &.fx-dialog-start {
+      & > .fx-modal-content {
+        margin: 0 auto 0 0;
+      }
+    }
+
+    &.fx-dialog-start-centered {
+      & > .fx-modal-content {
+        margin: auto auto auto 0;
+      }
+    }
+
+    &.fx-dialog-top-end {
+      & > .fx-modal-content {
+        margin: 0 0 auto auto;
+      }
+    }
+
+    &.fx-dialog-bottom-end {
+      & > .fx-modal-content {
+        margin: auto 0 0 auto;
+      }
+    }
+
+    &.fx-dialog-end {
+      & > .fx-modal-content {
+        margin: 0 0 0 auto;
+      }
+    }
+
+    &.fx-dialog-end-centered {
+      & > .fx-modal-content {
+        margin: auto 0 auto auto;
+      }
+    }
+
+    &.fx-dialog-top-centered {
+      & > .fx-modal-content {
+        margin: 0 auto auto;
+      }
+    }
+
+    &.fx-dialog-bottom-centered {
+      & > .fx-modal-content {
+        margin: auto auto 0;
       }
     }
 
@@ -51,11 +96,26 @@
       }
     }
 
+    &.fx-dialog-centered-full {
+      & > .fx-modal-content {
+        margin: 0 auto;
+      }
+    }
+
+    &.fx-dialog-full {
+      & > .fx-modal-content {
+        margin: unset;
+        width: 100%;
+        height: 100%;
+      }
+    }
+
     .fx-modal-content {
       display: none;
       width: 100%;
       background: #fafafa;
       //width: max-content;
+      flex-direction: column;
       border-radius: 0.3rem;
       transition: all ease-in-out 200ms;
 
@@ -129,6 +189,21 @@
             }
           }
         }
+      }
+    }
+
+    &.fx-dialog-scrollable {
+      & > .fx-modal-content {
+        overflow: hidden;
+      }
+
+      .fx-modal-header,
+      .fx-modal-footer {
+        max-height: 15vh;
+      }
+
+      .fx-modal-body {
+        height: 100%;
       }
     }
   }

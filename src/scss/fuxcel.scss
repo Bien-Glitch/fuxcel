@@ -21,28 +21,15 @@ body {
 }
 
 .close[data-fx-action="close"] {
-  &:after {
-    /*border: 1px solid #e54242;
-    background-color: #e54242;*/
-    font-family: "Tw Cen MT Bold", 'Arial Rounded MT Bold', serif;
-    -webkit-appearance: button;
-    justify-content: center;
-    display: inline-flex;
-    align-items: center;
-    //border-radius: 50%;
-    font-weight: bold;
-    font-size: 24px;
-    cursor: pointer;
-    content: "x";
-    /*min-height: 30px;
-    min-width: 30px;*/
-    color: #ff0000;
-  }
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+  background: url("../images/close.svg") center center no-repeat;
+  -webkit-appearance: button;
 
-  /*&:hover {
-    &:after {
-      border-color: #d51f1f;
-      background-color: #d51f1f;
-    }
-  }*/
+  &:hover {
+    background: url("../images/close-hover.svg") center center no-repeat;
+  }
 }

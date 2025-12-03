@@ -9,10 +9,10 @@
     "declaration": true,
     "declarationMap": true,
     "removeComments": false,
-    "useDefineForClassFields": true,
+    "useDefineForClassFields": true
   },
   "exclude": [
-    "dist",
+    "dist/*/**",
     "node_modules"
   ]
 }

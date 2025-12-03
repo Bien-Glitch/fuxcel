@@ -4,7 +4,7 @@
  * @param timeout {number|string}
  * @param iteration {number}
  * @param display {string}
- * @returns {FXAnimationType}
+ * @returns {FXAnimationReturn}
  */
 const animations = ({ timeout = 300, iterations = 1, display = 'unset' }) => {
     return {
@@ -41,6 +41,15 @@ const animations = ({ timeout = 300, iterations = 1, display = 'unset' }) => {
             onFinished: {},
             options: {
                 keyFrames: [{ transform: 'translate3d(0, 100%, 0)', visibility: 'hidden' }, { transform: 'translate3d(0, 0, 0)', visibility: 'visible' }],
+                timing: { duration: timeout, iterations: iterations }
+            },
+        },
+        slideInUp: {
+            name: 'slideinup',
+            onBegin: { display: display },
+            onFinished: {},
+            options: {
+                keyFrames: [{ transform: 'translate3d(0, -100%, 0)', visibility: 'hidden' }, { transform: 'translate3d(0, 0, 0)', visibility: 'visible' }],
                 timing: { duration: timeout, iterations: iterations }
             },
         },
@@ -142,8 +151,8 @@ const pushPropToWindow = (prop, value) => {
 /**
  * Creates new Fuxcel Object with selected element.
  *
- * @param selector {string|Iterable<any>|any} Selectable string or iterable.
- * @param context {string|Iterable<any>|any} Context to select from.
+ * @param selector {string|IterableElement|any} Selectable string or iterable.
+ * @param context {string|IterableElement|any} Context to select from.
  * @return {Fuxcel} New Fuxcel Object.
  */
 const fx = (selector, context = null) => new Fuxcel(selector, context);
@@ -214,27 +223,37 @@ const parseBool = (value) => {
 /**
  * Convert string to title cased string.
  *
- * @param seperator {boolean}
+ * @param separators {boolean=false}
  * @returns {String} Title cased string.
  */
-String.prototype.toTitleCase = function (seperators = false) {
+String.prototype.toTitleCase = function (separators = false) {
     const value = this;
-    let titleCased = '', valueSplit = value.split(seperators ? /([ _-])/gi : /[ _-]/gi);
+    let titleCased = '', valueSplit = value.split(separators ? /([ _-])/gi : /[ _-]/gi);
     valueSplit.forEach((word, key) => {
         let wordSplit = word.toLowerCase().split(''), firstChar = wordSplit[0];
         wordSplit[0] = wordSplit[0] ? firstChar.toUpperCase() : '';
-        titleCased += seperators ? wordSplit.join('') : (wordSplit.join('') + ((key <= valueSplit.length - 1) ? ' ' : ''));
+        titleCased += separators ? wordSplit.join('') : (wordSplit.join('') + ((key <= valueSplit.length - 1) ? ' ' : ''));
     });
     return String(titleCased);
 };
+class TimeoutError extends Error {
+    status;
+    code;
+    constructor(message = 'Request timed out', status = 408, code = 'ETIMEDOUT') {
+        super(message);
+        this.name = 'TimeoutError';
+        this.status = status;
+        this.code = code;
+    }
+}
 class FuxcelBase {
     length = 0;
     prev = { length: 0 };
     /**
      * Initialize the plugin
      *
-     * @param selector {string|Iterable<any>|any} Selectable string or iterable.
-     * @param context {string|Iterable<any>|any} Context to select from.
+     * @param selector {string|IterableElement|any} Selectable string or iterable.
+     * @param context {string|IterableElement|any} Context to select from.
      */
     constructor(selector, context) {
         const INSTANCE = this;
@@ -281,10 +300,13 @@ class FuxcelBase {
         catch (e) {
             if (e instanceof Error) {
                 const stackLines = e.stack?.split('\n');
-                const stackLineSplit = stackLines ? stackLines[0].split('/') : [];
-                if (stackLineSplit.length) {
-                    const guessedNameArray = (stackLineSplit[stackLineSplit.length - 1]).split(':');
-                    return guessedNameArray.length ? guessedNameArray[0] : null;
+                if (stackLines?.length) {
+                    const stackLinesFilter = stackLines.filter((stackLine) => stackLine.includes('#_getCurrentScriptFilename'));
+                    const stackLineSplit = stackLinesFilter?.length ? stackLinesFilter[0].split('/') : [];
+                    if (stackLineSplit.length) {
+                        const guessedNameArray = (stackLineSplit[stackLineSplit.length - 1]).split(':');
+                        return guessedNameArray.length ? guessedNameArray[0] : null;
+                    }
                 }
             }
         }
@@ -337,8 +359,13 @@ class FuxcelBase {
      */
     get fieldAttributes() {
         const selected = this.toArray;
+        const field = selected[0];
+        const fieldId = field.getAttribute('id')?.toLowerCase();
+        const fieldDataId = field.dataset.id;
+        const fieldName = field.dataset.fxName ?? (fieldDataId?.length && fieldId?.endsWith(fieldDataId) ? fieldId.replace(`_${fieldDataId}`, '') : fieldId);
         return {
-            id: selected[0].getAttribute('id') && selected[0].getAttribute('id')?.toLowerCase(),
+            id: fieldId,
+            fxName: fieldName,
             type: selected[0].getAttribute('type') && selected[0].getAttribute('type')?.toLowerCase(),
             fxId: selected[0].getAttribute('type') && selected[0].getAttribute('type')?.toLowerCase(),
             fxRole: selected[0].getAttribute('type') && selected[0].getAttribute('type')?.toLowerCase(),
@@ -526,9 +553,9 @@ class Fuxcel extends FuxcelBase {
     /**
      * Perform Fadein animation on selected element.
      *
-     * @param timeout {number} Animation duration.
-     * @param iteration {number}
-     * @param display
+     * @param timeout {number|string} Animation duration.
+     * @param iteration {number|string}
+     * @param display {string}
      * @return {Promise<Fuxcel>}
      */
     fadein(timeout, iteration, display) {
@@ -536,7 +563,7 @@ class Fuxcel extends FuxcelBase {
             display = timeout;
             timeout = 300;
         }
-        else if (timeout && typeof iteration === 'string') {
+        else if (isDefined(timeout) && typeof iteration === 'string') {
             display = iteration;
             iteration = 1;
         }
@@ -546,9 +573,9 @@ class Fuxcel extends FuxcelBase {
     /**
      * Perform a Slidein-down animation on selected element.
      *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
+     * @param timeout {number|string} Animation duration.
+     * @param iteration {number|string}
+     * @param display {string}
      * @return {Promise<Fuxcel>}
      */
     slideindown(timeout, iteration, display) {
@@ -564,11 +591,31 @@ class Fuxcel extends FuxcelBase {
         return this.#_animate(animation);
     }
     /**
+     * Perform a Slidein-up animation on selected element.
+     *
+     * @param timeout {number|string} Animation duration.
+     * @param iteration {number|string}
+     * @param display {string}
+     * @return {Promise<Fuxcel>}
+     */
+    slideinup(timeout, iteration, display) {
+        if (typeof timeout === 'string') {
+            display = timeout;
+            timeout = 300;
+        }
+        else if (timeout && typeof iteration === 'string') {
+            display = iteration;
+            iteration = 1;
+        }
+        const animation = animations({ timeout: timeout, iterations: iteration, display: display }).slideInUp;
+        return this.#_animate(animation);
+    }
+    /**
      * Perform a Slideout-down animation on selected element.
      *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
+     * @param timeout {number|string} Animation duration.
+     * @param iteration {number|string}
+     * @param display {string}
      * @return {Promise<Fuxcel>}
      */
     slideoutdown(timeout, iteration, display) {
@@ -584,11 +631,12 @@ class Fuxcel extends FuxcelBase {
         return this.#_animate(animation);
     }
     /**
+     *
      * Perform a Slideout-up animation on selected element.
      *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
+     * @param timeout {number|string} Animation duration.
+     * @param iteration {number|string}
+     * @param display {string}
      * @return {Promise<Fuxcel>}
      */
     slideoutup(timeout, iteration, display) {
@@ -606,9 +654,9 @@ class Fuxcel extends FuxcelBase {
     /**
      * Perform a Slidein-left animation on selected element.
      *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
+     * @param timeout {number|string} Animation duration.
+     * @param iteration {number|string}
+     * @param display {string}
      * @return {Promise<Fuxcel>}
      */
     slideinleft(timeout, iteration, display) {
@@ -626,9 +674,9 @@ class Fuxcel extends FuxcelBase {
     /**
      * Perform a Slideout-left animation on selected element.
      *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
+     * @param timeout {number|string} Animation duration.
+     * @param iteration {number|string}
+     * @param display {string}
      * @return {Promise<Fuxcel>}
      */
     slideoutleft(timeout, iteration, display) {
@@ -646,9 +694,9 @@ class Fuxcel extends FuxcelBase {
     /**
      * Perform a Slidein-right animation on selected element.
      *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
+     * @param timeout {number|string} Animation duration.
+     * @param iteration {number|string}
+     * @param display {string}
      * @return {Promise<Fuxcel>}
      */
     slideinright(timeout, iteration, display) {
@@ -666,9 +714,9 @@ class Fuxcel extends FuxcelBase {
     /**
      * Perform a Slideout-right animation on selected element.
      *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
+     * @param timeout {number|string} Animation duration.
+     * @param iteration {number|string}
+     * @param display {string}
      * @return {Promise<Fuxcel>}
      */
     slideoutright(timeout, iteration, display) {
@@ -686,9 +734,9 @@ class Fuxcel extends FuxcelBase {
     /**
      * Perform a blink animation on selected element.
      *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
+     * @param timeout {number|string} Animation duration.
+     * @param iteration {number|string}
+     * @param display {string}
      * @return {Promise<Fuxcel>}
      */
     blink(timeout, iteration, display) {
@@ -706,9 +754,9 @@ class Fuxcel extends FuxcelBase {
     /**
      * Perform a Zoom-in animation on selected element.
      *
-     * @param timeout {number} Animation duration.
-     * @param iteration
-     * @param display
+     * @param timeout {number|string} Animation duration.
+     * @param iteration {number|string}
+     * @param display {string}
      * @return {Promise<Fuxcel>}
      */
     zoomin(timeout, iteration, display) {
@@ -744,6 +792,29 @@ class Fuxcel extends FuxcelBase {
     get innerText() {
         const selected = this.toArray;
         return selected[0].innerText;
+    }
+    /**
+     * @return {boolean} Returns true if the selected element has the disabled property; false otherwise.
+     */
+    get isDisabled() {
+        return !!this.prop('disabled') || this.hasClass('disabled');
+    }
+    /**
+     * @return {boolean} Returns true if the selected element is a form element.
+     */
+    get isFormElement() {
+        const selected = this.toArray;
+        if (typeof selected[0].cloneNode !== 'function')
+            return false;
+        try {
+            const form = document.createElement('form');
+            form.style.display = 'none';
+            form.appendChild(selected[0].cloneNode(true));
+            return form.elements.length > 0;
+        }
+        catch {
+            return false;
+        }
     }
     /**
      * @return {string} The Outer Text value of the given element.
@@ -825,6 +896,16 @@ class Fuxcel extends FuxcelBase {
         Fuxcel.#_pluginPath = path;
     }
     /**
+     * Checks if selected element contains given class.
+     *
+     * @param {string} token
+     * @return {boolean} true if element contains given class; false otherwise.
+     */
+    hasClass(token) {
+        const selected = this.toArray;
+        return selected[0].classList.contains(token);
+    }
+    /**
      * Add class(es) to the classlist of the selected element.
      *
      * @param tokenList {string[]} Comma separated strings of class(es) to add.
@@ -858,6 +939,15 @@ class Fuxcel extends FuxcelBase {
         const selected = this.toArray;
         selected.forEach((element) => tokenList.forEach(token => element.classList.remove(token)));
         return this;
+    }
+    /**
+     * Perform callback on each selected item
+     *
+     * @param callback {((element: Fuxcel, index: number) => void)}
+     */
+    each(callback) {
+        const selected = this.toArray;
+        selected.forEach((element, index) => callback(fx(element), index));
     }
     /**
      * Get or Set the given attribute(s) for the selected element (If a String is passed to the name param).
@@ -957,6 +1047,15 @@ class Fuxcel extends FuxcelBase {
         const list = {};
         Object.keys(selected[0]).filter(prop => Number.isNaN(parseInt(prop) && selected[0][prop])).forEach(prop => list[prop] = selected[0][prop]);
         return list;
+    }
+    /**
+     * Remove selected element(s) from DOM.
+     *
+     * @return void
+     */
+    remove() {
+        const selected = this.toArray;
+        selected.forEach(element => element.remove());
     }
     /**
      * Removes the given [data-*] attribute(s) from the selected element.
@@ -1124,28 +1223,26 @@ class Fuxcel extends FuxcelBase {
      * @return {Fuxcel} Fuxcel Object of the selected element.
      */
     disable(disabled = true) {
-        const selected = this.toArray;
-        selected.forEach((element) => {
-            const tagName = element.tagName?.toLowerCase();
-            const selectedElement = fx(element);
-            if (tagName === 'a')
-                disabled ? selectedElement.classes.add('disabled') : selectedElement.classes.remove('disabled');
+        this.each(element => {
+            if (!element.isFormElement)
+                disabled ? element.putClass('disabled') : element.removeClass('disabled');
             else
-                disabled ? selectedElement.prop({ disabled: true }) : selectedElement.removeProp('disabled');
+                disabled ? element.prop({ disabled: true }) : element.removeProp('disabled');
         });
         return this;
     }
     /**
      *
-     * @param uri {string|null=null}=''} Request URL.
+     * @param uri {string|null=''} Request URL.
      * @param method {('get'|'post'|'put'|'patch'|'delete'|null)} Form Request method.
      * @param data {object|null=null} Additional form request data.
      * @param dataType {('html'|'json'|'jsonp'|'script'|'text'|'xml'|null)} Expected return data type.
      * @param headers {Object|Headers} Additional Headers to be sent along the request.
      * @param beforeSend {Function|null = null} Before request is sent.
+     * @param timeout
      * @param handleError
      */
-    handleFormSubmit({ uri = '', method = 'get', data = null, dataType = 'json', headers = null, beforeSend = null, handleError = false }) {
+    handleFormSubmit({ uri = '', method = 'get', data = null, dataType = 'json', headers = null, beforeSend = null, timeout = 10000, handleError = false } = {}) {
         const selected = this.toArray;
         let response;
         return new Promise((resolve, reject) => selected.forEach((element) => {
@@ -1164,6 +1261,7 @@ class Fuxcel extends FuxcelBase {
                     headers: headers,
                     data: formData,
                     dataType: dataType,
+                    timeout: timeout,
                     beforeSend() {
                         isFunction(beforeSend) && beforeSend(form);
                     },
@@ -1185,16 +1283,16 @@ class Fuxcel extends FuxcelBase {
                                         onCancel: () => form.toggleFormSubmitButtonState(false)
                                     });
                                 if (status === 419)
-                                    setTimeout(() => location.href = response.redirect, 2000);
-                                else if (status === 422 || status === 500) {
-                                    if (handleError && status === 422)
-                                        response.errors ?
-                                            response.message ? form.renderValidationErrors(response.errors, response.message) : form.renderValidationErrors(response.errors) :
-                                            response.message && form.renderValidationErrors({}, response.message);
-                                    else
-                                        resolve({ JSON: response, status: status, form: form });
-                                    form.toggleFormSubmitButtonState(false);
-                                }
+                                    setTimeout(() => response.redirect ? (location.href = response.redirect) : location.reload(), 2000);
+                                else if (status === 422 || status === 500)
+                                    form.toggleFormSubmitButtonState(false).then(() => {
+                                        if (handleError && status === 422)
+                                            response.errors ?
+                                                response.message ? form.renderValidationErrors(response.errors, response.message) : form.renderValidationErrors(response.errors) :
+                                                response.message && form.renderValidationErrors({}, response.message);
+                                        else
+                                            resolve({ JSON: response, status: status, form: form });
+                                    });
                                 else {
                                     console.error('Server Failure', xhr);
                                     reject({ response: xhr, status: status, form: form });
@@ -1305,37 +1403,50 @@ class Fuxcel extends FuxcelBase {
      * Toggle the disabled state (property) of the selected element [a button preferably].
      *
      * @param isLoading {boolean} Determines the state of the button.
+     * @return {Promise<Fuxcel>} Promise of Fuxcel Object of the selected element.
      */
     toggleButtonLoadState(isLoading = true) {
-        const selected = this.toArray;
-        const button = fx(selected[0]);
-        const loaderElement = fx(Fuxcel.buttonLoaderClass, button);
-        if (isLoading) {
-            if (!button.prop('disabled') || !button.attrib('disabled'))
-                loaderElement.length ?
-                    (loaderElement.style('display') === 'none' ? loaderElement.fadein().then(() => button.disable()) : button.disable()) :
-                    button.disable();
-        }
-        else
-            loaderElement.length ?
-                (loaderElement.style('display') !== 'none' ? loaderElement.fadeout().then(() => button.disable(false)) : button.disable(false)) :
-                button.disable(false);
+        return new Promise(resolve => {
+            const selected = this.toArray;
+            const button = fx(selected[0]);
+            const loaderElement = fx(Fuxcel.buttonLoaderClass, button);
+            const resolveDisable = (disabled = true) => {
+                button.disable(disabled);
+                resolve(button);
+            };
+            if (isLoading) {
+                if (!button.prop('disabled') || !button.attrib('disabled'))
+                    if (loaderElement.length && loaderElement.style('display') === 'none')
+                        loaderElement.fadein().then(() => resolveDisable());
+                    else
+                        resolveDisable();
+            }
+            else {
+                if (loaderElement.length && loaderElement.style('display') !== 'none')
+                    loaderElement.fadeout().then(() => resolveDisable(false));
+                else
+                    resolveDisable(false);
+            }
+        });
     }
     /**
      * Toggles the submit button state of the selected form.
      *
      * @param isLoading {boolean} Determines the state of the button.
+     * @return {Promise<Fuxcel>} Promise of Fuxcel Object of the selected element.
      */
     toggleFormSubmitButtonState(isLoading = true) {
-        const selected = this.toArray;
-        if (this.isElement('form')) {
-            const submitButton = fx('button[type="submit"]', selected[0]).length ?
-                fx('button[type="submit"]', selected[0]) :
-                fx(`button[form="${selected[0].id}"]`);
-            submitButton.toggleButtonLoadState(isLoading);
-        }
-        else
-            console.warn('Non form element given.');
+        return new Promise(resolve => {
+            const selected = this.toArray;
+            if (this.isElement('form')) {
+                const submitButton = fx('button[type="submit"]', selected[0]).length ?
+                    fx('button[type="submit"]', selected[0]) :
+                    fx(`button[form="${selected[0].id}"]`);
+                submitButton.toggleButtonLoadState(isLoading).then(button => resolve(button));
+            }
+            else
+                console.warn('Non form element given.');
+        });
     }
     /**
      * Trigger a new event on the selected element(s).
@@ -1370,7 +1481,7 @@ class Fuxcel extends FuxcelBase {
      * _If the events parameter is a Key-Value pair; then the second parameter is required as a boolean._
      *
      * @param events {string} Event as a string.
-     * @param listener {((e: CustomEvent | KeyboardEvent | MouseEvent | TouchEvent | Event) => any)} Listener function to handle given event.
+     * @param listener {((e: EventInterfaces) => any)} Listener function to handle given event.
      * @param {boolean} [option] Optional boolean parameter to set CAPTURING_PHASE of the event listener to either true or false.
      * @return {Fuxcel} Fuxcel Object of the selected element
      *
@@ -1413,11 +1524,21 @@ class Fuxcel extends FuxcelBase {
      */
     value(value = null) {
         const selected = this.toArray;
-        if (typeof value === 'string') {
-            selected.forEach((element) => element.value = value);
+        if (isString(value) || isDefined(value)) {
+            selected.forEach((element) => {
+                if (parseBool(element.contentEditable))
+                    element.innerText = value.toString();
+                else
+                    element.value = value.toString();
+            });
             return this;
         }
-        return selected[0].value;
+        return parseBool(selected[0].contentEditable) ? selected[0].innerText : selected[0].value;
+    }
+    testValidateAfter(formGroup) {
+        const form = this.formValidator;
+        const group = fx(formGroup).toArray;
+        return form.validateFromGroup(group[0]);
     }
 }
 class FuxcelValidator extends Fuxcel {
@@ -1426,11 +1547,11 @@ class FuxcelValidator extends Fuxcel {
         regExp: {
             cardCVV: /[0-9]{3,4}$/gi,
             cardNumber: /^[0-9]+$/gi,
-            email: /^(\w+([.-]?))*@\w+([.-]?)*(\.\w{2,3})$/gi,
+            email: /^(((\w)+(\+?[.-]?\w+)?)*@(\w+[.-]?)*(\.\w{2,63})){1,320}$/gi,
             name: /^([a-zA-Z]{2,255})(\s[a-zA-Z]{2,255}){1,2}$/gi,
             phone: /^(\+\d{1,3}?\s)(\(\d{3}\)\s)?(\d+\s)*(\d{2,3}-?\d+)+$/g,
             username: /^[a-zA-Z]+(_?[a-zA-Z]){2,255}$/gi,
-            password: /[0-9A-Za-z]{8,32}/gi,
+            password: /^([\w._-]){8,32}$/gi,
         },
         config: {
             capslockAlert: true,
@@ -1461,7 +1582,7 @@ class FuxcelValidator extends Fuxcel {
             capslock: 'Capslock active',
             emailFormat: null,
             nameFormat: null,
-            passwordFormat: null,
+            passwordFormat: 'Password requires between 8-32 characters',
             phoneFormat: null,
             usernameFormat: null,
         },
@@ -1476,8 +1597,8 @@ class FuxcelValidator extends Fuxcel {
     /**
      * Toggle given icons with a fadeout and fadein animation.
      *
-     * @param oldIcon {Selector|Iterable<any>} Old Icon selector
-     * @param newIcon {Selector|Iterable<any>} New Icon selector
+     * @param oldIcon {Selector|IterableElement} Old Icon selector
+     * @param newIcon {Selector|IterableElement} New Icon selector
      * @private
      * @return void
      */
@@ -1486,9 +1607,13 @@ class FuxcelValidator extends Fuxcel {
         const _newIcon = fx(newIcon);
         if (_oldIcon.length && _newIcon.length) {
             if (_oldIcon.style('display') !== 'none')
-                _oldIcon.style({ animation: 'fadeOut 500ms linear', display: 'none' });
-            _newIcon.style({ display: 'inline-block', animation: 'fadeIn 500ms linear' });
+                _oldIcon.style({ display: 'none' });
+            if (_newIcon.style('display') === 'none')
+                _newIcon.style({ display: 'inline-block' });
         }
+    }
+    validateFromGroup(formGroup) {
+        return this.#_validate(this, formGroup);
     }
     /**
      * Perform necessary action pre-validation.
@@ -1527,8 +1652,8 @@ class FuxcelValidator extends Fuxcel {
                             const fieldElementId = _fieldElement.attrib('id');
                             if (_fieldElement.prop('tagName').toString().toLowerCase() === 'input' && !_fieldElement.attrib('placeholder'))
                                 // @ts-ignore
-                                _fieldElement.attrib({ placeholder: _fieldElement.attrib('name').toTitleCase() });
-                            if (!_labelElement.attrib('for'))
+                                _fieldElement.attrib({ placeholder: _fieldElement.fieldAttributes.fxName?.toTitleCase() });
+                            if (!_labelElement.attrib('for') || _labelElement.attrib('for').toLowerCase() !== fieldElementId.toLowerCase())
                                 _labelElement.attrib('for', fieldElementId);
                             // @ts-ignore
                             const expectedFieldElement = _fieldElement[0];
@@ -1631,7 +1756,7 @@ class FuxcelValidator extends Fuxcel {
                 // @ts-ignore
                 delete FuxcelValidator.#_validatorErrorBag[fieldAttribs.formId][fieldAttribs.id]);
         else {
-            if (isString(MessageOrRemove))
+            if (isString(MessageOrRemove) || Array.isArray(MessageOrRemove))
                 Object.keys(FuxcelValidator.#_validatorErrorBag).length && (Object.values(FuxcelValidator.#_initSteps).filter(value => fieldAttribs.formId === value).length ?
                     // @ts-ignore
                     (Object.keys(FuxcelValidator.#_validatorErrorBag[fieldAttribs.formId]).length && (FuxcelValidator.#_validatorErrorBag[fieldAttribs.formId][this.stepFromField][fieldAttribs.id] = MessageOrRemove)) :
@@ -1716,7 +1841,7 @@ class FuxcelValidator extends Fuxcel {
                 }
             }
             const label = document.createElement('span');
-            label.innerHTML = expectedLabelElement.innerHTML;
+            label.innerHTML = (expectedLabelElement.innerText.length ? expectedLabelElement.innerHTML : expectedFieldElement.getAttribute('placeholder'));
             expectedLabelElement.innerHTML = '';
             expectedLabelElement.append(expectedFieldElement, label);
             newFieldGroup.append(/*expectedFieldElement, */ expectedLabelElement);
@@ -1743,8 +1868,11 @@ class FuxcelValidator extends Fuxcel {
                 alignItems: 'center'*/
             });
         }
-        else
+        else {
+            if (!expectedLabelElement.innerText.length)
+                expectedLabelElement.innerHTML = expectedFieldElement.getAttribute('placeholder');
             formGroup.append(validationText);
+        }
         validationText.setAttribute('id', `${expectedFieldElement.id}Valid`);
         return formGroup;
     }
@@ -1812,7 +1940,7 @@ class FuxcelValidator extends Fuxcel {
         let refillRequired, passwordToggle = FuxcelValidator.passwordTogglerIconClass, _inputElement = fx(inputElement, formGroup), _selectElement = fx(selectElement, formGroup), _textAreaElement = fx(textAreaElement, formGroup), _element = that.#_resetFuxcelObject(_inputElement.length ? _inputElement : (_selectElement.length ? _selectElement : _textAreaElement)), _passwordToggle = fx(passwordToggle, formGroup), showPasswordToggle = `#${formGroup.id} ${passwordToggle} > .fx-show-password-icon`, hidePasswordToggle = `#${formGroup.id} ${passwordToggle} > .fx-hide-password-icon`;
         const inputGroupWrapper = fx('.input-group-wrapper', formGroup);
         const labelElement = fx('label', inputGroupWrapper);
-        _inputElement.length && _inputElement.upon({
+        _inputElement.length && _inputElement.attrib('id')?.length && _inputElement.upon({
             blur: function () {
                 const _input = that.#_resetFuxcelObject(fx(this));
                 if (inputGroupWrapper.length && labelElement.length) {
@@ -1825,7 +1953,7 @@ class FuxcelValidator extends Fuxcel {
                             if (!focused && _input.value()?.length) {
                                 _input.attrib('type')?.toLowerCase() === 'password' && _passwordToggle.dataAttrib('require-refill', 'true');
                                 refillRequired = parseBool(_passwordToggle.dataAttrib('require-refill'));
-                                _input.attrib('type')?.toLowerCase() === 'password' && fx(`${showPasswordToggle}, ${hidePasswordToggle}`).style({ animation: 'fadeOut 500ms linear', display: 'none' });
+                                _input.attrib('type')?.toLowerCase() === 'password' && fx(`${showPasswordToggle}, ${hidePasswordToggle}`).style({ display: 'none' });
                             }
                         });
             },
@@ -1854,10 +1982,7 @@ class FuxcelValidator extends Fuxcel {
                 const filterFieldType = new Set(['date', 'datetime', 'email', 'month']);
                 if (_input.canBeValidated) {
                     if (!filterFieldType.has(elementType) && !filterFieldType.has(fxRole) && !filterField.has(elementId) && !filterField.has(fxRole) && !filterField.has(fxId))
-                        if (_input.isPasswordField)
-                            _input.#_validatePasswordFields();
-                        else
-                            _input.validateField();
+                        _input.isPasswordField ? _input.#_validatePasswordFields() : _input.validateField();
                     if (_input.isEmailField)
                         configObject.config?.validateEmail ? _input.validateEmail(configObject.regExp?.email, configObject.texts?.emailFormat ?? null) : _input.toggleValidation();
                     if (_input.isNameField)
@@ -1896,12 +2021,12 @@ class FuxcelValidator extends Fuxcel {
                                         FuxcelValidator.#_toggleValidationIcons(showPasswordToggle, hidePasswordToggle);
                                 else {
                                     refillRequired = parseBool(_passwordToggle.dataAttrib('require-refill'));
-                                    fx(`${showPasswordToggle}, ${hidePasswordToggle}`).style({ animation: 'fadeOut 500ms linear', display: 'none' });
+                                    fx(`${showPasswordToggle}, ${hidePasswordToggle}`).style({ display: 'none' });
                                 }
                             }
             }
         });
-        _selectElement.length && _selectElement.upon({
+        _selectElement.length && _selectElement.attrib('id')?.length && _selectElement.upon({
             blur: function () {
                 if (inputGroupWrapper.length && labelElement.length) {
                     labelElement.style({ color: 'var(--fx-dark)' });
@@ -1915,12 +2040,11 @@ class FuxcelValidator extends Fuxcel {
                 }
             },
             change: function () {
-                // @ts-ignore
                 const _element = that.#_resetFuxcelObject(fx(this));
                 _element.canBeValidated && _element.validateField();
             }
         });
-        _textAreaElement.length && _textAreaElement.upon({
+        _textAreaElement.length && _textAreaElement.attrib('id')?.length && _textAreaElement.upon({
             blur: function () {
                 if (inputGroupWrapper.length && labelElement.length) {
                     labelElement.style({ color: 'var(--fx-dark)' });
@@ -1934,15 +2058,13 @@ class FuxcelValidator extends Fuxcel {
                 }
             },
             input: function () {
-                // @ts-ignore
                 const _element = that.#_resetFuxcelObject(fx(this));
                 _element.canBeValidated && _element.validateField();
             }
         });
-        if (_element.length) {
+        if (_element.length && _element.attrib('id')?.length) {
             const elementId = _element.attrib('id');
-            // @ts-ignore
-            const fieldName = elementId.toTitleCase();
+            const fieldName = _element.fieldAttributes.fxName?.toTitleCase();
             if (_element.canBeValidated && (_element.isElement('input') || _element.isElement('select') || _element.isElement('textarea'))) {
                 if (_element.isElement('input')) {
                     const elementType = _element.attrib('type') && _element.attrib('type').toLowerCase();
@@ -1986,12 +2108,12 @@ class FuxcelValidator extends Fuxcel {
         const configObject = this.validatorConfig;
         if (configObject.config?.validatePassword) {
             const pwdField = fx(`#${configObject.config?.passwordId}`, form).formValidator;
-            const pwdFieldName = pwdField.fieldAttributes.id.toTitleCase();
+            const pwdFieldName = pwdField.fieldAttributes.fxName?.toTitleCase();
             const expectedCpwdField = fx(`#${configObject.config?.passwordConfirmId}`, form);
             if (configObject.regExp?.password) {
                 if (expectedCpwdField.length) {
                     const cpwdField = expectedCpwdField.formValidator;
-                    const cpwdFieldName = cpwdField.fieldAttributes.id.toTitleCase();
+                    const cpwdFieldName = cpwdField.fieldAttributes.fxName?.toTitleCase();
                     if (!pwdField.value()?.length) {
                         pwdField.validateField();
                         cpwdField.validateField(`Check Password.`);
@@ -2012,7 +2134,7 @@ class FuxcelValidator extends Fuxcel {
                 const maxLength = parseInt(pwdField.attrib('maxlength') ?? '0');
                 if (expectedCpwdField.length) {
                     const cpwdField = expectedCpwdField.formValidator;
-                    const cpwdFieldName = cpwdField.fieldAttributes.id.toTitleCase();
+                    const cpwdFieldName = cpwdField.fieldAttributes.fxName?.toTitleCase();
                     if (pwdField.value()?.length || cpwdField.value()?.length) {
                         if (minLength && maxLength)
                             if (minLength === maxLength) {
@@ -2089,13 +2211,18 @@ class FuxcelValidator extends Fuxcel {
             this.validateField();
     }
     /**
-     * Checks if the selected field element can be validated by checking that the [data-fx-validate] is not set to false.
+     * Checks if the selected field element can be validated by checking that the [data-fx-validate] is not set to false or the parent form-group is not hidden.
      *
      * @return {boolean} true if validation is possible; false otherwise
      */
     get canBeValidated() {
         const selected = this.toArray;
-        return selected.length ? (this.dataAttrib('fx-validate') ? parseBool(this.dataAttrib('fx-validate')) : true) : false;
+        return selected.length ?
+            (this.dataAttrib('fx-validate') ?
+                parseBool(this.dataAttrib('fx-validate')) : (this.parents('.form-group').length ?
+                this.parents('.form-group').style('display') !== 'none' :
+                this.style('display') !== 'none')) :
+            false;
     }
     /**
      * @return {object} The error bag for the current selected form.
@@ -2306,41 +2433,41 @@ class FuxcelValidator extends Fuxcel {
      * @param messageOrCallbackFn {((fx: FuxcelValidator, e?: CustomEvent) => any)|StringOrNull}
      * @param callbackFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
      */
-    renderValidationErrors(errors, messageOrCallbackFn = null, callbackFn = null) {
+    renderValidationErrors(errors = {}, messageOrCallbackFn = null, callbackFn = null) {
         const selected = this;
         if (selected.isElement('form')) {
-            const fieldElements = this.formFieldElements;
-            if (isObject(errors))
+            if (isObject(errors) && Object.keys(errors).length) {
+                const fieldElements = this.formFieldElements;
                 Object.keys(errors).forEach((elementId) => {
-                    // @ts-ignore
                     const fieldName = elementId.toString().toTitleCase();
                     const element = fx(`#${elementId}`).formValidator;
-                    // @ts-ignore
                     if (elementId in fieldElements && (isDefined(errors[elementId])))
-                        // @ts-ignore
                         element.validateField(errors[elementId], true);
                     else {
-                        // @ts-ignore
                         if (isString(errors[elementId]) && errors[elementId] !== undefined)
                             element.validateField(`Verify ${fieldName} and try again.`, true);
                     }
                 });
-            // @ts-ignore
-            fx('.fx-valid-error')[0].scrollIntoView({
-                behavior: "smooth", // Smooth scrolling
-                block: "center", // Scroll to the top of the target
-            });
+                fx('.fx-valid-error')[0].scrollIntoView({
+                    behavior: "smooth", // Smooth scrolling
+                    block: "center", // Scroll to the top of the target
+                });
+            }
         }
         else
             console.warn('Non form element given.');
         typeof messageOrCallbackFn === "string" ?
-            // @ts-ignore
-            fx.modal({
+            (typeof callbackFn === 'function' ? fx.modal({
                 type: 'error',
                 content: messageOrCallbackFn,
                 confirmButtonText: 'Ok',
-                onConfirm: (e) => typeof callbackFn === 'function' && callbackFn(this, e)
-            }) : typeof messageOrCallbackFn === 'function' && messageOrCallbackFn(this);
+                onConfirm: (e) => callbackFn(this, e)
+            }) : fx.modal({
+                type: 'error',
+                closeOnConfirm: true,
+                content: messageOrCallbackFn,
+                confirmButtonText: 'Ok'
+            })) : typeof messageOrCallbackFn === 'function' && messageOrCallbackFn(this);
         return this;
     }
     /**
@@ -2353,7 +2480,7 @@ class FuxcelValidator extends Fuxcel {
         const fieldAttribs = this.fieldAttributes;
         const validationProps = this.validationProps;
         // @ts-ignore
-        const finalMessage = message ?? `The ${fieldAttribs.id?.toTitleCase()} field is required`;
+        const finalMessage = message ?? `The ${fieldAttribs.fxName?.toTitleCase()} field is required`;
         this.#_manipulateErrorBag(finalMessage);
         this.#_fxValidatorConfig.config?.showIcons && FuxcelValidator.#_toggleValidationIcons(validationProps.validIcon, validationProps.invalidIcon);
         fx(validationProps.validationField).length && fx(validationProps.validationField).formValidator.renderMessage(finalMessage ?? null);
@@ -2409,7 +2536,7 @@ class FuxcelValidator extends Fuxcel {
         else
             fx(validationProps.formGroup).removeClass('fx-valid-error', 'fx-valid-success');
         !!fx(`${validationProps.validationIconField} > *`)?.length ?
-            fx(`${validationProps.validationIconField} > *`).fadeout().then((e) => fx(validationProps.validationField).formValidator.renderMessage(null)) :
+            fx(`${validationProps.validationIconField} > *`).fadeout().then(() => fx(validationProps.validationField).formValidator.renderMessage(null)) :
             fx(validationProps.validationField).formValidator.renderMessage(null);
         return this;
     }
@@ -2477,22 +2604,26 @@ class FuxcelValidator extends Fuxcel {
      * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
      */
     validateField(message = null, isError = false) {
-        const selected = this;
-        const fieldAttribs = selected.fieldAttributes;
-        const configObject = this.#_fxValidatorConfig.config;
-        // @ts-ignore
-        const target = selected[0];
-        let fieldValue = target.value, minLength = parseInt(selected.attrib('minlength') ?? '0'), fieldName = fieldAttribs.id.toTitleCase(), finalMessage = minLength ?
-            (!isString(message) && fieldValue.length && fieldValue.length < minLength ? `The ${fieldName} field requires a minimum of ${minLength} characters.` : message) :
-            (!isString(message) ?
-                (selected.isPasswordField ?
-                    ((fieldAttribs.id === configObject?.passwordConfirmId && configObject?.validatePassword) ? ((!fieldValue.length || fieldValue !== fx(`#${configObject.passwordId}`).value()) ? (fx(`#${configObject.passwordId}`).value()?.length ? 'Ensure passwords.' : `The ${fieldName} field is required.`) : null) : (!fieldValue.length ? `The ${fieldName} field is required.` : null)) :
-                    message) :
-                message);
-        if (!fieldValue || !fieldValue.length || fieldValue.length < minLength || (selected.isPasswordField && (!fieldValue.length || finalMessage)) || isError)
-            selected.showError(finalMessage);
+        if (this.attrib('id')?.length) {
+            const selected = this;
+            const fieldAttribs = selected.fieldAttributes;
+            const configObject = this.#_fxValidatorConfig.config;
+            // @ts-ignore
+            const target = selected[0];
+            let fieldValue = target.value, minLength = parseInt(selected.attrib('minlength') ?? '0'), fieldName = fieldAttribs.fxName?.toTitleCase(), finalMessage = minLength ?
+                (!isString(message) && fieldValue.length && fieldValue.length < minLength ? `The ${fieldName} field requires a minimum of ${minLength} characters.` : message) :
+                (!isString(message) ?
+                    (selected.isPasswordField ?
+                        (Array.isArray(message) ? message : (fieldAttribs.id === configObject?.passwordConfirmId && configObject?.validatePassword) ? ((!fieldValue.length || fieldValue !== fx(`#${configObject.passwordId}`).value()) ? (fx(`#${configObject.passwordId}`).value()?.length ? 'Ensure passwords.' : `The ${fieldName} field is required.`) : null) : (!fieldValue.length ? `The ${fieldName} field is required.` : null)) :
+                        message) :
+                    message);
+            if (!fieldValue || !fieldValue.length || fieldValue.length < minLength || (selected.isPasswordField && (!fieldValue.length || finalMessage)) || isError)
+                selected.showError(finalMessage);
+            else
+                selected.showSuccess(finalMessage);
+        }
         else
-            selected.showSuccess(finalMessage);
+            console.warn(`Selected element has no ID`, this);
         return this;
     }
     /**
@@ -2546,18 +2677,18 @@ class FuxcelValidator extends Fuxcel {
         const value = selected[0].value;
         const minLength = parseInt(this.attrib('minlength') ?? '2');
         // @ts-ignore
-        const fieldName = selected[0].id.toTitleCase();
+        const fieldName = this.fieldAttributes.fxName?.toTitleCase();
         return this.validateRegex(() => value.length ? (value.length > minLength ?
             (value.match(regExp) ? this.validateField() : this.validateField(`Invalid Username format: (${customFormatEx ?? 'Username must start and end with an alphabet, and can only contain alphabets and underscores.'})`)) :
             this.validateField(customFormatEx ?? `The ${fieldName} requires a minimum of 3 characters.`)) : this.toggleValidation());
     }
 }
 class FuxcelSteps extends FuxcelValidator {
-    #that;
+    // readonly #that: FuxcelValidator;
     static currentlySelected = {};
     constructor(selected) {
         super(selected);
-        this.#that = selected;
+        // this.#that = selected;
         try {
             // @ts-ignore
             if (Steps.constructor.name.length && selected.validatorConfig.stepForm.plugin)
@@ -2671,6 +2802,9 @@ class FuxcelModal extends Fuxcel {
     });
     /**
      *
+     * @param selector {string|IterableElement|any}
+     * @param context {string|IterableElement|any}
+     * @param autoActions {boolean=true}
      */
     constructor(selector, context, autoActions = true) {
         super(selector, context);
@@ -2685,6 +2819,7 @@ class FuxcelModal extends Fuxcel {
                 const triggerModal = () => {
                     if (modalTarget) {
                         FuxcelModal.#_modalTarget = modalTarget;
+                        console.log(FuxcelModal.#_modalTarget);
                         if (autoActions)
                             if (modalAction === 'close')
                                 FuxcelModal.#_modalTarget.modal.hide();
@@ -2692,11 +2827,12 @@ class FuxcelModal extends Fuxcel {
                                 FuxcelModal.#_modalTarget.modal.toggle();
                     }
                 };
+                // currentTrigger.parents('.fx-modal').length && ((!currentTrigger.parents('.fx-modal').length || !currentTrigger.parents('.fx-modal').attrib('id')?.includes('init')) && triggerModal());
                 (currentTrigger.parents('.fx-modal').length && !currentTrigger.parents('.fx-modal').attrib('id')?.includes('init')) ? triggerModal() : (!currentTrigger.parents('.fx-modal').length && triggerModal());
             });
         }
         else
-            console.error('Target modal not found.');
+            console.error('Target modal action triggers not found.');
     }
     /**
      * @return {FuxcelModal | null} FuxcelModal object of Current open modal.
@@ -2721,12 +2857,13 @@ class FuxcelModal extends Fuxcel {
      *
      * @param title {string} The Modal title.
      * @param html {boolean} Is modal content HTML or Text.
+     * @param isStatic {boolean} Is modal Static?.
      * @param content {string} The Content for the body of the Modal.
      * @param id {string} id to use for the Modal.
      * @param hasFooter {boolean} If the Modal should be created with a footer.
      * @return {HTMLElement} Generated Modal.
      */
-    static init({ title = null, html = true, content, id, hasFooter }) {
+    static init({ title = null, html = true, isStatic = false, content, id, hasFooter }) {
         const fxModal = document.createElement('div');
         const modalDialog = document.createElement('div');
         const modalContent = document.createElement('div');
@@ -2736,6 +2873,7 @@ class FuxcelModal extends Fuxcel {
         const modalTitle = document.createElement('div');
         const modalCloseButton = document.createElement('div');
         fxModal.id = id;
+        isStatic && (fxModal.dataset.fxStatic = 'true');
         fxModal.classList.add('fx-modal', 'filter');
         title && (modalTitle.innerHTML = title);
         html ? (modalBody.innerHTML = content) : (modalBody.innerText = content);
@@ -2790,20 +2928,22 @@ class FuxcelModal extends Fuxcel {
      */
     show(escKey = true) {
         const modalContent = fx('.fx-modal-content', this);
-        this.style({ pointerEvents: 'none' }).fadein(300).then(() => modalContent.fadein(300).then(() => {
+        console.log(modalContent);
+        this.style({ pointerEvents: 'none' }).fadein(300).then(() => modalContent.fadein(300, 'flex').then(() => {
             FuxcelModal.#_openModals.push(this);
             this.style({ pointerEvents: 'unset' });
-            if (!parseBool(this.dataAttrib('fx-static')))
+            if (!parseBool(this.dataAttrib('fx-static'))) {
                 // Hide modal if mouse is left-clicked outside the modal content [Trigger clicking on either buttons if any is available].
                 this.upon('click', () => modalContent.hasFocus.then((focused) => !focused ? this.hide() : null));
-            if (escKey)
-                fx(document). /* off('keyup'). */upon('keyup', (e) => {
-                    const event = e;
-                    const key = event.key.toLowerCase();
-                    if (key === 'escape' || key === 'esc')
-                        if (FuxcelModal.hasOpenModals)
-                            FuxcelModal.currentModal?.hide(true);
-                });
+                if (escKey)
+                    fx(document). /* off('keyup'). */upon('keyup', (e) => {
+                        const event = e;
+                        const key = event.key.toLowerCase();
+                        if (key === 'escape' || key === 'esc')
+                            if (FuxcelModal.hasOpenModals)
+                                FuxcelModal.currentModal?.hide();
+                    });
+            }
             // @ts-ignore
             this[0].dispatchEvent(FuxcelModal.fxModalShowEvent);
         }));
@@ -2831,12 +2971,15 @@ class FuxcelModal extends Fuxcel {
  * @param dataType {('html'|'json'|'jsonp'|'script'|'text'|'xml'|null)} Expected return data type.
  * @param headers {Object|Headers} Additional Headers to be sent along the request.
  * @param beforeSend {Function|null = null} Before request is sent.
+ * @param timeout {number} Request Timeout.
  * @param onComplete {((response: ResponseData, status: number, statusText: string) => void)|null = null} Once request is completed.
  * @param onError {((error: any, status: number, statusText: string) => void)|null = null} If request has errors.
  * @param onSuccess {((response: ResponseData, status: number, statusText: string) => void)|null = null} If request is successful.
  */
-fx.fetch = function ({ uri = '', method = 'get', data = null, dataType = 'json', headers = null, beforeSend = null, onComplete = null, onError = null, onSuccess = null }) {
+fx.fetch = function ({ uri = '', method = 'get', data = null, dataType = 'json', headers = null, beforeSend = null, timeout = 10000, onComplete = null, onError = null, onSuccess = null }) {
     let status, statusText, responseData;
+    const controller = new AbortController();
+    const timeoutID = setTimeout(() => controller.abort(), timeout);
     const allowedErrorStatuses = new Set([301, 308, 401, 402, 419, 422, 423, 426, 451, 500, 511]);
     const defaultHeaders = {
         'X-Requested-With': 'XMLHttpRequest'
@@ -2852,11 +2995,11 @@ fx.fetch = function ({ uri = '', method = 'get', data = null, dataType = 'json',
         // @ts-ignore
         Object.keys(headers).forEach(key => defaultHeaders[key] = headers[key]);
     headers = defaultHeaders;
-    // TODO: Abort request with timeout
     fetch(uri, {
         method: method,
         body: data,
-        headers: headers
+        headers: headers,
+        signal: controller.signal,
     }).then(response => {
         responseData = response;
         status = responseData.status;
@@ -2872,12 +3015,13 @@ fx.fetch = function ({ uri = '', method = 'get', data = null, dataType = 'json',
     }).then(data => {
         responseData.responseJSON = dataType === 'json' && data;
         responseData.responseText = dataType === 'json' ? JSON.stringify(data) : (dataType === 'text' && data);
-        // @ts-ignore
-        status > 199 && status < 300 && isFunction(onSuccess) && onSuccess(responseData, status, statusText);
-        // @ts-ignore
-        isFunction(onComplete) && onComplete(responseData, status, statusText);
-        // @ts-ignore
-    }).catch(error => isFunction(onError) && onError(error, status, statusText));
+        onComplete && isFunction(onComplete) && onComplete(responseData, status, statusText);
+        status > 199 && status < 300 && onSuccess && isFunction(onSuccess) && onSuccess(responseData, status, statusText);
+    }).catch(error => {
+        (isFunction(onError)) && ((error.name === 'AbortError') ?
+            onError(new TimeoutError(`⏰ Request timed out\r\nSet Timeout:${timeout / 1000}s`), 408, 'timeout') :
+            onError(error, status, statusText));
+    }).finally(() => clearTimeout(timeoutID));
 };
 /**
  * Create quick simple modal with callbacks.
@@ -2888,13 +3032,15 @@ fx.fetch = function ({ uri = '', method = 'get', data = null, dataType = 'json',
  * @param confirmButtonText {string|null=null} Text for Confirm Button.
  * @param cancelButtonText {string|null=null} Text for Cancel Button.
  * @param html {boolean} Use HTML content? else use Text content.
+ * @param isStatic {boolean} Is Modal Static?.
+ * @param closeOnConfirm {boolean} Close the modal immediately after on confirm button click and no onConfirm callback?
  * @param onConfirm {((e: CustomEvent, modal: FuxcelModal) => void) | null} Callback on confirm button click.
  * @param onCancel {(e: CustomEvent, modal: FuxcelModal) => void | null} Callback on cancel button click.
  * @param onEsc {(e: CustomEvent, modal: FuxcelModal) => void | null} Callback on Escape key used. Only works when cancel button is not available. [i.e. cancelButtonText is null].
  */
-fx.modal = function ({ title = null, type = 'success', content = 'Alert Content', confirmButtonText = null, cancelButtonText = null, html = true, onConfirm = null, onCancel = null, onEsc = null } = {}) {
+fx.modal = function ({ title = null, type = 'success', content = 'Alert Content', confirmButtonText = null, cancelButtonText = null, html = true, isStatic = false, closeOnConfirm = false, onConfirm = null, onCancel = null, onEsc = null } = {}) {
     let alertIconPath, altAlertIcon;
-    const initialModal = FuxcelModal.init({ title: title, html: html, content: content, id: 'init', hasFooter: false });
+    const initialModal = FuxcelModal.init({ title: title, html: html, isStatic: isStatic, content: content, id: 'init', hasFooter: false });
     const modalBody = fx('.fx-modal-body', initialModal);
     const body = document.querySelector('body');
     alertIconPath = type === 'success' ?
@@ -2920,19 +3066,37 @@ fx.modal = function ({ title = null, type = 'success', content = 'Alert Content'
             modal.off().upon('fx.modal.hide', (e) => typeof onEsc === 'function' ? onEsc(e, modal) : null);
         modal.off('click').upon('click', function (e) {
             const clickedTarget = fx(e.target);
-            const isCancel = clickedTarget.matchSelector('#fx-modal-cancel');
-            const isConfirm = clickedTarget.matchSelector('#fx-modal-confirm');
+            const isCancel = clickedTarget.matchSelector('#fx-modal-cancel') || clickedTarget.matchSelector('#fx-modal-cancel *');
+            const isConfirm = clickedTarget.matchSelector('#fx-modal-confirm') || clickedTarget.matchSelector('#fx-modal-confirm *');
+            const isCloseBtn = clickedTarget.matchSelector(`.close[data-fx-action="close"]`) || clickedTarget.matchSelector(`.close[data-fx-action="close"] *`);
             // Hide modal if mouse is left-clicked outside the modal content [Trigger clicking on either buttons if any is available].
             fx('.fx-modal-content', modal).hasFocus.then((focused) => {
-                if (!focused)
-                    cancelButtonText ?
+                if (!focused && !parseBool(modal.dataAttrib('fx-static'))) {
+                    modal.hide(true);
+                    modal.off().upon('fx.modal.hide', (e) => cancelButtonText && typeof onCancel === 'function' ? onCancel(e, modal) : (!closeOnConfirm && typeof onConfirm === 'function' ? onConfirm(e, modal) : null));
+                    /*cancelButtonText ?
                         document.querySelector('#fx-modal-cancel')?.dispatchEvent(FuxcelModal.fxModalCancelButtonClick) :
-                        document.querySelector('#fx-modal-confirm')?.dispatchEvent(FuxcelModal.fxModalCancelButtonClick);
+                        document.querySelector('#fx-modal-confirm')?.dispatchEvent(FuxcelModal.fxModalCancelButtonClick);*/
+                }
+                else {
+                    if (isConfirm && !closeOnConfirm && typeof onConfirm === 'function')
+                        onConfirm(e, modal);
+                    else {
+                        if (isCancel || isConfirm || isCloseBtn) {
+                            modal.hide(true);
+                            modal.off().upon('fx.modal.hide', (e) => (isCancel || isCloseBtn) && typeof onCancel === 'function' ? onCancel(e, modal) : (isConfirm && typeof onConfirm === 'function' ? onConfirm(e, modal) : null));
+                        }
+                    }
+                }
             });
-            if (isCancel || isConfirm) {
-                modal.hide(true);
-                modal.off().upon('fx.modal.hide', (e) => isCancel && typeof onCancel === 'function' ? onCancel(e, modal) : (isConfirm && typeof onConfirm === 'function' ? onConfirm(e, modal) : null));
-            }
+            /*if (isConfirm && !closeOnConfirm && typeof onConfirm === 'function')
+                onConfirm(<CustomEvent>e, modal);
+            else {
+                if (isCancel || isConfirm || isCloseBtn) {
+                    modal.hide(true);
+                    modal.off().upon('fx.modal.hide', (e) => (isCancel || isCloseBtn) && typeof onCancel === 'function' ? onCancel(<CustomEvent>e, modal) : (isConfirm && typeof onConfirm === 'function' ? onConfirm(<CustomEvent>e, modal) : null));
+                }
+            }*/
         });
     }
     else {
