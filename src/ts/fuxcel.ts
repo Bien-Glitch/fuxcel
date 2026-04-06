@@ -1,5 +1,5 @@
-declare type IterableElement = HTMLCollection | HTMLElement[] | HTMLScriptElement[] | HTMLFormElement[] | HTMLInputElement[] | HTMLSelectElement[] | HTMLTextAreaElement[] | Document[] | []
-declare type SingleElement = HTMLElement | HTMLFormElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | Document;
+declare type IterableElement = any | NodeList | HTMLCollection | HTMLElement[] | HTMLScriptElement[] | HTMLFormElement[] | HTMLInputElement[] | HTMLSelectElement[] | HTMLTextAreaElement[] | Document[]
+declare type SingleElement = HTMLElement | HTMLFormElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | Document | Element;
 declare type Direction = 'horizontal' | 'vertical';
 declare type Position = 'affix' | 'prefix' | 'postfix' | 'suffix';
 
@@ -255,6 +255,8 @@ declare interface FuxcelInterface {
 	
 	removeClass(...tokenList: string[]): Fuxcel;
 	
+	toggleClass(token: string): Fuxcel;
+	
 	each(callback: ((element: Fuxcel, index: number) => void)): void;
 	
 	attrib(name: string | object, value?: boolean | string | null): Fuxcel | string;
@@ -394,7 +396,14 @@ declare interface FuxcelModalInterface {
 }
 
 declare interface FXInterface {
-	(selector: string | IterableElement | any, context?: string | IterableElement | any): Fuxcel;
+	/**
+	 *
+	 * @param selector {string | IterableElement} CSS selector
+	 * @see document.querySelectorAll
+	 * @param context {string | IterableElement | undefined}
+	 * @returns {Fuxcel}
+	 */
+	(selector: string | IterableElement, context?: string | IterableElement): Fuxcel;
 	
 	fetch: ({uri, method, data, dataType, beforeSend, timeout, onComplete, onError, onSuccess}: FXRequestType) => void;
 	
@@ -564,18 +573,46 @@ const animations: FXAnimation = ({timeout = 300, iterations = 1, display = 'unse
 	}
 }
 
-const pushPropToWindow = (prop: string, value: any) => {
-	(window as any)[prop] = value;
+function pushPropsToWindow(prop: Record<string, any>): void;
+function pushPropsToWindow(prop: string, value: any): void;
+/**
+ *
+ * @param prop {Record<string, any>}
+ * @param value {any=null}
+ */
+function pushPropsToWindow(prop: string | Record<string, any>, value?: any): void {
+	if (typeof window !== 'undefined') {
+		if (typeof prop === 'object' && prop !== null)
+			Object.assign(window as any, prop);
+		else
+			(window as any)[<string>prop] = value;
+	}
+}
+
+function fx(selector: string | IterableElement | SingleElement): Fuxcel;
+function fx(selector: string | IterableElement | SingleElement, context: string | IterableElement | SingleElement): Fuxcel;
+/**
+ * Creates new Fuxcel Object with selected element.
+ *
+ * @param selector {string | IterableElement | SingleElement} CSS Selector
+ * @param context {string | IterableElement = null} CSS Selector
+ * @see document.querySelectorAll
+ * @returns {Fuxcel}
+ */
+function fx(selector: string | IterableElement | SingleElement, context: StringOrNull | IterableElement | SingleElement = null): Fuxcel {
+	return new Fuxcel(selector, context);
 }
 
 /**
  * Creates new Fuxcel Object with selected element.
  *
- * @param selector {string|IterableElement|any} Selectable string or iterable.
- * @param context {string|IterableElement|any} Context to select from.
+ * @overload document.querySelectorAll
+ * @param selector {string|IterableElement} CSS selector or iterable.
+ * @see document.querySelectorAll
+ * @param context {string|IterableElement|null=null} Context to select from.
  * @return {Fuxcel} New Fuxcel Object.
  */
-const fx: FXInterface = (selector: string | IterableElement | any, context: string | IterableElement | any = null): Fuxcel => new Fuxcel(selector, context);
+// const fx: FXInterface = (selector: string | IterableElement, context?: string | IterableElement | null): Fuxcel => new Fuxcel(selector, context);
 
 /**
  * Checks if the given value is of type boolean.
@@ -665,7 +702,7 @@ String.prototype.toTitleCase = function (separators: boolean = false): string {
 		wordSplit[0] = wordSplit[0] ? firstChar.toUpperCase() : '';
 		titleCased += separators ? wordSplit.join('') : (wordSplit.join('') + ((key <= valueSplit.length - 1) ? ' ' : ''));
 	});
-	return String(titleCased);
+	return String(titleCased.trim());
 }
 
 
@@ -701,7 +738,7 @@ class FuxcelBase implements FuxcelBaseInterface {
 			INSTANCE.prev.length++;
 		});
 		
-		selectedElements && selectedElements.forEach((value, key) => {
+		selectedElements && selectedElements.forEach((value: HTMLElement, key: number) => {
 			(<any>INSTANCE)[key] = value;
 			INSTANCE.length++
 		});
@@ -997,8 +1034,10 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		}));
 	}
 	
+	fadeout(timeout?: number): Promise<Fuxcel>;
 	fadeout(display?: string): Promise<Fuxcel>;
-	fadeout(timeout?: number, iteration?: string): Promise<Fuxcel>;
+	fadeout(timeout: number, display?: string): Promise<Fuxcel>;
+	fadeout(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
 	/**
 	 * Perform Fadeout animation on selected element.
 	 *
@@ -1020,8 +1059,10 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		return this.#_animate(animation);
 	}
 	
+	fadein(timeout?: number): Promise<Fuxcel>;
 	fadein(display?: string): Promise<Fuxcel>;
-	fadein(timeout?: number, display?: string): Promise<Fuxcel>;
+	fadein(timeout: number, display: string): Promise<Fuxcel>;
+	fadein(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
 	/**
 	 * Perform Fadein animation on selected element.
 	 *
@@ -1043,8 +1084,10 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		return this.#_animate(animation);
 	}
 	
+	slideindown(timeout?: number): Promise<Fuxcel>;
 	slideindown(display?: string): Promise<Fuxcel>;
-	slideindown(timeout?: number, display?: string): Promise<Fuxcel>;
+	slideindown(timeout: number, display: string): Promise<Fuxcel>;
+	slideindown(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
 	/**
 	 * Perform a Slidein-down animation on selected element.
 	 *
@@ -1066,8 +1109,10 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		return this.#_animate(animation);
 	}
 	
+	slideinup(timeout?: number): Promise<Fuxcel>;
 	slideinup(display?: string): Promise<Fuxcel>;
-	slideinup(timeout?: number, iteration?: string): Promise<Fuxcel>;
+	slideinup(timeout: number, display: string): Promise<Fuxcel>;
+	slideinup(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
 	/**
 	 * Perform a Slidein-up animation on selected element.
 	 *
@@ -1088,8 +1133,10 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		return this.#_animate(animation);
 	}
 	
+	slideoutdown(timeout?: number): Promise<Fuxcel>;
 	slideoutdown(display?: string): Promise<Fuxcel>;
-	slideoutdown(timeout?: number, iteration?: string): Promise<Fuxcel>;
+	slideoutdown(timeout: number, display: string): Promise<Fuxcel>;
+	slideoutdown(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
 	/**
 	 * Perform a Slideout-down animation on selected element.
 	 *
@@ -1111,8 +1158,10 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		return this.#_animate(animation);
 	}
 	
+	slideoutup(timeout?: number): Promise<Fuxcel>;
 	slideoutup(display?: string): Promise<Fuxcel>;
-	slideoutup(timeout?: number, iteration?: string): Promise<Fuxcel>;
+	slideoutup(timeout: number, display: string): Promise<Fuxcel>;
+	slideoutup(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
 	/**
 	 *
 	 * Perform a Slideout-up animation on selected element.
@@ -1135,8 +1184,10 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		return this.#_animate(animation);
 	}
 	
+	slideinleft(timeout?: number): Promise<Fuxcel>;
 	slideinleft(display?: string): Promise<Fuxcel>;
-	slideinleft(timeout?: number, iteration?: string): Promise<Fuxcel>;
+	slideinleft(timeout: number, display: string): Promise<Fuxcel>;
+	slideinleft(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
 	/**
 	 * Perform a Slidein-left animation on selected element.
 	 *
@@ -1158,8 +1209,10 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		return this.#_animate(animation);
 	}
 	
+	slideoutleft(timeout?: number): Promise<Fuxcel>;
 	slideoutleft(display?: string): Promise<Fuxcel>;
-	slideoutleft(timeout?: number, iteration?: string): Promise<Fuxcel>;
+	slideoutleft(timeout: number, display: string): Promise<Fuxcel>;
+	slideoutleft(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
 	/**
 	 * Perform a Slideout-left animation on selected element.
 	 *
@@ -1181,8 +1234,10 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		return this.#_animate(animation);
 	}
 	
+	slideinright(timeout?: number): Promise<Fuxcel>;
 	slideinright(display?: string): Promise<Fuxcel>;
-	slideinright(timeout?: number, iteration?: string): Promise<Fuxcel>;
+	slideinright(timeout: number, display: string): Promise<Fuxcel>;
+	slideinright(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
 	/**
 	 * Perform a Slidein-right animation on selected element.
 	 *
@@ -1204,8 +1259,10 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		return this.#_animate(animation);
 	}
 	
+	slideoutright(timeout?: number): Promise<Fuxcel>;
 	slideoutright(display?: string): Promise<Fuxcel>;
-	slideoutright(timeout?: number, iteration?: string): Promise<Fuxcel>;
+	slideoutright(timeout: number, display: string): Promise<Fuxcel>;
+	slideoutright(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
 	/**
 	 * Perform a Slideout-right animation on selected element.
 	 *
@@ -1227,8 +1284,10 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		return this.#_animate(animation);
 	}
 	
+	blink(timeout?: number): Promise<Fuxcel>;
 	blink(display?: string): Promise<Fuxcel>;
-	blink(timeout?: number, iteration?: string): Promise<Fuxcel>;
+	blink(timeout: number, display: string): Promise<Fuxcel>;
+	blink(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
 	/**
 	 * Perform a blink animation on selected element.
 	 *
@@ -1250,8 +1309,10 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 		return this.#_animate(animation);
 	}
 	
+	zoomin(timeout?: number): Promise<Fuxcel>;
 	zoomin(display?: string): Promise<Fuxcel>;
-	zoomin(timeout?: number, iteration?: string): Promise<Fuxcel>;
+	zoomin(timeout: number, display: string): Promise<Fuxcel>;
+	zoomin(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
 	/**
 	 * Perform a Zoom-in animation on selected element.
 	 *
@@ -1425,7 +1486,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	/**
 	 * Add class(es) to the classlist of the selected element.
 	 *
-	 * @param tokenList {string[]} Comma separated strings of class(es) to add.
+	 * @param tokenList {...string} Comma separated strings of class(es) to add.
 	 */
 	putClass(...tokenList: string[]): Fuxcel {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
@@ -1451,13 +1512,24 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	}
 	
 	/**
-	 * Removes the given class(es) from the classlist of the given element.
+	 * Removes the given class(es) from the classlist of the given elements.
 	 *
-	 * @param tokenList {string[]} Comma separated strings of class(es) to remove.
+	 * @param tokenList {...string} Comma separated strings of class(es) to remove.
 	 */
 	removeClass(...tokenList: string[]): Fuxcel {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 		selected.forEach((element: HTMLElement) => tokenList.forEach(token => element.classList.remove(token)));
+		return this;
+	}
+	
+	/**
+	 * Toggle the given classin the classlist of the given element.
+	 *
+	 * @param token {string} Class to toggle.
+	 */
+	toggleClass(token: string): Fuxcel {
+		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		selected.forEach((element: HTMLElement) => element.classList.toggle(token));
 		return this;
 	}
 	
@@ -1609,13 +1681,13 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	 */
 	remove(): void {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
-		selected.forEach(element => element.remove());
+		selected.forEach((element: HTMLElement) => element.remove());
 	}
 	
 	/**
 	 * Removes the given [data-*] attribute(s) from the selected element.
 	 *
-	 * @param name {string[]} Comma separated strings of [data-*] attribute(s) to remove.
+	 * @param name {...string} Comma separated strings of [data-*] attribute(s) to remove.
 	 * @return {Fuxcel} Fuxcel Object of the selected element
 	 */
 	removeAttrib(...name: string[]): Fuxcel {
@@ -1627,7 +1699,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	/**
 	 * Removes the given [data-*] attribute(s) from the selected element.
 	 *
-	 * @param name {string[]} Comma separated strings of [data-*] attribute(s) to remove.
+	 * @param name {...string} Comma separated strings of [data-*] attribute(s) to remove.
 	 * @return {Fuxcel} Fuxcel Object of the selected element
 	 */
 	removeDataAttrib(...name: string[]): Fuxcel {
@@ -1642,7 +1714,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	/**
 	 * Removes the given property / properties from the selected element.
 	 *
-	 * @param name {string[]} Comma separated strings of property / properties to remove.
+	 * @param name {...string} Comma separated strings of property / properties to remove.
 	 * @return {Fuxcel} Fuxcel Object of the selected element
 	 */
 	removeProp(...name: string[]): Fuxcel {
@@ -1756,7 +1828,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	}
 	
 	/**
-	 * Returns the direct descendants (Children) of the selected element.
+	 * Returns the siblings of the selected element.
 	 *
 	 * _Returns the descendant that matches the selector if the selector parameter is passed._
 	 *
@@ -1954,7 +2026,7 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	 *
 	 * _Removes all previous Event Listeners from the selected element._
 	 *
-	 * @param events {string[]} Particular event to remove.
+	 * @param events {...string} Particular event to remove.
 	 * @return {Fuxcel} Fuxcel Object of the selected element.
 	 */
 	off(...events: string[]): Fuxcel {
@@ -2033,17 +2105,18 @@ class Fuxcel extends FuxcelBase implements FuxcelInterface {
 	/**
 	 * Trigger a new event on the selected element(s).
 	 *
-	 * @param event {string}
-	 * @param type {('mouse'|'keyboard'|null)}
-	 * @return {Fuxcel}
+	 * @param {string} event
+	 * @param {"mouse" | "keyboard" | "custom" | null} type
+	 * @returns {Fuxcel}
 	 */
-	trigger(event: string, type: ('mouse' | 'keyboard' | null) = null): Fuxcel {
+	trigger(event: string, type: ('mouse' | 'keyboard' | 'custom' | null) = null): Fuxcel {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 		const matchEvent = {
 			mouse: MouseEvent,
+			custom: CustomEvent,
 			keyboard: KeyboardEvent,
 		}
-		const InitEvent = !type ? Event : matchEvent[(<('mouse' | 'keyboard')>type.toLowerCase())];
+		const InitEvent = !type ? Event : matchEvent[(<('mouse' | 'keyboard' | 'custom')>type.toLowerCase())];
 		
 		const newEvent = new InitEvent(event, {
 			bubbles: true,
@@ -2575,7 +2648,7 @@ class FuxcelValidator extends Fuxcel implements FuxcelValidatorInterface {
 		this.length = 0;
 		this.prev = {length: 0};
 		
-		documentDOMArray.forEach((value, key) => {
+		documentDOMArray.forEach((value: Document, key: number) => {
 			// @ts-ignore
 			this.prev[key] = value;
 			this.prev.length++;
@@ -2993,7 +3066,7 @@ class FuxcelValidator extends Fuxcel implements FuxcelValidatorInterface {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 		if (selected.length > 1) {
 			const elements: object = {};
-			selected.forEach((element) => {
+			selected.forEach((element: HTMLElement) => {
 				if (fx(element).isElement('form')) {
 					const formElement = <HTMLFormElement>element;
 					// @ts-ignore
@@ -3174,19 +3247,19 @@ class FuxcelValidator extends Fuxcel implements FuxcelValidatorInterface {
 	/**
 	 * Display all validation errors for the selected form.
 	 *
-	 * @param errors {object} An object containing the errors. The keys are the form field ids and their values are the errors for the fields respectively.
+	 * @param errors {{ [key: string]: any }|null = null} An object containing the errors. The keys are the form field ids and their values are the errors for the fields respectively.
 	 * @param messageOrCallbackFn {((fx: FuxcelValidator, e?: CustomEvent) => any)|StringOrNull}
 	 * @param callbackFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
 	 */
-	renderValidationErrors(errors: { [key: string]: any } = {}, messageOrCallbackFn: ((fx: FuxcelValidator, e?: CustomEvent) => any) | StringOrNull = null, callbackFn: ((fx: FuxcelValidator, e?: CustomEvent) => any) | null = null): FuxcelValidator {
+	renderValidationErrors(errors: { [key: string]: any } | null = null, messageOrCallbackFn: ((fx: FuxcelValidator, e?: CustomEvent) => any) | StringOrNull = null, callbackFn: ((fx: FuxcelValidator, e?: CustomEvent) => any) | null = null): FuxcelValidator {
 		const selected: FuxcelValidator = this;
 		
 		if (selected.isElement('form')) {
-			if (isObject(errors) && Object.keys(errors).length) {
+			if (errors && isObject(errors) && Object.keys(<{}>errors).length) {
 				const fieldElements: object = <object>this.formFieldElements;
 				Object.keys(errors).forEach((elementId: string) => {
 					const fieldName: string = elementId.toString().toTitleCase();
-					const element: FuxcelValidator = fx(`#${elementId}`).formValidator;
+					const element: FuxcelValidator = fx(`#${elementId}`, selected).formValidator;
 					
 					if (elementId in fieldElements && (isDefined(errors[elementId])))
 						element.validateField(errors[elementId], true);
@@ -3379,19 +3452,40 @@ class FuxcelValidator extends Fuxcel implements FuxcelValidatorInterface {
 			// @ts-ignore
 			const target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement = selected[0];
 			
-			let fieldValue = target.value,
-				minLength = parseInt(selected.attrib('minlength') ?? '0'),
-				fieldName = fieldAttribs.fxName?.toTitleCase(),
-				finalMessage = minLength ?
-					(!isString(message) && fieldValue.length && fieldValue.length < minLength ? `The ${fieldName} field requires a minimum of ${minLength} characters.` : message) :
-					(!isString(message) ?
-						(selected.isPasswordField ?
-							(Array.isArray(message) ? message : (fieldAttribs.id === configObject?.passwordConfirmId && configObject?.validatePassword) ? ((!fieldValue.length || fieldValue !== fx(`#${configObject.passwordId}`).value()) ? (fx(`#${configObject.passwordId}`).value()?.length ? 'Ensure passwords.' : `The ${fieldName} field is required.`) : null) : (!fieldValue.length ? `The ${fieldName} field is required.` : null)) :
-							message) :
-						message);
+			let errorMessage = null,
+				fieldValue = target.value,
+				finalMessage = message,
+				fieldName = fieldAttribs.fxName?.toTitleCase();
 			
-			if (!fieldValue || !fieldValue.length || fieldValue.length < minLength || (selected.isPasswordField && (!fieldValue.length || finalMessage)) || isError)
-				selected.showError(finalMessage);
+			const minLength = parseInt(selected.attrib('minlength'));
+			const maxLength = parseInt(selected.attrib('maxlength'));
+			const min = parseInt(selected.attrib('min'));
+			const max = parseInt(selected.attrib('max'));
+			
+			if (!isString(finalMessage))
+				if (fieldValue?.length || (fieldAttribs.id === configObject?.passwordConfirmId && configObject?.validatePassword))
+					if (maxLength && fieldValue.length > maxLength)
+						errorMessage = `The ${fieldName} field requires a maximum of ${maxLength} characters.`;
+					else if (minLength && fieldValue.length < minLength)
+						errorMessage = `The ${fieldName} field requires a minimum of ${minLength} characters.`;
+					else
+						switch (fieldAttribs.type) {
+							case 'number':
+								errorMessage = ((max && min) && (parseInt(fieldValue) > max && parseInt(fieldValue) < min)) ? `The ${fieldName} field requires a value between ${min} and ${max}.` :
+									((max && parseInt(fieldValue) > max) ? `The maximum required value for ${fieldName} field is ${max}.` : ((min && parseInt(fieldValue) < min) ? `The minimum required value for ${fieldName} field is ${min}.` : message));
+								break;
+							default:
+								if (selected.isPasswordField)
+									errorMessage = (Array.isArray(message) ? message :
+										((fieldAttribs.id === configObject?.passwordConfirmId && configObject?.validatePassword) ?
+											((!fieldValue.length || fieldValue !== fx(`#${configObject.passwordId}`).value()) ? (fx(`#${configObject.passwordId}`).value()?.length ? 'Ensure passwords.' : `The ${fieldName} field is required.`) : message) : message));
+								break;
+						}
+				else
+					errorMessage = `The ${fieldName} field is required.`;
+			
+			if (errorMessage || isError)
+				selected.showError(errorMessage ?? finalMessage);
 			else
 				selected.showSuccess(finalMessage);
 		} else
@@ -3485,7 +3579,7 @@ class FuxcelSteps extends FuxcelValidator implements FuxcelStepsInterface {
 				// @ts-ignore
 				new Steps(selected[0]).init(selected.validatorConfig.stepForm.config);
 		} catch (e) {
-			
+		
 		}
 		
 		return this;
@@ -3627,7 +3721,6 @@ class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
 				const triggerModal = () => {
 					if (modalTarget) {
 						FuxcelModal.#_modalTarget = modalTarget;
-						console.log(FuxcelModal.#_modalTarget)
 						if (autoActions)
 							if (modalAction === 'close')
 								FuxcelModal.#_modalTarget.modal.hide();
@@ -3756,8 +3849,8 @@ class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
 	 */
 	show(escKey: boolean | undefined = true): void {
 		const modalContent = fx('.fx-modal-content', this);
-		console.log(modalContent)
-		this.style({pointerEvents: 'none'}).fadein(300).then(() => modalContent.fadein(300, 'flex').then(() => {
+		
+		this.style({pointerEvents: 'none'}).fadein(0).then(() => modalContent.fadein(0, 'flex').then(() => {
 			FuxcelModal.#_openModals.push(this);
 			this.style({pointerEvents: 'unset'});
 			
@@ -3810,10 +3903,11 @@ class FuxcelModal extends Fuxcel implements FuxcelModalInterface {
  * @param onError {((error: any, status: number, statusText: string) => void)|null = null} If request has errors.
  * @param onSuccess {((response: ResponseData, status: number, statusText: string) => void)|null = null} If request is successful.
  */
-fx.fetch = function ({uri = '', method = 'get', data = null, dataType = 'json', headers = null, beforeSend = null, timeout = 10000, onComplete = null, onError = null, onSuccess = null}: FXRequestType) {
+fx.fetch = function ({uri = '', method = 'get', data = null, dataType = 'json', headers = null, beforeSend = null, timeout = 10, onComplete = null, onError = null, onSuccess = null}: FXRequestType) {
 	let status: number,
 		statusText: string,
 		responseData: ResponseData;
+	timeout = timeout * 1000;
 	
 	const controller: AbortController = new AbortController();
 	const timeoutID = setTimeout(() => controller.abort(), timeout);
@@ -3931,9 +4025,9 @@ fx.modal = function ({title = null, type = 'success', content = 'Alert Content',
 						document.querySelector('#fx-modal-cancel')?.dispatchEvent(FuxcelModal.fxModalCancelButtonClick) :
 						document.querySelector('#fx-modal-confirm')?.dispatchEvent(FuxcelModal.fxModalCancelButtonClick);*/
 				} else {
-					if (isConfirm && !closeOnConfirm && typeof onConfirm === 'function')
+					if (isConfirm && !closeOnConfirm && typeof onConfirm === 'function') {
 						onConfirm(<CustomEvent>e, modal);
-					else {
+					} else {
 						if (isCancel || isConfirm || isCloseBtn) {
 							modal.hide(true);
 							modal.off().upon('fx.modal.hide', (e) => (isCancel || isCloseBtn) && typeof onCancel === 'function' ? onCancel(<CustomEvent>e, modal) : (isConfirm && typeof onConfirm === 'function' ? onConfirm(<CustomEvent>e, modal) : null));
@@ -3984,7 +4078,7 @@ fx.passLuhnAlgo = (input: any | string | number): boolean => {
 		.reduce((previous: number, current: number) => previous + current) % 10 === 0;
 }
 // Expose plugin to Window
-pushPropToWindow('fuxcel', Fuxcel);
+pushPropsToWindow('fuxcel', Fuxcel);
 
 // Automatically initialize modal if triggers are available
 FuxcelModal.modalTriggers.length && new FuxcelModal('*');

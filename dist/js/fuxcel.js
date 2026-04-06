@@ -145,17 +145,40 @@ const animations = ({ timeout = 300, iterations = 1, display = 'unset' }) => {
         },
     };
 };
-const pushPropToWindow = (prop, value) => {
-    window[prop] = value;
-};
+/**
+ *
+ * @param prop {Record<string, any>}
+ * @param value {any=null}
+ */
+function pushPropsToWindow(prop, value) {
+    if (typeof window !== 'undefined') {
+        if (typeof prop === 'object' && prop !== null)
+            Object.assign(window, prop);
+        else
+            window[prop] = value;
+    }
+}
 /**
  * Creates new Fuxcel Object with selected element.
  *
- * @param selector {string|IterableElement|any} Selectable string or iterable.
- * @param context {string|IterableElement|any} Context to select from.
+ * @param selector {string | IterableElement | SingleElement} CSS Selector
+ * @param context {string | IterableElement = null} CSS Selector
+ * @see document.querySelectorAll
+ * @returns {Fuxcel}
+ */
+function fx(selector, context = null) {
+    return new Fuxcel(selector, context);
+}
+/**
+ * Creates new Fuxcel Object with selected element.
+ *
+ * @overload document.querySelectorAll
+ * @param selector {string|IterableElement} CSS selector or iterable.
+ * @see document.querySelectorAll
+ * @param context {string|IterableElement|null=null} Context to select from.
  * @return {Fuxcel} New Fuxcel Object.
  */
-const fx = (selector, context = null) => new Fuxcel(selector, context);
+// const fx: FXInterface = (selector: string | IterableElement, context?: string | IterableElement | null): Fuxcel => new Fuxcel(selector, context);
 /**
  * Checks if the given value is of type boolean.
  *
@@ -234,7 +257,7 @@ String.prototype.toTitleCase = function (separators = false) {
         wordSplit[0] = wordSplit[0] ? firstChar.toUpperCase() : '';
         titleCased += separators ? wordSplit.join('') : (wordSplit.join('') + ((key <= valueSplit.length - 1) ? ' ' : ''));
     });
-    return String(titleCased);
+    return String(titleCased.trim());
 };
 class TimeoutError extends Error {
     status;
@@ -908,7 +931,7 @@ class Fuxcel extends FuxcelBase {
     /**
      * Add class(es) to the classlist of the selected element.
      *
-     * @param tokenList {string[]} Comma separated strings of class(es) to add.
+     * @param tokenList {...string} Comma separated strings of class(es) to add.
      */
     putClass(...tokenList) {
         const selected = this.toArray;
@@ -931,13 +954,23 @@ class Fuxcel extends FuxcelBase {
         return this;
     }
     /**
-     * Removes the given class(es) from the classlist of the given element.
+     * Removes the given class(es) from the classlist of the given elements.
      *
-     * @param tokenList {string[]} Comma separated strings of class(es) to remove.
+     * @param tokenList {...string} Comma separated strings of class(es) to remove.
      */
     removeClass(...tokenList) {
         const selected = this.toArray;
         selected.forEach((element) => tokenList.forEach(token => element.classList.remove(token)));
+        return this;
+    }
+    /**
+     * Toggle the given classin the classlist of the given element.
+     *
+     * @param token {string} Class to toggle.
+     */
+    toggleClass(token) {
+        const selected = this.toArray;
+        selected.forEach((element) => element.classList.toggle(token));
         return this;
     }
     /**
@@ -1055,12 +1088,12 @@ class Fuxcel extends FuxcelBase {
      */
     remove() {
         const selected = this.toArray;
-        selected.forEach(element => element.remove());
+        selected.forEach((element) => element.remove());
     }
     /**
      * Removes the given [data-*] attribute(s) from the selected element.
      *
-     * @param name {string[]} Comma separated strings of [data-*] attribute(s) to remove.
+     * @param name {...string} Comma separated strings of [data-*] attribute(s) to remove.
      * @return {Fuxcel} Fuxcel Object of the selected element
      */
     removeAttrib(...name) {
@@ -1071,7 +1104,7 @@ class Fuxcel extends FuxcelBase {
     /**
      * Removes the given [data-*] attribute(s) from the selected element.
      *
-     * @param name {string[]} Comma separated strings of [data-*] attribute(s) to remove.
+     * @param name {...string} Comma separated strings of [data-*] attribute(s) to remove.
      * @return {Fuxcel} Fuxcel Object of the selected element
      */
     removeDataAttrib(...name) {
@@ -1085,7 +1118,7 @@ class Fuxcel extends FuxcelBase {
     /**
      * Removes the given property / properties from the selected element.
      *
-     * @param name {string[]} Comma separated strings of property / properties to remove.
+     * @param name {...string} Comma separated strings of property / properties to remove.
      * @return {Fuxcel} Fuxcel Object of the selected element
      */
     removeProp(...name) {
@@ -1194,7 +1227,7 @@ class Fuxcel extends FuxcelBase {
         return fx(prevSiblings).#_setPrev(this);
     }
     /**
-     * Returns the direct descendants (Children) of the selected element.
+     * Returns the siblings of the selected element.
      *
      * _Returns the descendant that matches the selector if the selector parameter is passed._
      *
@@ -1376,7 +1409,7 @@ class Fuxcel extends FuxcelBase {
      *
      * _Removes all previous Event Listeners from the selected element._
      *
-     * @param events {string[]} Particular event to remove.
+     * @param events {...string} Particular event to remove.
      * @return {Fuxcel} Fuxcel Object of the selected element.
      */
     off(...events) {
@@ -1451,14 +1484,15 @@ class Fuxcel extends FuxcelBase {
     /**
      * Trigger a new event on the selected element(s).
      *
-     * @param event {string}
-     * @param type {('mouse'|'keyboard'|null)}
-     * @return {Fuxcel}
+     * @param {string} event
+     * @param {"mouse" | "keyboard" | "custom" | null} type
+     * @returns {Fuxcel}
      */
     trigger(event, type = null) {
         const selected = this.toArray;
         const matchEvent = {
             mouse: MouseEvent,
+            custom: CustomEvent,
             keyboard: KeyboardEvent,
         };
         const InitEvent = !type ? Event : matchEvent[type.toLowerCase()];
@@ -2429,18 +2463,18 @@ class FuxcelValidator extends Fuxcel {
     /**
      * Display all validation errors for the selected form.
      *
-     * @param errors {object} An object containing the errors. The keys are the form field ids and their values are the errors for the fields respectively.
+     * @param errors {{ [key: string]: any }|null = null} An object containing the errors. The keys are the form field ids and their values are the errors for the fields respectively.
      * @param messageOrCallbackFn {((fx: FuxcelValidator, e?: CustomEvent) => any)|StringOrNull}
      * @param callbackFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
      */
-    renderValidationErrors(errors = {}, messageOrCallbackFn = null, callbackFn = null) {
+    renderValidationErrors(errors = null, messageOrCallbackFn = null, callbackFn = null) {
         const selected = this;
         if (selected.isElement('form')) {
-            if (isObject(errors) && Object.keys(errors).length) {
+            if (errors && isObject(errors) && Object.keys(errors).length) {
                 const fieldElements = this.formFieldElements;
                 Object.keys(errors).forEach((elementId) => {
                     const fieldName = elementId.toString().toTitleCase();
-                    const element = fx(`#${elementId}`).formValidator;
+                    const element = fx(`#${elementId}`, selected).formValidator;
                     if (elementId in fieldElements && (isDefined(errors[elementId])))
                         element.validateField(errors[elementId], true);
                     else {
@@ -2610,15 +2644,34 @@ class FuxcelValidator extends Fuxcel {
             const configObject = this.#_fxValidatorConfig.config;
             // @ts-ignore
             const target = selected[0];
-            let fieldValue = target.value, minLength = parseInt(selected.attrib('minlength') ?? '0'), fieldName = fieldAttribs.fxName?.toTitleCase(), finalMessage = minLength ?
-                (!isString(message) && fieldValue.length && fieldValue.length < minLength ? `The ${fieldName} field requires a minimum of ${minLength} characters.` : message) :
-                (!isString(message) ?
-                    (selected.isPasswordField ?
-                        (Array.isArray(message) ? message : (fieldAttribs.id === configObject?.passwordConfirmId && configObject?.validatePassword) ? ((!fieldValue.length || fieldValue !== fx(`#${configObject.passwordId}`).value()) ? (fx(`#${configObject.passwordId}`).value()?.length ? 'Ensure passwords.' : `The ${fieldName} field is required.`) : null) : (!fieldValue.length ? `The ${fieldName} field is required.` : null)) :
-                        message) :
-                    message);
-            if (!fieldValue || !fieldValue.length || fieldValue.length < minLength || (selected.isPasswordField && (!fieldValue.length || finalMessage)) || isError)
-                selected.showError(finalMessage);
+            let errorMessage = null, fieldValue = target.value, finalMessage = message, fieldName = fieldAttribs.fxName?.toTitleCase();
+            const minLength = parseInt(selected.attrib('minlength'));
+            const maxLength = parseInt(selected.attrib('maxlength'));
+            const min = parseInt(selected.attrib('min'));
+            const max = parseInt(selected.attrib('max'));
+            if (!isString(finalMessage))
+                if (fieldValue?.length || (fieldAttribs.id === configObject?.passwordConfirmId && configObject?.validatePassword))
+                    if (maxLength && fieldValue.length > maxLength)
+                        errorMessage = `The ${fieldName} field requires a maximum of ${maxLength} characters.`;
+                    else if (minLength && fieldValue.length < minLength)
+                        errorMessage = `The ${fieldName} field requires a minimum of ${minLength} characters.`;
+                    else
+                        switch (fieldAttribs.type) {
+                            case 'number':
+                                errorMessage = ((max && min) && (parseInt(fieldValue) > max && parseInt(fieldValue) < min)) ? `The ${fieldName} field requires a value between ${min} and ${max}.` :
+                                    ((max && parseInt(fieldValue) > max) ? `The maximum required value for ${fieldName} field is ${max}.` : ((min && parseInt(fieldValue) < min) ? `The minimum required value for ${fieldName} field is ${min}.` : message));
+                                break;
+                            default:
+                                if (selected.isPasswordField)
+                                    errorMessage = (Array.isArray(message) ? message :
+                                        ((fieldAttribs.id === configObject?.passwordConfirmId && configObject?.validatePassword) ?
+                                            ((!fieldValue.length || fieldValue !== fx(`#${configObject.passwordId}`).value()) ? (fx(`#${configObject.passwordId}`).value()?.length ? 'Ensure passwords.' : `The ${fieldName} field is required.`) : message) : message));
+                                break;
+                        }
+                else
+                    errorMessage = `The ${fieldName} field is required.`;
+            if (errorMessage || isError)
+                selected.showError(errorMessage ?? finalMessage);
             else
                 selected.showSuccess(finalMessage);
         }
@@ -2819,7 +2872,6 @@ class FuxcelModal extends Fuxcel {
                 const triggerModal = () => {
                     if (modalTarget) {
                         FuxcelModal.#_modalTarget = modalTarget;
-                        console.log(FuxcelModal.#_modalTarget);
                         if (autoActions)
                             if (modalAction === 'close')
                                 FuxcelModal.#_modalTarget.modal.hide();
@@ -2928,8 +2980,7 @@ class FuxcelModal extends Fuxcel {
      */
     show(escKey = true) {
         const modalContent = fx('.fx-modal-content', this);
-        console.log(modalContent);
-        this.style({ pointerEvents: 'none' }).fadein(300).then(() => modalContent.fadein(300, 'flex').then(() => {
+        this.style({ pointerEvents: 'none' }).fadein(0).then(() => modalContent.fadein(0, 'flex').then(() => {
             FuxcelModal.#_openModals.push(this);
             this.style({ pointerEvents: 'unset' });
             if (!parseBool(this.dataAttrib('fx-static'))) {
@@ -2976,8 +3027,9 @@ class FuxcelModal extends Fuxcel {
  * @param onError {((error: any, status: number, statusText: string) => void)|null = null} If request has errors.
  * @param onSuccess {((response: ResponseData, status: number, statusText: string) => void)|null = null} If request is successful.
  */
-fx.fetch = function ({ uri = '', method = 'get', data = null, dataType = 'json', headers = null, beforeSend = null, timeout = 10000, onComplete = null, onError = null, onSuccess = null }) {
+fx.fetch = function ({ uri = '', method = 'get', data = null, dataType = 'json', headers = null, beforeSend = null, timeout = 10, onComplete = null, onError = null, onSuccess = null }) {
     let status, statusText, responseData;
+    timeout = timeout * 1000;
     const controller = new AbortController();
     const timeoutID = setTimeout(() => controller.abort(), timeout);
     const allowedErrorStatuses = new Set([301, 308, 401, 402, 419, 422, 423, 426, 451, 500, 511]);
@@ -3079,8 +3131,9 @@ fx.modal = function ({ title = null, type = 'success', content = 'Alert Content'
                         document.querySelector('#fx-modal-confirm')?.dispatchEvent(FuxcelModal.fxModalCancelButtonClick);*/
                 }
                 else {
-                    if (isConfirm && !closeOnConfirm && typeof onConfirm === 'function')
+                    if (isConfirm && !closeOnConfirm && typeof onConfirm === 'function') {
                         onConfirm(e, modal);
+                    }
                     else {
                         if (isCancel || isConfirm || isCloseBtn) {
                             modal.hide(true);
@@ -3128,7 +3181,7 @@ fx.passLuhnAlgo = (input) => {
         .reduce((previous, current) => previous + current) % 10 === 0;
 };
 // Expose plugin to Window
-pushPropToWindow('fuxcel', Fuxcel);
+pushPropsToWindow('fuxcel', Fuxcel);
 // Automatically initialize modal if triggers are available
 FuxcelModal.modalTriggers.length && new FuxcelModal('*');
 //# sourceMappingURL=fuxcel.js.map
