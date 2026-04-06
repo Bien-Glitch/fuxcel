@@ -1,6 +1,11 @@
 {
   "name": "fuxcel",
-  "version": "1.0.0",
+  "author": {
+    "name": "Bien Nwinate",
+    "email": "biennwinate@gmail.com"
+  },
+  "version": "1.1.0",
+  "description": "A simple lightweight DOM Utitlity",
   "devDependencies": {
     "esbuild": "^0.25.4"
   }

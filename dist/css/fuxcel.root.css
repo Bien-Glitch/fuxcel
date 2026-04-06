@@ -1,27 +1,20 @@
 :root {
   --fx-dark: #232323;
-
   --fx-error: #b03131;
   --fx-error-dark: #a41818;
-
   --fx-purple: #5151d9;
-
   --fx-primary: #145388;
   --fx-primary-dark: #0f3d64;
-
   --fx-success: #3bb24f;
   --fx-success-dark: #308c3f;
-
   --fx-warning: #ff8503;
   --fx-warning-dark: #d77206;
-
   --fx-white-50: #808080;
-
   --fx-border-dark: #454545;
   --fx-border-light: #d1c9c9;
-
   --fx-border-width: 1px;
-
   --fx-select-bg-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
   --fx-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }
+
+/*# sourceMappingURL=fuxcel.root.css.map */

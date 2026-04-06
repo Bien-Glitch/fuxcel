@@ -1,0 +1,47 @@
+.fx-bg-border {
+  background-color: var(--fx-border-dark);
+}
+.fx-bg-dark {
+  background-color: var(--fx-dark);
+}
+.fx-bg-error {
+  background-color: var(--fx-error);
+}
+.fx-bg-error-dark {
+  background-color: var(--fx-error-dark);
+}
+.fx-bg-primary {
+  background-color: var(--fx-primary);
+}
+.fx-bg-primary-dark {
+  background-color: var(--fx-primary-dark);
+}
+.fx-bg-success {
+  background-color: var(--fx-success);
+}
+.fx-bg-white-50 {
+  background-color: var(--fx-white-50);
+}
+.fx-text-border {
+  color: var(--fx-border-dark);
+}
+.fx-text-dark {
+  color: var(--fx-dark);
+}
+.fx-text-error {
+  color: var(--fx-error);
+}
+.fx-text-primary {
+  color: var(--fx-primary);
+}
+.fx-text-primary-dark {
+  color: var(--fx-primary-dark);
+}
+.fx-text-success {
+  color: var(--fx-success);
+}
+.fx-text-white-50 {
+  color: var(--fx-white-50);
+}
+
+/*# sourceMappingURL=fuxcel.color.css.map */

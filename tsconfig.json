@@ -2,16 +2,17 @@
   "compilerOptions": {
     "module": "ESNext",
     "target": "ESNext",
-    "sourceMap": false,
     "rootDir": "src/ts",
     "outDir": "dist/js",
-    "removeComments": false,
     "strict": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "removeComments": false,
     "useDefineForClassFields": true
-    // "declaration": true,
-    // "declarationMap": true
   },
   "exclude": [
+    "dist/*/**",
     "node_modules"
   ]
 }

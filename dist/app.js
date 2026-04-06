@@ -53,7 +53,7 @@ fx.onDocumentLoad((e) => {
 						console.log(target, e);
 					});
 			}
-		});
+		}).trigger('click', 'keyboard');
 
 		btnPrev.off().upon('click', function (e) {
 			e.preventDefault();
