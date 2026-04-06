@@ -104,6 +104,31 @@
     visibility: hidden;
   }
 }
+/* Page fade */
+html.fx-leaving body {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+html.fx-entering body {
+  opacity: 0;
+}
+html.fx-entered body {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+/* Progress bar */
+#fx-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: #4f46e5;
+  z-index: 9999;
+  transition: width 0.2s ease, opacity 0.3s ease;
+}
+
 form {
   background-color: inherit;
 }
@@ -116,11 +141,17 @@ form .form-group.fx-default-style {
 form .form-group.fx-valid-error .form-field {
   border-color: var(--fx-error) !important;
 }
+form .form-group.fx-valid-error .bootstrap-select {
+  border: 1px solid var(--fx-error) !important;
+}
 form .form-group.fx-valid-error .validation-text {
   color: var(--fx-error);
 }
 form .form-group.fx-valid-success .form-field {
   border-color: var(--fx-success) !important;
+}
+form .form-group.fx-valid-success .bootstrap-select {
+  border: 1px solid var(--fx-success) !important;
 }
 form .form-group.fx-valid-success .validation-text {
   color: var(--fx-success);

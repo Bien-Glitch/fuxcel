@@ -15,6 +15,7 @@
 	<script defer src="app.js"></script>
 </head>
 
+
 <body>
 	<main>
 		<form action="" id="test-form">
@@ -35,7 +36,7 @@
 
 			<div class="form-group">
 				<select id="gender" class="form-field">
-					<option value="" selected>Select Gender</option>
+					<option value="" disabled selected>Select Gender</option>
 					<option value="male">Male</option>
 					<option value="female">Female</option>
 				</select>
@@ -49,7 +50,7 @@
 
 			<button type="submit">Submit</button>
 		</form>
-
+		
 		<!--<form action="" id="test-step">
 			<div class="fx-step" data-fx-step="2">
 				<div class="form-group">
@@ -173,6 +174,7 @@
 		<button type="button" data-fx-target="modal" data-fx-modal="test-modal">Show</button>
 	</main>
 
+	
 	<div class="fx-modal filter" id="test-modal" data-fx-static="true">
 		<div class="fx-modal-dialog fx-dialog-centered fx-dialog-scrollable">
 			<div class="fx-modal-content">
