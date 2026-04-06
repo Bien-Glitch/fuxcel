@@ -4,9 +4,33 @@
     "name": "Bien Nwinate",
     "email": "biennwinate@gmail.com"
   },
-  "version": "1.1.0",
+  "type": "module",
+  "version": "2.0.0",
   "description": "A simple lightweight DOM Utitlity",
+  "main": "dist/js/fuxcel.cjs.js",
+  "module": "dist/js/fuxcel.esm.js",
+  "browser": "dist/js/fuxcel.iife.js",
+  "types": "dist/js/fuxcel.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/js/fuxcel.esm.js",
+      "require": "./dist/js/fuxcel.cjs.js"
+    }
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -c -w",
+    "dev": "rollup -c -w"
+  },
   "devDependencies": {
-    "esbuild": "^0.25.4"
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/node": "^25.5.0",
+    "esbuild": "^0.25.4",
+    "rollup": "^4.60.1",
+    "rollup-plugin-dts": "^6.4.1",
+    "tslib": "^2.8.1",
+    "typescript": "^6.0.2"
   }
 }
