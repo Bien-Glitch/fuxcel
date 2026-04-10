@@ -5,7 +5,7 @@
     "email": "biennwinate@gmail.com"
   },
   "type": "module",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "A simple lightweight DOM Utitlity",
   "main": "dist/js/fuxcel.js",
   "module": "dist/js/fuxcel.esm.js",
