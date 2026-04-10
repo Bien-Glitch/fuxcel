@@ -2,10 +2,11 @@ import {
 	IterableElement,
 	StringOrNull,
 	ValidatorConfigObject,
-	ValidationProps, FXModalType, FuxcelValidatorInstance,
+	ValidationProps, FXModalType, FuxcelValidatorInstance, FormValidationRegistryBag,
 } from '../types';
 import {Fuxcel, fx} from '../core/Fuxcel';
 import {isDefined, isObject, isString, parseBool} from '../utils';
+import {FuxcelSteps} from './FuxcelSteps';
 
 /**
  * Form validation engine.
@@ -15,6 +16,12 @@ import {isDefined, isObject, isString, parseBool} from '../utils';
 export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 	#_fxValidatorConfig: ValidatorConfigObject = FuxcelValidator.defaultValidatorConfig;
 	
+	/**
+	 * Default Validator configuration.
+	 *
+	 * @type {ValidatorConfigObject}
+	 * @private
+	 */
 	static #_defaultConfig: ValidatorConfigObject = {
 		regExp: {
 			cardCVV: /[0-9]{3,4}$/gi,
@@ -59,27 +66,13 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 	static #_initSteps: object = {};
 	static #_stepsClass: string = '.fx-step';
 	
-	static #_registry: Record<string, {
-		configObject: ValidatorConfigObject;
-		bag: { [key: string]: any };
-		count: number;
-		steps: Record<string, {
-			bag: { [key: string]: any };
-			count: number
-		}>;
-	}> = {};
 	/**
-	 * Per-instance error bag: { [formId]: { [fieldId]: errorMessage } }
-	 * Instance-level so multiple FuxcelValidator instances on different
-	 * forms (or the same form) never share or overwrite each other's state.
+	 * Form Validation Registry.
+	 *
+	 * @type {FormValidationRegistryBag}
+	 * @private
 	 */
-	// #_validatorErrorBag: { [key: string]: any } = {};
-	
-	/**
-	 * Per-instance error count: { [formId]: number }
-	 */
-	// #_validatorErrorCount: { [key: string]: any } = {};
-	// #_validatorFormConfigBag: { [key: string]: any } = {};
+	static #_registry: FormValidationRegistryBag = {};
 	
 	/**
 	 * Injectable FuxcelSteps constructor.
@@ -754,6 +747,7 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 	}
 	
 	// ─── Public Getters ───────────────────────────────────────────────────────
+	/** Checks if the selected field element can be validated by checking thw value of `[data-fx-validate]` data-attribute or the parent form-group is not hidden. **/
 	get canBeValidated(): boolean {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 		return selected.length ?
@@ -767,22 +761,20 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 			false;
 	}
 	
+	/** Get the error bag for the current selected form. **/
 	get errorBag(): object | null {
 		if (!this.length || !this.isElement('form')) return null!;
 		const registry = FuxcelValidator.#_registry[this.attrib('id')];
 		return registry && Object.keys(registry.bag).length ? registry.bag : null!;
-		/*return (this.length && this.isElement('form')) && Object.keys(this.#_validatorErrorBag[this.attrib('id')] ?? {}).length ?
-			this.#_validatorErrorBag[this.attrib('id')] :
-			null;*/
 	}
 	
+	/** Get the error count for the current selected form. **/
 	get errorCount(): number {
 		if (!this.length || !this.isElement('form')) return 0;
 		return FuxcelValidator.#_registry[this.attrib('id')]?.count ?? 0;
-		/*return (this.length && this.isElement('form')) && Object.keys(this.#_validatorErrorCount).length ?
-			this.#_validatorErrorCount[this.attrib('id')] : 0;*/
 	}
 	
+	/** An object containing the error bag and error count for the current selected form(s). Logs an error to the console if selected element(s) not form element(s). **/
 	get getErrors(): object | void {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 		let errors: { [key: string]: any } = {};
@@ -799,6 +791,7 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 			console.error('Non form element given.');
 	}
 	
+	/** An object containing all form field elements for the current selected form(s). Logs an error to the console if selected element(s) not form element(s). **/
 	get formFieldElements(): object | void {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 		if (selected.length > 1) {
@@ -812,16 +805,19 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 		return this.isElement('form') ? (<HTMLFormElement>selected[0]).elements : console.error('Non form elements given', selected);
 	}
 	
+	/** Checks if the selected form field element is an email field. **/
 	get isEmailField(): boolean {
 		const a = this.fieldAttributes;
 		return !!(a.type?.includes('email') || a.id?.includes('email') || a.fxId?.includes('email') || a.fxRole?.includes('email'));
 	}
 	
+	/** Checks if the selected form field element is a name field. **/
 	get isNameField(): boolean {
 		const a = this.fieldAttributes;
 		return !this.isUsernameField && (a.id === 'name' || a.fxId === 'name' || a.fxRole === 'name');
 	}
 	
+	/** Checks if the selected form field element is a password field. **/
 	get isPasswordField(): boolean {
 		const registry = FuxcelValidator.#_registry[this.isElement('form') ? this.fieldAttributes?.id : this.fieldAttributes?.formId];
 		const passwordId: string = registry.configObject.config?.passwordId as string;
@@ -832,11 +828,13 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 		);
 	}
 	
+	/** Checks if the selected form field element is a phone field. **/
 	get isPhoneField(): boolean {
 		const a = this.fieldAttributes;
 		return !!(a.type?.includes('tel') || a.type?.includes('phone') || a.id?.includes('phone') || a.fxId?.includes('phone') || a.fxRole?.includes('phone'));
 	}
 	
+	/** Checks if the selected form field element is a username field. **/
 	get isUsernameField(): boolean {
 		const a = this.fieldAttributes;
 		return !!(a.id?.includes('username') || a.fxId?.includes('username') || a.fxRole?.includes('username'));
@@ -847,6 +845,7 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 		return stepDiv.length ? parseInt(stepDiv.dataAttrib('fx-step') ?? '0') : -1;
 	}
 	
+	/** Returns the `ValidationProps` of the selected form field element. **/
 	get validationProps(): ValidationProps {
 		const configObject = this.#_fxValidatorConfig;
 		const formGroup = <string>configObject.config?.initWrapper;
@@ -864,20 +863,23 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 		throw 'Non-Form field element given';
 	}
 	
+	/** Returns the current `ValidatorConfigObject` options of selected form. **/
 	get validatorConfig(): ValidatorConfigObject {
 		return this.#_fxValidatorConfig;
 	}
 	
 	// ─── Static Getters / Setters ─────────────────────────────────────────────
-	
+	/** Returns the default Form Validator Configuration Object. **/
 	static get defaultValidatorConfig(): ValidatorConfigObject {
 		return FuxcelValidator.#_defaultConfig;
 	}
 	
+	/** Returns the Password capslock alert class selector **/
 	static get passwordCapslockAlertClass(): string {
 		return '.capslock-alert';
 	}
 	
+	/** Returns the Password toggler icon class selector **/
 	static get passwordTogglerIconClass(): string {
 		return '.toggle-password-icons';
 	}
@@ -886,13 +888,20 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 		return FuxcelValidator.#_stepsClass;
 	}
 	
-	static set stepsClass(v: string) {
-		FuxcelValidator.#_stepsClass = v;
+	static set stepsClass(selector: string) {
+		FuxcelValidator.#_stepsClass = selector;
 	}
 	
 	// ─── Public Methods ───────────────────────────────────────────────────────
-	
-	init(config: ValidatorConfigObject | null = null): any /* FuxcelSteps | FuxcelValidator */ {
+	/**
+	 * Initialize validation on selected form(s) _[Must be an instance of FuxcelValidator]_.
+	 *
+	 * _Throws an error if non form elements are selected._
+	 *
+	 * @param config {ValidatorConfigObject} user config object.
+	 * @return {FuxcelSteps | FuxcelValidator} Fuxcel Validator Object of the forms.
+	 */
+	init(config: ValidatorConfigObject | null = null):  FuxcelSteps | FuxcelValidator  {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 		const forms = <HTMLFormElement[]>selected.filter((el: HTMLElement) => fx(el).isElement('form'));
 		const nonForms = selected.filter((el: HTMLElement) => !fx(el).isElement('form'));
@@ -910,11 +919,101 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 		}
 	}
 	
-	renderMessage(message: StringOrNull = null, renderType: StringOrNull = null): FuxcelValidator {
-		this.insertHTML(`<small ${renderType ? `class="${renderType}"` : ''}>${message ?? '&nbsp;'}</small>`);
+	/** Reset validation message. **/
+	renderMessage(): FuxcelValidator;
+	/**
+	 * Render validation message.
+	 *
+	 * @param message {StringOrNull} message to display.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the current selected element.
+	 */
+	renderMessage(message?: StringOrNull): FuxcelValidator;
+	/**
+	 * Render validation message.
+	 *
+	 * @param message {string} message to display.
+	 * @param renderClass {string} validation type.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the current selected element.
+	 */
+	renderMessage(message: string, renderClass: string): FuxcelValidator;
+	/**
+	 * Render validation message.
+	 *
+	 * @param message {StringOrNull = null} message to display [optional]
+	 * @param renderClass {StringOrNull} validation type
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the current selected element.
+	 */
+	renderMessage(message: StringOrNull = null, renderClass: StringOrNull = null): FuxcelValidator {
+		this.insertHTML(`<small ${renderClass ? `class="${renderClass}"` : ''}>${message ?? '&nbsp;'}</small>`);
 		return this;
 	}
 	
+	/**
+	 * Display all validation errors for the selected form.
+	 *
+	 * @param errors {{ [key: string]: any }}
+	 * @return FuxcelValidator
+	 */
+	renderValidationErrors(errors: { [key: string]: any }): FuxcelValidator;
+	/**
+	 * Display all validation errors for the selected form.
+	 *
+	 * @param errors {null}
+	 * @param messageOrFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
+	 * @return FuxcelValidator
+	 */
+	renderValidationErrors(errors: null, messageOrFn: ((fx: FuxcelValidator, e?: CustomEvent) => any)): FuxcelValidator;
+	/**
+	 * Display all validation errors for the selected form.
+	 *
+	 * @param errors {null}
+	 * @param messageOrFn {string}
+	 * @return FuxcelValidator
+	 */
+	renderValidationErrors(errors: null, messageOrFn: string): FuxcelValidator;
+	/**
+	 * Display all validation errors for the selected form.
+	 *
+	 * @param errors {{ [key: string]: any }} An object containing the errors. The keys are the form field ids and their values are the errors for the fields respectively.
+	 * @param messageOrFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
+	 * @return FuxcelValidator
+	 */
+	renderValidationErrors(errors: { [key: string]: any }, messageOrFn: ((fx: FuxcelValidator, e?: CustomEvent) => any)): FuxcelValidator;
+	/**
+	 * Display all validation errors for the selected form.
+	 *
+	 * @param errors {{ [key: string]: any }} An object containing the errors. The keys are the form field ids and their values are the errors for the fields respectively.
+	 * @param messageOrFn {string}
+	 * @return FuxcelValidator
+	 */
+	renderValidationErrors(errors: { [key: string]: any }, messageOrFn: string): FuxcelValidator;
+	
+	/**
+	 * Display all validation errors for the selected form.
+	 *
+	 * @param errors {{ [key: string]: any }} An object containing the errors. The keys are the form field ids and their values are the errors for the fields respectively.
+	 * @param messageOrFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
+	 * @param callbackFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
+	 * @return FuxcelValidator
+	 */
+	renderValidationErrors(errors: { [key: string]: any }, messageOrFn: ((fx: FuxcelValidator, e?: CustomEvent) => any), callbackFn: ((fx: FuxcelValidator, e?: CustomEvent) => any)): FuxcelValidator;
+	/**
+	 * Display all validation errors for the selected form.
+	 *
+	 * @param errors {{ [key: string]: any }} An object containing the errors. The keys are the form field ids and their values are the errors for the fields respectively.
+	 * @param messageOrFn {string}
+	 * @param callbackFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
+	 * @return FuxcelValidator
+	 */
+	renderValidationErrors(errors: { [key: string]: any }, messageOrFn: string, callbackFn: ((fx: FuxcelValidator, e?: CustomEvent) => any)): FuxcelValidator;
+	/**
+	 * Display all validation errors for the selected form.
+	 *
+	 * @param errors {{ [key: string]: any } | null = null} An object containing the errors. The keys are the form field ids and their values are the errors for the fields respectively.
+	 * @param messageOrFn {((fx: FuxcelValidator, e?: CustomEvent) => any)|StringOrNull}
+	 * @param callbackFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
+	 * @return FuxcelValidator
+	 */
 	renderValidationErrors(errors: { [key: string]: any } | null = null, messageOrFn: ((fx: FuxcelValidator, e?: CustomEvent) => any) | StringOrNull = null, callbackFn: ((fx: FuxcelValidator, e?: CustomEvent) => any) | null = null): FuxcelValidator {
 		if (this.isElement('form')) {
 			if (isObject(errors) && Object.keys(<{ [key: string]: any }>errors).length) {
@@ -941,6 +1040,25 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 		return this;
 	}
 	
+	/**
+	 * Show validation error for the selected field.
+	 *
+	 * @return {void}
+	 */
+	showError(): void;
+	/**
+	 * Show validation error for the selected field.
+	 *
+	 * @param message {StringOrNull} Validation message.
+	 * @return {void}
+	 */
+	showError(message: StringOrNull): void;
+	/**
+	 * Show validation error for the selected field.
+	 *
+	 * @param message {StringOrNull = null} Validation message.
+	 * @return {void}
+	 */
 	showError(message: StringOrNull = null): void {
 		const fieldAttribs = this.fieldAttributes;
 		const validationProps = this.validationProps;
@@ -958,6 +1076,25 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 			fx(validationProps.formGroup).replaceClass('fx-valid-success', 'fx-valid-error');
 	}
 	
+	/**
+	 * Show validation success.
+	 *
+	 * @return {void}
+	 */
+	showSuccess(): void;
+	/**
+	 * Show validation success.
+	 *
+	 * @param message {StringOrNull} Validation message.
+	 * @return {void}
+	 */
+	showSuccess(message: StringOrNull): void;
+	/**
+	 * Show validation success.
+	 *
+	 * @param message {StringOrNull = null} Validation message.
+	 * @return {void}
+	 */
 	showSuccess(message: StringOrNull = null): void {
 		const validationProps = this.validationProps;
 		const fieldAttribs = this.fieldAttributes;
@@ -966,8 +1103,7 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 		this.#_manipulateErrorBag(true);
 		registry.configObject.config?.showIcons && FuxcelValidator.#_toggleValidationIcons(validationProps.invalidIcon, validationProps.validIcon);
 		
-		fx(validationProps.validationField).length &&
-		fx(validationProps.validationField).formValidator.renderMessage(message ?? null);
+		fx(validationProps.validationField).length && fx(validationProps.validationField).formValidator.renderMessage(message);
 		
 		if (registry.configObject.config?.useDefaultStyling)
 			fx(`${validationProps.formGroup} .form-group-wrapper`).replaceClass('fx-valid-error', 'fx-valid-success');
@@ -975,10 +1111,21 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 			fx(validationProps.formGroup).replaceClass('fx-valid-error', 'fx-valid-success');
 	}
 	
+	/**
+	 * Toggle between validating and removing validation from the selected field.
+	 *
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the forms.
+	 */
 	toggleValidation(): FuxcelValidator {
 		return this.canBeValidated ? this.validateField() : this.undoValidation();
 	}
 	
+	/**
+	 * Remove validation from the selected field element. Also remove the error from the error bag if destroyValidation parameter is set tot true.
+	 *
+	 * @param destroyValidation {boolean = false}
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the forms.
+	 */
 	undoValidation(destroyValidation: boolean = false): FuxcelValidator {
 		const fieldAttribs = this.fieldAttributes;
 		const validationProps = this.validationProps;
@@ -990,19 +1137,14 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 				registry.count = Object.keys(registry.bag).length;
 			}
 			
-			/*if (destroyValidation) {
-				delete this.#_validatorErrorBag[fieldAttribs.formId][<string>fieldAttribs.id];
-				this.#_validatorErrorCount[fieldAttribs.formId] = Object.keys(this.#_validatorErrorCount[fieldAttribs.formId]).length;
-			}*/
-			
 			if (registry.configObject.config?.useDefaultStyling)
 				fx(`${validationProps.formGroup} .form-group-wrapper`).removeClass('fx-valid-error', 'fx-valid-success');
 			else
 				fx(validationProps.formGroup).removeClass('fx-valid-error', 'fx-valid-success');
 			
 			!fx(`${validationProps.validationIconField} > *`)?.length ?
-				fx(validationProps.validationField).formValidator.renderMessage(null) :
-				fx(`${validationProps.validationIconField} > *`).fadeout().then(() => fx(validationProps.validationField).formValidator.renderMessage(null));
+				fx(validationProps.validationField).formValidator.renderMessage() :
+				fx(`${validationProps.validationIconField} > *`).fadeout().then(() => fx(validationProps.validationField).formValidator.renderMessage());
 		}
 		return this;
 	}
@@ -1011,26 +1153,61 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 		if (!this.length || !this.isElement('form')) return null!;
 		const stepReg = FuxcelValidator.#_registry[this.attrib('id')]?.steps[step];
 		return stepReg && Object.keys(stepReg.bag).length ? stepReg.bag : null!;
-		/*// @ts-ignore
-		return (this.length && this.isElement('form')) && Object.keys(FuxcelValidator.#_validatorErrorBag[this.attrib('id')][step] ?? {}).length ?
-			// @ts-ignore
-			FuxcelValidator.#_validatorErrorBag[this.attrib('id')][step] :
-			null;*/
 	}
 	
 	stepErrorCount(step: number | string): number {
 		if (!this.length || !this.isElement('form')) return 0;
 		return FuxcelValidator.#_registry[this.attrib('id')]?.steps[step]?.count ?? 0;
-		/*// @ts-ignore
-		return (this.length && this.isElement('form')) && Object.keys(FuxcelValidator.#_validatorErrorCount).length ?
-			// @ts-ignore
-			FuxcelValidator.#_validatorErrorCount[this.attrib('id')][step] : 0;*/
 	}
 	
+	/**
+	 * Validate Card CVV field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateCardCVV(regExp: RegExp): FuxcelValidator;
+	/**
+	 * Validate Card CVV field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use.
+	 * @param customFormatEx {StringOrNull} Custom format example to show user.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateCardCVV(regExp: RegExp, customFormatEx: StringOrNull): FuxcelValidator;
+	/**
+	 * Validate Card CVV field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use.
+	 * @param customFormatEx {StringOrNull = null} Custom format example to show user.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
 	validateCardCVV(regExp: RegExp, customFormatEx: StringOrNull = null): FuxcelValidator {
 		return this.validateRegex(regExp, `${customFormatEx ?? 'Invalid CVV.'}`);
 	}
 	
+	/**
+	 * Validate Card Number field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateCardNumber(regExp: RegExp): FuxcelValidator;
+	/**
+	 * Validate Card Number field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use.
+	 * @param customFormatEx {StringOrNull} Custom format example to show user
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateCardNumber(regExp: RegExp, customFormatEx: StringOrNull): FuxcelValidator;
+	/**
+	 * Validate Card Number field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use.
+	 * @param customFormatEx {StringOrNull = null} Custom format example to show user
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
 	validateCardNumber(regExp: RegExp, customFormatEx: StringOrNull = null): FuxcelValidator {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 		// @ts-ignore
@@ -1044,17 +1221,74 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 	}
 	
 	/**
-	 * Validate Email field using Regular Expression.
+	 * Validate Email field using Regular Expression
 	 *
 	 * @param regExp {RegExp} Regular expression to use.
-	 * @param customFormatEx {string|null=null} Custom format example to show user.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
-	 **/
+	 */
+	validateEmail(regExp: RegExp): FuxcelValidator;
+	/**
+	 * Validate Email field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use.
+	 * @param customFormatEx {StringOrNull} Custom format example to show user.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateEmail(regExp: RegExp, customFormatEx: StringOrNull): FuxcelValidator;
+	/**
+	 * Validate Email field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use.
+	 * @param customFormatEx {StringOrNull = null} Custom format example to show user.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
 	validateEmail(regExp: RegExp, customFormatEx: StringOrNull = null): FuxcelValidator {
 		return this.validateRegex(regExp, `Invalid E-Mail format: (eg. ${customFormatEx ?? 'johndoe@email.com'})`);
 	}
 	
-	validateField(message: StringOrNull = null, isError: boolean = false): FuxcelValidator {
+	/** Validate the selected field. **/
+	validateField(): FuxcelValidator;
+	/**
+	 * Validate the selected field.
+	 *
+	 * _Automatically generates and displays an error message._
+	 *
+	 * @param isError {boolean=false} an automatic error message is generated.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateField(isError: boolean): FuxcelValidator;
+	/**
+	 * Validate the selected field.
+	 *
+	 * _Displays a success message._
+	 *
+	 * @param message {string} Validation message to display.
+	 * @returns {FuxcelValidator}
+	 */
+	validateField(message: string): FuxcelValidator;
+	/**
+	 * Validate the selected field.
+	 *
+	 * @param message {StringOrNull} Validation message to display.
+	 * @param isError {boolean=false} Is Validation message an error? _[defaults to false]._
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateField(message: StringOrNull, isError?: boolean): FuxcelValidator;
+	/**
+	 * Validate the selected field.
+	 *
+	 * _Displays an error message if the `message` parameter is null or if `isError` parameter is true._
+	 *
+	 * @param message {StringOrNull} Validation message to display.
+	 * @param isError {boolean=false} If true and the message parameter is null, an automatic error message is generated.
+	 * @returns {FuxcelValidator}
+	 */
+	validateField(message: StringOrNull | boolean = null, isError: boolean = false): FuxcelValidator {
+		if (typeof message === 'boolean') {
+			isError = message;
+			message = null;
+		}
+		
 		if (this.attrib('id')?.length) {
 			let errorMessage: StringOrNull = null,
 				finalMessage: StringOrNull = message;
@@ -1108,26 +1342,106 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 		return this;
 	}
 	
+	/**
+	 * Validate Name field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateName(regExp: RegExp): FuxcelValidator;
+	/**
+	 * Validate Name field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use.
+	 * @param customFormatEx {StringOrNull} Custom format example to show user.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateName(regExp: RegExp, customFormatEx: StringOrNull): FuxcelValidator;
+	/**
+	 * Validate Name field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use.
+	 * @param customFormatEx {string|null=null} Custom format example to show user.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
 	validateName(regExp: RegExp, customFormatEx: StringOrNull = null): FuxcelValidator {
 		return this.validateRegex(regExp, `Invalid Name format: (eg. ${customFormatEx ?? 'john doe, john doe woods'})`);
 	}
 	
+	/**
+	 * Validate Password field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validatePassword(regExp: RegExp): FuxcelValidator;
+	/**
+	 * Validate Password field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use
+	 * @param customFormatEx {StringOrNull} Custom format example to show user.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validatePassword(regExp: RegExp, customFormatEx: StringOrNull): FuxcelValidator;
+	/**
+	 * Validate Password field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use
+	 * @param customFormatEx {string|null=null} Custom format example to show user.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
 	validatePassword(regExp: RegExp, customFormatEx: StringOrNull = null): FuxcelValidator {
 		return this.validateRegex(regExp, `Invalid Password format: (${customFormatEx ?? 'Password requires a minimum of 8 characters and must contain at least 1 uppercase and 1 special character'})`);
 	}
 	
+	/**
+	 * Validate Phone field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validatePhone(regExp: RegExp): FuxcelValidator;
+	/**
+	 * Validate Phone field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use
+	 * @param customFormatEx {StringOrNull} Custom format example to show user.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validatePhone(regExp: RegExp, customFormatEx: StringOrNull): FuxcelValidator;
+	/**
+	 * Validate Phone field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use
+	 * @param customFormatEx {string|null=null} Custom format example to show user.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
 	validatePhone(regExp: RegExp, customFormatEx: StringOrNull = null): FuxcelValidator {
 		return this.validateRegex(regExp, `Invalid Phone format: (eg. ${customFormatEx ?? '+234 8156547099, +1 104 2198'})`);
 	}
 	
 	/**
-	 * Validate field using Regular Expression or a callback function
+	 * Validate field using a callback function.
 	 *
-	 * @param regExpOrFn {Function|RegExp} Regular Expression or callback function to use.
+	 * @param regExpOrFn {Function} Function to use.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateRegex(regExpOrFn: Function): FuxcelValidator
-	validateRegex(regExpOrFn: RegExp, message: string): FuxcelValidator
+	validateRegex(regExpOrFn: Function): FuxcelValidator;
+	/**
+	 * Validate field using Regular Expression.
+	 *
+	 * @param regExpOrFn {RegExp} Regular Expression to use.
+	 * @param message {StringOrNull} Validation message.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateRegex(regExpOrFn: RegExp, message: StringOrNull): FuxcelValidator;
+	/**
+	 * Validate field using Regular Expression or a callback function.
+	 *
+	 * @param regExpOrFn {Function|RegExp} Regular Expression or callback function to use.
+	 * @param message {string|null=null} Validation message.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
 	validateRegex(regExpOrFn: Function | RegExp, message?: StringOrNull): FuxcelValidator {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 		// @ts-ignore
@@ -1136,11 +1450,33 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 		typeof regExpOrFn === 'function' ?
 			regExpOrFn(this) :
 			(regExpOrFn && isString(message) ?
-				(value.length ? (value.match(<RegExp>regExpOrFn) ? this.validateField() : this.validateField(message, true)) : this.validateField()) :
+				(value.length ? (value.match(<RegExp>regExpOrFn) ? this.validateField() : this.validateField(message as string, true)) : this.validateField()) :
 				console.error('`validateRegex()` expects 2 arguments.'));
 		return this;
 	}
 	
+	/**
+	 * Validate Username field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateUsername(regExp: RegExp): FuxcelValidator;
+	/**
+	 * Validate Username field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use
+	 * @param customFormatEx {StringOrNull} Custom format example to show user.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateUsername(regExp: RegExp, customFormatEx: StringOrNull): FuxcelValidator;
+	/**
+	 * Validate Username field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use
+	 * @param customFormatEx {string|null=null} Custom format example to show user.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
 	validateUsername(regExp: RegExp, customFormatEx: StringOrNull = null): FuxcelValidator {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 		// @ts-ignore

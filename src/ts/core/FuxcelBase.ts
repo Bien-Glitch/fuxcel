@@ -164,12 +164,12 @@ export class FuxcelBase {
 	
 	// ─── Static Device Helpers ────────────────────────────────────────────────
 	
-	/** `true` if the current device is a mobile device. */
+	/** `true` if the current device is a mobile device. **/
 	static get isMobileDevice(): boolean {
 		return navigator.userAgent.toLowerCase().includes('mobile');
 	}
 	
-	/** `true` if the pointer is coarse (touch). */
+	/** `true` if the pointer is coarse (touch). **/
 	static get pointerIsTouch(): boolean {
 		return window.matchMedia('(pointer: coarse)').matches;
 	}

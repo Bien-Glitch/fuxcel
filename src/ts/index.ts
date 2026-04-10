@@ -84,7 +84,7 @@ fx.passLuhnAlgo = passLuhnAlgo;
  * fuxcel('#btn').fadein();
  * fuxcel.fetch({ uri: '/api', method: 'post' });
  */
-export const fuxcel: typeof fx = fx;
+const fuxcel: typeof fx = fx;
 
 // ─── Expose everything to window for script-tag / non-module usage ───────────
 pushPropsToWindow({

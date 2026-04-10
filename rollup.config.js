@@ -43,8 +43,8 @@ export default [
 			nodeResolve(),
 			typescript({
 				tsconfig: './tsconfig.json',
-				// declaration: true,
-				// declarationDir: 'dist/js',  // Must be inside dist/
+				declaration: true,
+				declarationDir: 'dist/js',  // Must be inside dist/
 				outDir: 'dist/js'
 			})
 		]

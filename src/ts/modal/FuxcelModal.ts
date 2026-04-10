@@ -62,27 +62,29 @@ export class FuxcelModal extends Fuxcel implements FuxcelModalInstance {
 	
 	// ─── Static Getters ───────────────────────────────────────────────────────
 	
-	/** The most recently opened modal, or `null` if none is open. */
+	/** The most recently opened modal, or `null` if none is open. **/
 	static get currentModal(): FuxcelModal | null {
 		return FuxcelModal.hasOpenModals
 			? FuxcelModal.#_openModals[FuxcelModal.#_openModals.length - 1]
 			: null;
 	}
 	
-	/** `true` if any modals are currently open. */
+	/** `true` if any modals are currently open. **/
 	static get hasOpenModals(): boolean {
 		return !!FuxcelModal.#_openModals.length;
 	}
 	
-	/** All elements with `[data-fx-target="modal"]`. */
+	/** All elements with `[data-fx-target="modal"]`. **/
 	static get modalTriggers(): Fuxcel {
 		return fx('*[data-fx-target="modal"]');
 	}
 	
 	// ─── Static Factory ───────────────────────────────────────────────────────
-	
 	/**
 	 * Builds a modal DOM structure and returns the root element.
+	 *
+	 * @param {ModalInit} options
+	 * @returns {HTMLElement}
 	 */
 	static init({title = null, html = true, isStatic = false, content, id, hasFooter}: ModalInit): HTMLElement {
 		const fxModal = document.createElement('div');
@@ -125,14 +127,14 @@ export class FuxcelModal extends Fuxcel implements FuxcelModalInstance {
 	
 	// ─── Instance Methods ─────────────────────────────────────────────────────
 	
-	/** Remove the modal element from the DOM entirely. */
+	/** Remove the selected modal element from the DOM entirely. **/
 	destroy(): void {
 		// @ts-ignore
 		this[0].remove();
 	}
 	
 	/**
-	 * Hide (and optionally destroy) the modal.
+	 * Hide (and optionally destroy) the selected modal.
 	 *
 	 * @param destroy {boolean=false} Whether to remove the element from the DOM after hiding.
 	 */
@@ -140,8 +142,8 @@ export class FuxcelModal extends Fuxcel implements FuxcelModalInstance {
 		const modalContent = fx('.fx-modal-content', this);
 		if (!this.#_isHiding) {
 			this.#_isHiding = true;
-			modalContent.fadeout(500).then(() =>
-				this.fadeout(500).then(() => {
+			modalContent.fadeout(200).then(() =>
+				this.fadeout(200).then(() => {
 					const index = FuxcelModal.#_openModals.indexOf(this);
 					if (index !== -1) FuxcelModal.#_openModals.splice(index, 1);
 					
@@ -155,9 +157,9 @@ export class FuxcelModal extends Fuxcel implements FuxcelModalInstance {
 	}
 	
 	/**
-	 * Show the modal.
+	 * Open selected modal.
 	 *
-	 * @param escKey {boolean=true} Allow closing via the Escape key.
+	 * @param escKey {boolean=true} Allow closing the modal using the Escape on the KeyBoard if set to true. True by default.
 	 */
 	show(escKey: boolean | undefined = true): void {
 		const modalContent = fx('.fx-modal-content', this);
@@ -186,7 +188,7 @@ export class FuxcelModal extends Fuxcel implements FuxcelModalInstance {
 		);
 	}
 	
-	/** Toggle between open and closed state. */
+	/** Toggle between hide and show state of the selected modal. **/
 	toggle(): void {
 		this.style('display') === 'none' ? this.show() : this.hide();
 	}

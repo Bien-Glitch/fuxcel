@@ -7,15 +7,9 @@ fx.onDocumentLoad((e) => {
 	const stepValidator = testStep.formValidator.init({config: {useDefaultStyling: true}, stepForm: {use: true, plugin: false}});
 	fx('#test-form').formValidator.init({config: {useDefaultStyling: true}, stepForm: {use: false}});
 	
-	console.log(fx('input'));
-	// testStep.fadeout(5000).then(element => element.fadein(2000).then(element => element.slideoutup(3000)));
-	/*testStep.fadeout(5000).then(element => element.fadein(2000).then(element => element.slideoutup(3000)));
-	testStep.off().upon()*/
-	
-	// testStep.formValidator.init({stepForm: {use: true, plugin: false}});
 	testStep.toArray.forEach(stepForm => {
 		const stepsArray = [];
-		const steps = fx('.fx-step', stepForm);
+		const steps = fx('.fx-step', stepForm).attrib({});
 		
 		const btnNext = fx('button[data-action="next"]', stepForm);
 		const btnPrev = fx('button[data-action="prev"]', stepForm);
@@ -82,9 +76,7 @@ fx.onDocumentLoad((e) => {
 		confirmButtonText: 'Ok',
 		onConfirm: (e, modal) => {
 			console.log(e, 'Confirmed');
-			setTimeout(function () {
-				modal.hide()
-			}, 1000);
+			modal.hide()
 		},
 		onEsc: (e, modal) => {
 			alert('Escaped');

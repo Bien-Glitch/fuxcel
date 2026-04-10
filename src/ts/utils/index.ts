@@ -1,5 +1,4 @@
 // ─── Type Guards & Helpers ────────────────────────────────────────────────────
-
 /**
  * Checks if the given value is of type boolean.
  */
@@ -32,7 +31,10 @@ export const isString = (value: any): boolean =>
 
 /**
  * Parse the given value and get its boolean equivalent.
- * Handles: true, 'true', 1, '1', 'on', 'yes' → true; everything else → false.
+ *
+ * Handles: `true, 'true', 1, '1', 'on', 'yes'` → `true`
+ *
+ * Everything else → `false.`
  */
 export const parseBool = (value: any): boolean => {
 	switch (isString(value) ? value.toString().toLowerCase() : value) {
@@ -49,13 +51,26 @@ export const parseBool = (value: any): boolean => {
 };
 
 // ─── Window Helper ────────────────────────────────────────────────────────────
-
-export function pushPropsToWindow(prop: Record<string, any>): void;
-export function pushPropsToWindow(prop: string, value: any): void;
 /**
  * Expose one or more properties onto the global `window` object.
+ *
+ * @param {Record<string, any>} prop Key-Value pair Properties to expose.
  */
-export function pushPropsToWindow(prop: string | Record<string, any>, value?: any): void {
+export function pushPropsToWindow(prop: Record<string, any>): void;
+/**
+ * Expose a property onto the global `window` object.
+ *
+ * @param {string} prop Property to expose.
+ * @param {any} value Value of the property.
+ */
+export function pushPropsToWindow(prop: string, value?: any): void;
+/**
+ * Expose one or more properties onto the global `window` object.
+ *
+ * @param prop {string | Record<string, any>} Property to expose.
+ * @param value {any = null} Value of the property.
+ */
+export function pushPropsToWindow(prop: string | Record<string, any>, value: any = null): void {
 	if (typeof window !== 'undefined') {
 		if (typeof prop === 'object' && prop !== null)
 			Object.assign(window as any, prop);

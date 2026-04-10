@@ -21,6 +21,9 @@
  */
 
 import {Fuxcel} from '../core/Fuxcel';
+import {FuxcelValidator} from '../validator/FuxcelValidator';
+import {FuxcelModal} from '../modal/FuxcelModal';
+import {FuxcelSteps} from '../validator/FuxcelSteps';
 
 // ─── Primitive / Element Types ────────────────────────────────────────────────
 export type IterableElement =
@@ -134,6 +137,16 @@ export type ValidatorConfigObject = {
 	};
 };
 
+export type FormValidationRegistryBag = Record<string, {
+	configObject: ValidatorConfigObject;
+	bag: { [key: string]: any };
+	count: number;
+	steps: Record<string, {
+		bag: { [key: string]: any };
+		count: number
+	}>;
+}>
+
 // ─── Animation Types ──────────────────────────────────────────────────────────
 
 export type FXAnimationOptions = {
@@ -195,9 +208,9 @@ export type FXModalType = {
 	/** Auto-close on confirm click. */           closeOnConfirm?: boolean;
 	/** Render body as HTML (default true). */    html?: boolean;
 	/** Prevent closing on outside click. */      isStatic?: boolean;
-	/** Fired when confirm is clicked. */         onConfirm?: ((e: CustomEvent, modal: FuxcelModalInstance) => void) | null;
-	/** Fired when cancel is clicked. */          onCancel?: ((e: CustomEvent, modal: FuxcelModalInstance) => void) | null;
-	/** Fired on Escape (no cancel button). */    onEsc?: ((e: CustomEvent, modal: FuxcelModalInstance) => void) | null;
+	/** Fired when confirm is clicked. */         onConfirm?: ((e: CustomEvent, modal: FuxcelModal) => void) | null;
+	/** Fired when cancel is clicked. */          onCancel?: ((e: CustomEvent, modal: FuxcelModal) => void) | null;
+	/** Fired on Escape (no cancel button). */    onEsc?: ((e: CustomEvent, modal: FuxcelModal) => void) | null;
 };
 
 // ─── HTTP Types ───────────────────────────────────────────────────────────────
@@ -244,29 +257,106 @@ export interface FuxcelInstance {
 	
 	// ─── Animations ───────────────────────────────────────────────────────
 	/**
-	 * Perform Fadeout animation on selected element.
+	 * Perform Fadein animation on selected element.*
 	 *
-	 * @param {number} timeout
-	 * @returns {Promise<FuxcelInstance>}
+	 * @returns {Promise<Fuxcel>}
 	 */
-	fadein(timeout?: number): Promise<FuxcelInstance>;
+	fadein(): Promise<Fuxcel>;
+	
+	/**
+	 * Perform Fadein animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	fadein(timeout: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform Fadein animation on selected element.
+	 *
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	fadein(display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform Fadein animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	fadein(timeout: number, iteration: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform Fadein animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	fadein(timeout: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform Fadein animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count
+	 * @param {string} display Initial CSS display
+	 * @returns {Promise<Fuxcel>}
+	 */
+	fadein(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform Fadein animation on selected element.
+	 *
+	 * @param {string | number} timeout Animation duration.
+	 * @param {string | number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	fadein(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform Fadeout animation on selected element.*
+	 *
+	 * @returns {Promise<Fuxcel>}
+	 */
+	fadeout(): Promise<Fuxcel>;
 	
 	/**
 	 * Perform Fadeout animation on selected element.
 	 *
-	 * @param {string} display
-	 * @returns {Promise<FuxcelInstance>}
+	 * @param {number} timeout Animation duration.
+	 * @returns {Promise<Fuxcel>}
 	 */
-	fadein(display?: string): Promise<FuxcelInstance>;
+	fadeout(timeout: number): Promise<Fuxcel>;
 	
 	/**
 	 * Perform Fadeout animation on selected element.
 	 *
-	 * @param {number} timeout
-	 * @param {string} display
-	 * @returns {Promise<FuxcelInstance>}
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
 	 */
-	fadein(timeout: number, display: string): Promise<FuxcelInstance>;
+	fadeout(display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform Fadeout animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	fadeout(timeout: number, iteration: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform Fadeout animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	fadeout(timeout: number, display: string): Promise<Fuxcel>;
 	
 	/**
 	 * Perform Fadeout animation on selected element.
@@ -274,218 +364,630 @@ export interface FuxcelInstance {
 	 * @param {number} timeout Animation duration.
 	 * @param {number} iteration Animation iteration count
 	 * @param {string} display Initial CSS display
-	 * @returns {Promise<FuxcelInstance>}
+	 * @returns {Promise<Fuxcel>}
 	 */
-	fadein(timeout: number, iteration: number, display: string): Promise<FuxcelInstance>;
+	fadeout(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
 	
 	/**
 	 * Perform Fadeout animation on selected element.
 	 *
-	 * @param {string | number} timeout
-	 * @param {string | number} iteration
-	 * @param {string} display
-	 * @returns {Promise<FuxcelInstance>}
+	 * @param {string | number} timeout Animation duration.
+	 * @param {string | number} iteration Animation iteration count
+	 * @param {string} display Initial CSS display
+	 * @returns {Promise<Fuxcel>}
 	 */
-	fadein(timeout?: number | string, iteration?: number | string, display?: string): Promise<FuxcelInstance>;
+	fadeout(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
 	
-	fadeout(timeout?: number): Promise<FuxcelInstance>;
-	
-	fadeout(display?: string): Promise<FuxcelInstance>;
-	
-	fadeout(timeout: number, display?: string): Promise<FuxcelInstance>;
-	
-	fadeout(timeout: number, iteration: number, display: string): Promise<FuxcelInstance>;
 	
 	/**
-	 * Perform Fadeout animation on selected element.
+	 * Perform _Slidein-down_ animation on selected element.
 	 *
-	 * @param {number | string} timeout
-	 * @param {number | string} iteration
-	 * @param {string} display
-	 * @returns {Promise<FuxcelInstance>}
+	 * @returns {Promise<Fuxcel>}
 	 */
-	fadeout(timeout?: number | string, iteration?: number | string, display?: string): Promise<FuxcelInstance>;
-	
-	
-	slideindown(timeout?: number): Promise<FuxcelInstance>;
-	
-	slideindown(display?: string): Promise<FuxcelInstance>;
-	
-	slideindown(timeout: number, display: string): Promise<FuxcelInstance>;
-	
-	slideindown(timeout: number, iteration: number, display: string): Promise<FuxcelInstance>;
+	slideindown(): Promise<Fuxcel>;
 	
 	/**
+	 * Perform _Slidein-down_ animation on selected element.
 	 *
-	 * @param {number | string} timeout
-	 * @param {number | string} iteration
-	 * @param {string} display
-	 * @returns {Promise<FuxcelInstance>}
+	 * @param {number} timeout Animation duration.
+	 * @returns {Promise<Fuxcel>}
 	 */
-	slideindown(timeout?: number | string, iteration?: number | string, display?: string): Promise<FuxcelInstance>;
-	
-	
-	slideinup(timeout?: number): Promise<FuxcelInstance>;
-	
-	slideinup(display?: string): Promise<FuxcelInstance>;
-	
-	slideinup(timeout: number, display: string): Promise<FuxcelInstance>;
-	
-	slideinup(timeout: number, iteration: number, display: string): Promise<FuxcelInstance>;
+	slideindown(timeout: number): Promise<Fuxcel>;
 	
 	/**
+	 * Perform _Slidein-down_ animation on selected element.
 	 *
-	 * @param {number | string} timeout
-	 * @param {number | string} iteration
-	 * @param {string} display
-	 * @returns {Promise<FuxcelInstance>}
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
 	 */
-	slideinup(timeout?: number | string, iteration?: number | string, display?: string): Promise<FuxcelInstance>;
-	
-	
-	slideoutdown(timeout?: number): Promise<FuxcelInstance>;
-	
-	slideoutdown(display?: string): Promise<FuxcelInstance>;
-	
-	slideoutdown(timeout: number, display: string): Promise<FuxcelInstance>;
-	
-	slideoutdown(timeout: number, iteration: number, display: string): Promise<FuxcelInstance>;
+	slideindown(display: string): Promise<Fuxcel>;
 	
 	/**
+	 * Perform _Slidein-down_ animation on selected element.
 	 *
-	 * @param {number | string} timeout
-	 * @param {number | string} iteration
-	 * @param {string} display
-	 * @returns {Promise<FuxcelInstance>}
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @returns {Promise<Fuxcel>}
 	 */
-	slideoutdown(timeout?: number | string, iteration?: number | string, display?: string): Promise<FuxcelInstance>;
-	
-	
-	slideoutup(timeout?: number): Promise<FuxcelInstance>;
-	
-	slideoutup(display?: string): Promise<FuxcelInstance>;
-	
-	slideoutup(timeout: number, display: string): Promise<FuxcelInstance>;
-	
-	slideoutup(timeout: number, iteration: number, display: string): Promise<FuxcelInstance>;
+	slideindown(timeout: number, iteration: number): Promise<Fuxcel>;
 	
 	/**
+	 * Perform _Slidein-down_ animation on selected element.
 	 *
-	 * @param {number | string} timeout
-	 * @param {number | string} iteration
-	 * @param {string} display
-	 * @returns {Promise<FuxcelInstance>}
+	 * @param {number} timeout Animation duration.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
 	 */
-	slideoutup(timeout?: number | string, iteration?: number | string, display?: string): Promise<FuxcelInstance>;
-	
-	
-	slideinleft(timeout?: number): Promise<FuxcelInstance>;
-	
-	slideinleft(display?: string): Promise<FuxcelInstance>;
-	
-	slideinleft(timeout: number, display: string): Promise<FuxcelInstance>;
-	
-	slideinleft(timeout: number, iteration: number, display: string): Promise<FuxcelInstance>;
+	slideindown(timeout: number, display: string): Promise<Fuxcel>;
 	
 	/**
+	 * Perform _Slidein-down_ animation on selected element.
 	 *
-	 * @param {number | string} timeout
-	 * @param {number | string} iteration
-	 * @param {string} display
-	 * @returns {Promise<FuxcelInstance>}
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count
+	 * @param {string} display Initial CSS display
+	 * @returns {Promise<Fuxcel>}
 	 */
-	slideinleft(timeout?: number | string, iteration?: number | string, display?: string): Promise<FuxcelInstance>;
-	
-	
-	slideoutleft(timeout?: number): Promise<FuxcelInstance>;
-	
-	slideoutleft(display?: string): Promise<FuxcelInstance>;
-	
-	slideoutleft(timeout: number, display: string): Promise<FuxcelInstance>;
-	
-	slideoutleft(timeout: number, iteration: number, display: string): Promise<FuxcelInstance>;
+	slideindown(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
 	
 	/**
+	 * Perform _Slidein-down_ animation on selected element.
 	 *
-	 * @param {number | string} timeout
-	 * @param {number | string} iteration
-	 * @param {string} display
-	 * @returns {Promise<FuxcelInstance>}
+	 * @param {string | number} timeout Animation duration.
+	 * @param {string | number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
 	 */
-	slideoutleft(timeout?: number | string, iteration?: number | string, display?: string): Promise<FuxcelInstance>;
-	
-	
-	slideinright(timeout?: number): Promise<FuxcelInstance>;
-	
-	slideinright(display?: string): Promise<FuxcelInstance>;
-	
-	slideinright(timeout: number, display: string): Promise<FuxcelInstance>;
-	
-	slideinright(timeout: number, iteration: number, display: string): Promise<FuxcelInstance>;
+	slideindown(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
 	
 	/**
+	 * Perform _Slidein-up_ animation on selected element.
 	 *
-	 * @param {number | string} timeout
-	 * @param {number | string} iteration
-	 * @param {string} display
-	 * @returns {Promise<FuxcelInstance>}
+	 * @returns {Promise<Fuxcel>}
 	 */
-	slideinright(timeout?: number | string, iteration?: number | string, display?: string): Promise<FuxcelInstance>;
-	
-	
-	slideoutright(timeout?: number): Promise<FuxcelInstance>;
-	
-	slideoutright(display?: string): Promise<FuxcelInstance>;
-	
-	slideoutright(timeout: number, display: string): Promise<FuxcelInstance>;
-	
-	slideoutright(timeout: number, iteration: number, display: string): Promise<FuxcelInstance>;
+	slideinup(): Promise<Fuxcel>;
 	
 	/**
+	 * Perform _Slidein-up_ animation on selected element.
 	 *
-	 * @param {number | string} timeout
-	 * @param {number | string} iteration
-	 * @param {string} display
-	 * @returns {Promise<FuxcelInstance>}
+	 * @param {number} timeout Animation duration.
+	 * @returns {Promise<Fuxcel>}
 	 */
-	slideoutright(timeout?: number | string, iteration?: number | string, display?: string): Promise<FuxcelInstance>;
-	
-	
-	blink(timeout?: number): Promise<FuxcelInstance>;
-	
-	blink(display?: string): Promise<FuxcelInstance>;
-	
-	blink(timeout: number, display: string): Promise<FuxcelInstance>;
-	
-	blink(timeout: number, iteration: number, display: string): Promise<FuxcelInstance>;
+	slideinup(timeout: number): Promise<Fuxcel>;
 	
 	/**
+	 * Perform _Slidein-up_ animation on selected element.
 	 *
-	 * @param {number | string} timeout
-	 * @param {number | string} iteration
-	 * @param {string} display
-	 * @returns {Promise<FuxcelInstance>}
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
 	 */
-	blink(timeout?: number | string, iteration?: number | string, display?: string): Promise<FuxcelInstance>;
-	
-	
-	zoomin(timeout?: number): Promise<FuxcelInstance>;
-	
-	zoomin(display?: string): Promise<FuxcelInstance>;
-	
-	zoomin(timeout: number, display: string): Promise<FuxcelInstance>;
-	
-	zoomin(timeout: number, iteration: number, display: string): Promise<FuxcelInstance>;
+	slideinup(display: string): Promise<Fuxcel>;
 	
 	/**
-	 * Perform a Zoom-in animation on selected element.
+	 * Perform _Slidein-up_ animation on selected element.
 	 *
-	 * @param timeout {number|string} Animation duration.
-	 * @param iteration {number|string}
-	 * @param display {string}
-	 * @return {Promise<FuxcelInstance>}
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @returns {Promise<Fuxcel>}
 	 */
-	zoomin(timeout?: number | string, iteration?: number | string, display?: string): Promise<FuxcelInstance>;
+	slideinup(timeout: number, iteration: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slidein-up_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinup(timeout: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slidein-up_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinup(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slidein-up_ animation on selected element.
+	 *
+	 * @param {number | string} timeout Animation duration.
+	 * @param {number | string} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinup(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-down_ animation on selected element.
+	 *
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutdown(): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-down_ animation on selected element.*
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutdown(timeout: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-down_ animation on selected element.
+	 *
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutdown(display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-down_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutdown(timeout: number, iteration: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-down_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutdown(timeout: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-down_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutdown(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-down_ animation on selected element.
+	 *
+	 * @param {number | string} timeout Animation duration.
+	 * @param {number | string} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutdown(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-up_ animation on selected element.
+	 *
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutup(): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-up_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutup(timeout: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-up_ animation on selected element.
+	 *
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutup(display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-up_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutup(timeout: number, iteration: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-up_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutup(timeout: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-up_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutup(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-up_ animation on selected element.
+	 *
+	 * @param {string | number} timeout Animation duration.
+	 * @param {string | number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutup(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slidein-left_ animation on selected element.
+	 *
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinleft(): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slidein-left_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinleft(timeout: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slidein-left_ animation on selected element.
+	 *
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinleft(display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slidein-left_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinleft(timeout: number, iteration: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slidein-left_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinleft(timeout: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slidein-left_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinleft(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slidein-left_ animation on selected element.
+	 *
+	 * @param {string | number} timeout Animation duration.
+	 * @param {string | number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinleft(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-left_ animation on selected element.
+	 *
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutleft(): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-left_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutleft(timeout: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-left_ animation on selected element.
+	 *
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutleft(display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-left_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutleft(timeout: number, iteration: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-left_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutleft(timeout: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-left_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutleft(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-left_ animation on selected element.
+	 *
+	 * @param {string | number} timeout Animation duration.
+	 * @param {string | number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutleft(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-left_ animation on selected element.
+	 *
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinright(): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-left_ animation on selected element.
+	 *
+	 * @param {string | number} timeout Animation duration.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinright(timeout: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-left_ animation on selected element.
+	 *
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinright(display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-left_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinright(timeout: number, iteration: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-left_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinright(timeout: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-left_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinright(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slidein-right_ animation on selected element.
+	 *
+	 * @param {string | number} timeout Animation duration.
+	 * @param {string | number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideinright(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-right_ animation on selected element.
+	 *
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutright(): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-right_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutright(timeout: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-right_ animation on selected element.
+	 *
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutright(display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-right_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutright(timeout: number, iteration: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-right_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutright(timeout: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-right_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutright(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Slideout-right_ animation on selected element.
+	 *
+	 * @param {string | number} timeout Animation duration.
+	 * @param {string | number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	slideoutright(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Blink_ animation on selected element.
+	 *
+	 * @returns {Promise<Fuxcel>}
+	 */
+	blink(): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Blink_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	blink(timeout: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Blink_ animation on selected element.
+	 *
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	blink(display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Blink_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	blink(timeout: number, iteration: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Blink_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	blink(timeout: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Blink_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	blink(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Blink_ animation on selected element.
+	 *
+	 * @param {string | number} timeout Animation duration.
+	 * @param {string | number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	blink(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Zoom-in_ animation on selected element.
+	 *
+	 * @returns {Promise<Fuxcel>}
+	 */
+	zoomin(): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Zoom-in_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	zoomin(timeout: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Zoom-in_ animation on selected element.
+	 *
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	zoomin(display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Zoom-in_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	zoomin(timeout: number, iteration: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Zoom-in_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	zoomin(timeout: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Zoom-in_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	zoomin(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Zoom-in_ animation on selected element.
+	 *
+	 * @param {string | number} timeout Animation duration.
+	 * @param {string | number} iteration Animation iteration count.
+	 * @param {string} display Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	zoomin(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
 	
 	// ─── Class Manipulation ───────────────────────────────────────────────────
 	/**
@@ -501,14 +1003,14 @@ export interface FuxcelInstance {
 	 *
 	 * @param tokenList {...string} Comma separated strings of class(es) to add.
 	 */
-	putClass(...tokenList: string[]): FuxcelInstance;
+	putClass(...tokenList: string[]): Fuxcel;
 	
 	/**
 	 * Removes the given class(es) from the classlist of the given elements.
 	 *
 	 * @param tokenList {...string} Comma separated strings of class(es) to remove.
 	 */
-	removeClass(...tokenList: string[]): FuxcelInstance;
+	removeClass(...tokenList: string[]): Fuxcel;
 	
 	/**
 	 * Replace an existing class with the given class.
@@ -518,21 +1020,48 @@ export interface FuxcelInstance {
 	 * @param oldToken {string} Old class token.
 	 * @param newToken {string} New class token.
 	 */
-	replaceClass(oldToken: string, newToken: string): FuxcelInstance;
+	replaceClass(oldToken: string, newToken: string): Fuxcel;
 	
 	/**
-	 * Toggle the given classin the classlist of the given element.
+	 * Toggle the given class in the classlist of the given element.
 	 *
 	 * @param token {string} Class to toggle.
 	 */
-	toggleClass(token: string): FuxcelInstance;
+	toggleClass(token: string): Fuxcel;
+	
+	// ─── Iteration ────────────────────────────────────────────────────────────
+	/**
+	 * Perform callback on each selected item
+	 *
+	 * @param callback {((element: Fuxcel, index: number) => void)}
+	 */
+	each(callback: ((element: Fuxcel, index: number) => void)): void;
 	
 	// ─── Attributes / Properties / Style Accessors ───────────────────────────────
-	attrib(name: object): FuxcelInstance;
+	/**
+	 * Set the given attribute(s) for the selected element.
+	 *
+	 * @param name {object} Key-Value pair Object to set for the attribute(s).
+	 * @return {Fuxcel|string}
+	 */
+	attrib(name: object): Fuxcel;
 	
+	/**
+	 * Get the given attribute for the selected element.
+	 *
+	 * @param name {string} Name of the attribute.
+	 * @return {Fuxcel|string}
+	 */
 	attrib(name: string): string;
 	
-	attrib(name: string, value: string | boolean): FuxcelInstance;
+	/**
+	 * Set the given attribute(s) for the selected element.
+	 *
+	 * @param name {string} Name of the attribute or a Key-Value pair Object.
+	 * @param value {string | boolean} Value to set for the attribute.
+	 * @return {Fuxcel|string}
+	 */
+	attrib(name: string, value: string | boolean): Fuxcel;
 	
 	/**
 	 * Get or Set the given attribute(s) for the selected element (If a string is passed to the name param).
@@ -543,118 +1072,151 @@ export interface FuxcelInstance {
 	 *
 	 * _Sets the given attributes if name is given as an Object (Key-Value Pair)._
 	 *
-	 * @param name {string|Object} Name of the attribute or a Key-Value pair Object.
-	 * @param value {string|null = null} Value to set for the attribute; Not required if an Object is passed as an argument to the name parameter.
-	 * @return {FuxcelInstance|string}
+	 * @param name {string | object} Name of the attribute.
+	 * @param value {boolean | string | null = null} Value to set for the attribute(s).
+	 * @return {Fuxcel|string}
 	 */
-	attrib(name: string | object, value?: string | boolean | null): FuxcelInstance | string;
+	attrib(name: string | object, value?: boolean | string | null): Fuxcel | string | null;
 	
-	
-	dataAttrib(name: object): FuxcelInstance;
-	
-	dataAttrib(name: string): string;
-	
-	dataAttrib(name: string, value: string | boolean): FuxcelInstance;
 	
 	/**
-	 * Get or Set the given [data-*] attribute(s) for the selected element (If a string is passed to the name param).
+	 * Set the given [data-*] attribute(s) for the selected element.
 	 *
-	 * _Gets the [data-*] attribute if only the name is given as a string._
+	 * @param name {object} Key-Value pair Object to set for the [data-*] attribute(s).
+	 * @return {Fuxcel | string}
+	 */
+	dataAttrib(name: object): Fuxcel;
+	
+	/**
+	 * Get the given [data-*] attribute.
 	 *
-	 * _Sets the [data-*] attribute if name and value is given as a string._
+	 * @param name {string} Name of the [data-*] attribute.
+	 * @return {Fuxcel | string}
+	 */
+	dataAttrib(name: string): string;
+	
+	/**
+	 * Set the given [data-*] attribute(s) for the selected element.
+	 *
+	 * @param name {string} Name of the [data-*] attribute or a Key-Value pair Object.
+	 * @param value {string | object} Value to set for the [data-*] attribute.
+	 * @return {Fuxcel | string}
+	 */
+	dataAttrib(name: string, value: string | boolean): Fuxcel;
+	
+	/**
+	 * Get or Set the given [data-*] attribute(s) for the selected element (If a String is passed to the name param).
+	 *
+	 * _Gets the [data-*] attribute if only the name is given as a String._
+	 *
+	 * _Sets the [data-*] attribute if name and value is given as a String._
 	 *
 	 * _Sets the given [data-*] attributes if name is given as an Object (Key-Value Pair)._
 	 *
-	 * @param name {string|Object} Name of the [data-*] attribute or a Key-Value pair Object.
-	 * @param value {string|null = null} Value to set for the [data-*] attribute; Not required if an Object is passed as an argument to the name parameter.
-	 * @return {FuxcelInstance|string}
+	 * @param name {string | object} Name of the [data-*] attribute or a Key-Value pair Object.
+	 * @param value {boolean | string | null = null} Value to set for the [data-*] attribute; Not required if an Object is passed as an argument to the name parameter.
+	 * @return {Fuxcel | string}
 	 */
-	dataAttrib(name: string | object, value?: string | boolean | null): FuxcelInstance | string;
+	dataAttrib(name: string | object, value?: boolean | string | null): Fuxcel | string;
 	
-	
-	prop(name: object): FuxcelInstance;
-	
-	prop(name: string): string;
-	
-	prop(name: string, value: string | boolean): FuxcelInstance;
 	
 	/**
-	 * Get or Set the given property / properties for the selected element (If a string is passed to the name param).
+	 * Set the given property / properties for the selected element.
 	 *
-	 * _Gets the property if only the name is given as a string._
+	 * @param name {object}Key-Value pair Object to set for the property / properties.
+	 * @return {Fuxcel | string}
+	 */
+	prop(name: object): Fuxcel;
+	
+	/**
+	 * Get the given property for the selected element.
 	 *
-	 * _Sets the property if name and value is given as a string or name is a string and value is a Boolean._
+	 * @param name {string} Name of the property.
+	 * @return {Fuxcel | string}
+	 */
+	prop(name: string): string;
+	
+	/**
+	 * Set the given property for the selected element.
+	 *
+	 * @param name {string} Name of the property or a Key-Value pair Object.
+	 * @param value {string | boolean} Value to set for the property.
+	 * @return {Fuxcel | string}
+	 */
+	prop(name: string, value: string | boolean): Fuxcel;
+	
+	/**
+	 * Get or Set the given property / properties for the selected element (If a String is passed to the name param).
+	 *
+	 * _Gets the property if only the name is given as a String._
+	 *
+	 * _Sets the property if name and value is given as a String or name is a String and value is a Boolean._
 	 *
 	 * _Sets the given property / properties if name is given as an Object (Key-Value Pair)._
 	 *
-	 * @param name {string|Object} Name of the property or a Key-Value pair Object.
-	 * @param value {boolean|string|null = null} Value to set for the property; Not required if an Object is passed as an argument to the name parameter.
-	 * @return {FuxcelInstance|string}
+	 * @param name {string | object} Name of the property or a Key-Value pair Object.
+	 * @param value {boolean | string | null = null} Value to set for the property; Not required if an Object is passed as an argument to the name parameter.
+	 * @return {Fuxcel | string}
 	 */
-	prop(name: string | object, value?: string | boolean | null): FuxcelInstance | string;
+	prop(name: string | object, value?: boolean | string | null): Fuxcel | string;
 	
-	
-	style(name: object): FuxcelInstance;
-	
-	style(name: string): string;
-	
-	style(name: string, value: string | boolean): FuxcelInstance;
 	
 	/**
-	 * Get or set the given CSS style(s) value of the selected element (If a string is passed to the name param).
+	 * Set the given CSS style(s) value of the selected element.
 	 *
-	 * _Gets the given style if only the name is given as a string._
+	 * @param name {object} Key-value pair Object to set for the style(s).
+	 * @return {Fuxcel | string}
+	 */
+	style(name: object): Fuxcel;
+	
+	/**
+	 * Get the given CSS style value of the selected element.
 	 *
-	 * _Sets the given style if name and value is given as a string._
+	 * @param name {string} Name of the style.
+	 * @return {Fuxcel | string}
+	 */
+	style(name: string): string;
+	
+	/**
+	 * Set the given CSS style value of the selected element.
+	 *
+	 * @param name {string} Name of the style.
+	 * @param value {string | boolean} Value to set for the style.
+	 * @return {Fuxcel | string}
+	 */
+	style(name: string, value: string | boolean): Fuxcel;
+	
+	/**
+	 * Get or set the given CSS style(s) value of the selected element (If a String is passed to the name param).
+	 *
+	 * _Gets the given style if only the name is given as a String._
+	 *
+	 * _Sets the given style if name and value is given as a String._
 	 *
 	 * _Sets the given styles if name is given as a plain Object (Key-Value Pair)._
 	 *
-	 * @param name {string|Object} Name of the style or a Key-Value pair Object.
-	 * @param value {boolean|string|null = null} Value to set for the style; Not required if an Object is passed as an argument to the name parameter.
-	 * @return {FuxcelInstance|string}
+	 * @param name {string | object} Name of the style or a Key-Value pair Object.
+	 * @param value {boolean | string | null = null} Value to set for the style; Not required if an Object is passed as an argument to the name parameter.
+	 * @return {Fuxcel | string}
 	 */
-	style(name: string | object, value?: string | boolean | null): FuxcelInstance | string;
+	style(name: string | object, value?: boolean | string | null): Fuxcel | string;
 	
 	
 	/**
 	 * Returns the attributes of the selected element as on Object.
 	 *
-	 * @return {Object} An object containing the attributes of the selected element.
+	 * @return {Object} A Key-value-pair object containing the attributes of the selected element.
 	 */
 	listAttrib(): object;
 	
 	/**
-	 * Returns the properties of the selected element as on Object.
+	 * Returns the properties of the selected element as on key-value pair Object.
 	 *
-	 * @return {Object} An object containing the properties of the selected element.
+	 * @return {Object} A Key-value-pair object containing the properties of the selected element.
 	 */
 	listProp(): object;
 	
-	/**
-	 * Removes the given attribute(s) from the selected element.
-	 *
-	 * @param name {...string} Comma separated strings of attribute(s) to remove.
-	 * @return {FuxcelInstance} Fuxcel Object of the selected element
-	 */
-	removeAttrib(...name: string[]): FuxcelInstance;
-	
-	/**
-	 * Removes the given [data-*] attribute(s) from the selected element.
-	 *
-	 * @param name {...string} Comma separated strings of [data-*] attribute(s) to remove.
-	 * @return {FuxcelInstance} Fuxcel Object of the selected element
-	 */
-	removeDataAttrib(...name: string[]): FuxcelInstance;
-	
-	/**
-	 * Removes the given property / properties from the selected element.
-	 *
-	 * @param name {...string} Comma separated strings of property / properties to remove.
-	 * @return {FuxcelInstance} Fuxcel Object of the selected element
-	 */
-	removeProp(...name: string[]): FuxcelInstance;
-	
-	// DOM mutation
+	// ─── DOM Mutation ─────────────────────────────────────────────────────────
 	/**
 	 * Remove selected element(s) from DOM.
 	 *
@@ -666,9 +1228,52 @@ export interface FuxcelInstance {
 	 * Disables or enables the selected element(s).
 	 *
 	 * @param disabled {boolean} Switch between disabling and enabling the selected element(s).
-	 * @return {FuxcelInstance} Fuxcel Object of the selected element.
+	 * @return {Fuxcel} Fuxcel Object of the selected element.
 	 */
-	disable(disabled?: boolean): FuxcelInstance;
+	disable(disabled?: boolean): Fuxcel;
+	
+	/**
+	 * Removes the given attribute(s) from the selected element.
+	 *
+	 * @param name {...string} Comma separated strings of attribute(s) to remove.
+	 * @return {Fuxcel} Fuxcel Object of the selected element
+	 */
+	removeAttrib(...name: string[]): Fuxcel;
+	
+	/**
+	 * Removes the given [data-*] attribute(s) from the selected element.
+	 *
+	 * @param name {...string} Comma separated strings of [data-*] attribute(s) to remove.
+	 * @return {Fuxcel} Fuxcel Object of the selected element
+	 */
+	removeDataAttrib(...name: string[]): Fuxcel;
+	
+	/**
+	 * Removes the given property / properties from the selected element.
+	 *
+	 * @param name {...string} Comma separated strings of property / properties to remove.
+	 * @return {Fuxcel} Fuxcel Object of the selected element
+	 */
+	removeProp(...name: string[]): Fuxcel;
+	
+	/**
+	 * Inserts the given HTML string to the given position of the selected element.
+	 *
+	 * _Defaults to innerHTML._
+	 *
+	 * @param value {string} HTML string to insert
+	 * @return {Fuxcel} Fuxcel Object of the selected element
+	 */
+	insertHTML(value: string): Fuxcel;
+	
+	/**
+	 * Inserts the given HTML string to the given position of the selected element.
+	 *
+	 * @param value {string} HTML string to insert
+	 * @param position {Position} Position to place given HTML string.
+	 * @return {Fuxcel} Fuxcel Object of the selected element
+	 */
+	insertHTML(value: string, position: Position): Fuxcel;
 	
 	/**
 	 * Inserts the given HTML string to the given position of the selected element.
@@ -676,22 +1281,149 @@ export interface FuxcelInstance {
 	 * _Inserts the HTML string as inner HTML if no position is given._
 	 *
 	 * @param value {string} HTML string to insert
-	 * @param position {('affix'|'prefix'|'postfix'|'suffix'|null)} Position to place given HTML string.
-	 * @return {FuxcelInstance} Fuxcel Object of the selected element
+	 * @param position {Position | null = null} Position to place given HTML string.
+	 * @return {Fuxcel} Fuxcel Object of the selected element
 	 */
-	insertHTML(value: string, position?: Position | null): FuxcelInstance;
+	insertHTML(value: string, position: Position): Fuxcel;
+	
+	// ─── Traversal ───────────────────────────────────────────────────────
+	/**
+	 * Returns the direct descendants (Children) of the selected element.
+	 *
+	 * @return {Fuxcel} Fuxcel Object of the selected child(ren)
+	 */
+	children(): Fuxcel;
+	
+	/**
+	 * Returns the direct descendant (Child) of the selected element that matches the given selector.
+	 *
+	 * @param selector {Selector} Selectable string.
+	 * @return {Fuxcel} Fuxcel Object of the selected child(ren)
+	 */
+	children(selector: Selector): Fuxcel;
+	
+	/**
+	 * Returns the direct descendants (Children) of the selected element.
+	 *
+	 * _Returns the child that matches the selector if the selector parameter is passed._
+	 *
+	 * @param selector {Selector} Selectable string.
+	 * @return {Fuxcel} Fuxcel Object of the selected child(ren)
+	 */
+	children(selector?: Selector): Fuxcel;
+	
+	/**
+	 * Returns all the descendants of the selected element.
+	 *
+	 * @return {Fuxcel} Fuxcel Object of the selected descendant(s)
+	 */
+	descendants(): Fuxcel;
+	
+	/**
+	 * Returns the descendant of the selected element that matches the given selector.
+	 *
+	 * @param selector {Selector} Selectable string.
+	 * @return {Fuxcel} Fuxcel Object of the selected descendant(s)
+	 */
+	descendants(selector: Selector): Fuxcel;
+	
+	/**
+	 * Returns all the descendants of the selected element.
+	 *
+	 * _Returns the descendant that matches the selector if the selector parameter is passed._
+	 *
+	 * @param selector {Selector} Selectable string.
+	 * @return {Fuxcel} Fuxcel Object of the selected descendant(s)
+	 */
+	descendants(selector?: Selector): Fuxcel
+	
+	/**
+	 * Returns the parents of the selected element.
+	 *
+	 * @return {Fuxcel} Fuxcel Object of the selected parent(s)
+	 */
+	parents(): Fuxcel;
+	
+	/**
+	 * Returns the parent of the selected element that matches the given selector.
+	 *
+	 * @param selector {Selector} Selectable string.
+	 * @return {Fuxcel} Fuxcel Object of the selected parent(s)
+	 */
+	parents(selector: Selector): Fuxcel;
+	
+	/**
+	 * Returns the parents of the selected element.
+	 *
+	 * _Returns the parent that matches the selector if the selector parameter is passed._
+	 *
+	 * @param selector {Selector} Selectable string.
+	 * @return {Fuxcel} Fuxcel Object of the selected parent(s)
+	 */
+	parents(selector?: Selector): Fuxcel;
+	
+	/**
+	 * Returns the previous siblings of the selected element.
+	 *
+	 * @return {Fuxcel} Fuxcel Object of the selected previous sibling(s)
+	 */
+	prevSiblings(): Fuxcel;
+	
+	/**
+	 * Returns the previous sibling of the selected element that matches the given selector.
+	 *
+	 * @param selector {Selector} Selectable string.
+	 * @return {Fuxcel} Fuxcel Object of the selected previous sibling(s)
+	 */
+	prevSiblings(selector: Selector): Fuxcel;
+	
+	/**
+	 * Returns the previous siblings of the selected element.
+	 *
+	 * _Returns the previous sibling that matches the selector if the selector parameter is passed._
+	 *
+	 * @param selector {Selector} Selectable string.
+	 * @return {Fuxcel} Fuxcel Object of the selected previous sibling(s)
+	 */
+	prevSiblings(selector?: Selector): Fuxcel;
+	
+	/**
+	 * Returns the siblings of the selected element.
+	 *
+	 * @return {Fuxcel} Fuxcel Object of the selected sibling(s)
+	 */
+	siblings(): Fuxcel;
+	
+	/**
+	 * Returns the sibling of the selected element that matchee the given selector.
+	 *
+	 * @param selector {Selector} Selectable string.
+	 * @return {Fuxcel} Fuxcel Object of the selected sibling(s)
+	 */
+	siblings(selector: Selector): Fuxcel;
+	
+	/**
+	 * Returns the siblings of the selected element.
+	 *
+	 * _Returns the siblings that matches the selector if the selector parameter is passed._
+	 *
+	 * @param selector {Selector} Selectable string.
+	 * @return {Fuxcel} Fuxcel Object of the selected sibling(s)
+	 */
+	siblings(selector?: Selector): Fuxcel;
+	
 	
 	// ─── Element Checks ───────────────────────────────────────────────────────
 	/**
 	 * Checks if the selected element matches the given tag name.
 	 *
-	 * @param tagName {string|HTMLElementTagNameMap} HTML tag name to check for.
+	 * @param tagName {string | HTMLElementTagNameMap} HTML tag name to check for.
 	 * @return {boolean} true if the selected elements' tag name matches the given tag name; false otherwise.
 	 */
-	isElement(tagName: string): boolean;
+	isElement(tagName: string | HTMLElementTagNameMap): boolean;
 	
 	/**
-	 * Checks to see if the selected element would be selected by the provided selectorString _-- in other words --_ checks if the selected element "is" the selector.
+	 * Checks to see if the selected element would be selected by the provided selector-string _(i.e. checks if the selector is unique to the selected element)_.
 	 *
 	 * @param selector {Selector} Selector to check element against.
 	 * @return {boolean} true if the selected element would be selected; false otherwise.
@@ -701,107 +1433,137 @@ export interface FuxcelInstance {
 	/**
 	 * Check if the selected element has a scrollbar in the given direction.
 	 *
-	 * @param direction {('vertical'|'horizontal'|null)} Specific direction to check _[horizontal or vertical]_.
+	 * @param direction {Direction | null} Specific direction to check _[horizontal or vertical]_.
 	 * @return {boolean} true if the selected element has a scrollbar in the specified direction; false otherwise.
 	 */
-	hasScrollBar(direction?: Direction | null): boolean;
+	hasScrollBar(direction?: Direction): boolean;
 	
-	// ─── Traversal ───────────────────────────────────────────────────────
+	// ─── Form Helpers ─────────────────────────────────────────────────────────
 	/**
-	 * Returns the direct descendants (Children) of the selected element.
+	 * A convenient wrapper for the `fx.fetch(options)` function to automatically parse form-data and submit the form using the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
 	 *
-	 * _Returns the child that matches the selector if the selector parameter is passed._
+	 * _Additional form-data can also be passed_
 	 *
-	 * @param selector {Selector} Selectable string.
-	 * @return {FuxcelInstance} Fuxcel Object of the selected child(ren)
+	 * @param options {FXFormSubmitType}
+	 * @return {Promise<{JSON?: any, text?: string, status: number, form: FuxcelValidator}>}
 	 */
-	children(selector?: Selector): FuxcelInstance;
-	
-	/**
-	 * Returns all the descendants of the selected element.
-	 *
-	 * _Returns the descendant that matches the selector if the selector parameter is passed._
-	 *
-	 * @param selector {Selector} Selectable string.
-	 * @return {FuxcelInstance} Fuxcel Object of the selected descendant(s)
-	 */
-	descendants(selector?: Selector): FuxcelInstance;
+	handleFormSubmit(options?: FXFormSubmitType): Promise<{ JSON?: any, text?: string, status: number, form: FuxcelValidator }>;
 	
 	/**
-	 * Returns the parents of the selected element.
+	 * Toggle the disabled state (property) of the selected element [a button preferably].
 	 *
-	 * _Returns the parent that matches the selector if the selector parameter is passed._
-	 *
-	 * @param selector {Selector} Selectable string.
-	 * @return {FuxcelInstance} Fuxcel Object of the selected parent(s)
+	 * @param isLoading {boolean} Determines the state of the button.
+	 * @return {Promise<Fuxcel>} Promise of Fuxcel Object of the selected element.
 	 */
-	parents(selector?: Selector): FuxcelInstance;
+	toggleButtonLoadState(isLoading?: boolean): Promise<Fuxcel>;
 	
 	/**
-	 * Returns the previous siblings of the selected element.
+	 * Toggles the submit button state of the selected form.
 	 *
-	 * _Returns the previous sibling that matches the selector if the selector parameter is passed._
-	 *
-	 * @param selector {Selector} Selectable string.
-	 * @return {FuxcelInstance} Fuxcel Object of the selected previous sibling(s)
+	 * @param isLoading {boolean} Determines the state of the button.
+	 * @return {Promise<Fuxcel>} Promise of Fuxcel Object of the selected element.
 	 */
-	prevSiblings(selector?: Selector): FuxcelInstance;
-	
-	/**
-	 * Returns the siblings of the selected element.
-	 *
-	 * _Returns the descendant that matches the selector if the selector parameter is passed._
-	 *
-	 * @param selector {Selector} Selectable string.
-	 * @return {FuxcelInstance} Fuxcel Object of the selected sibling(s)
-	 */
-	siblings(selector?: Selector): FuxcelInstance;
+	toggleFormSubmitButtonState(isLoading?: boolean): Promise<Fuxcel>;
 	
 	// ─── Events ───────────────────────────────────────────────────────────────
+	/**
+	 * Removes all previous Event Listeners from the selected element if no event is given.
+	 *
+	 * @return {Fuxcel} Fuxcel Object of the selected element.
+	 */
+	off(): Fuxcel;
+	
+	/**
+	 * Remove the given Event Listener(s) from the selected element.
+	 *
+	 * @param events {...string} Particular event to remove.
+	 * @return {Fuxcel} Fuxcel Object of the selected element.
+	 */
+	off(...events: string[]): Fuxcel;
+	
+	/**
+	 * _Remove the given Event Listener(s) from the selected element._
+	 *
+	 * _Removes all previous Event Listeners from the selected element if no event is given._
+	 *
+	 * @param events {...string} Particular event to remove.
+	 * @return {Fuxcel} Fuxcel Object of the selected element.
+	 */
+	off(...events: string[]): Fuxcel;
+	
 	/**
 	 * Add given Event Listener to the selected element.
 	 *
 	 * @param events {string} Event as a string
-	 * @param listener {((e: EventInterfaces)=>any)} Listener function to handle given event.
+	 * @param listener {EventListener} Listener function to handle given event.
 	 * @param option {boolean} Optional boolean parameter to set CAPTURING_PHASE of the event listener to either true or false.
+	 * @example
+	 *	fx('#email').upon('input', function(e) {
+	 *    console.log(e);
+	 *  });
+	 * @return {Fuxcel} Fuxcel Object of the selected element
 	 */
-	upon(events: string, listener: ((e: EventInterfaces) => any), option?: boolean): FuxcelInstance
-	
+	upon(events: string, listener: EventListener, option?: boolean): Fuxcel
 	
 	/**
-	 * @param events {string[]} Event as an array of strings.
-	 * @param listener {(e: EventInterfaces) => any} Listener function to handle given event(s).
-	 * @param option {boolean} Optional boolean parameter to set CAPTURING_PHASE of the event listener to either true or false.
-	 * @return {FuxcelInstance} Fuxcel Object of the selected element
-	 */
-	upon(events: string[], listener: ((e: EventInterfaces) => any), option?: boolean): FuxcelInstance
-	
-	/**
+	 * Add given Event Listener to the selected element.
 	 *
-	 * @param events {EventListenerOrEventListenerObject | object} Events passed as a Key-Value pair with each event as the key and the listener functions as the values.
+	 * @param events {string} Event as an array of strings
+	 * @param listener {EventListener} Listener function to handle given event.
 	 * @param option {boolean} Optional boolean parameter to set CAPTURING_PHASE of the event listener to either true or false.
-	 * @returns {FuxcelInstance}
+	 * @example
+	 *  fx('#email').upon(['focus', 'input'], function(e) {
+	 *    console.log(e);
+	 *  });
+	 * @return {Fuxcel} Fuxcel Object of the selected element
 	 */
-	upon(events: EventListenerOrEventListenerObject | object, option?: boolean): FuxcelInstance
+	upon(events: string[], listener: EventListener, option?: boolean): Fuxcel
+	
+	/**
+	 * Add given Event Listener to the selected element.
+	 *
+	 * @param events {object} Event as an array of strings
+	 * @param option {boolean} boolean parameter to set CAPTURING_PHASE of the event listener to either true or false.
+	 * @example
+	 *  fx('#email').upon({
+	 *    input: function(e) {
+	 *      console.log(e);
+	 *    },
+	 *    focus: (e) => console.log(e);
+	 *  }, true);
+	 * @return {Fuxcel} Fuxcel Object of the selected element
+	 */
+	upon(events: object, option: boolean): Fuxcel
+	
+	/**
+	 * Add given Event Listener to the selected element.
+	 *
+	 * @param events {object} Event as an array of strings
+	 * @example
+	 *  fx('#email').upon(['focus', 'input'], function(e) {
+	 *    console.log(e)
+	 *  });
+	 * @return {Fuxcel} Fuxcel Object of the selected element
+	 */
+	upon(events: object): Fuxcel
 	
 	/**
 	 * Add Event Listener(s) to the selected element.
 	 *
-	 * @param {EventListenerOrEventListenerObject | string[] | object} events
-	 * @param {((e: EventInterfaces) => any) | boolean} listener
-	 * @param {boolean} option
-	 * @returns {FuxcelInstance}
-	 */
-	upon(events: EventListenerOrEventListenerObject | string[] | object, listener?: ((e: EventInterfaces) => any) | boolean, option?: boolean): FuxcelInstance;
-	
-	/**
-	 * _Remove given Event Listener(s) from the selected element._
-	 * _If no events are given, all attached listeners will be removed from the element_
+	 * _Add a single Event Listener to the element if the events parameter is given as a string._
 	 *
-	 * @param events {string}
-	 * @returns {FuxcelInstance}
+	 * _Add multiple Event Listeners by passing them as a Key-Value pair._
+	 *
+	 * _If the events parameter is a string; the listener parameter is required as a function to handle the event with an optional third parameter of boolean._
+	 *
+	 * _If the events parameter is a Key-Value pair; then the second parameter is required as a boolean._
+	 *
+	 * @param events {object | string[] | string} Event(s) to listen.
+	 * @param listener {EventListener | boolean | null = null} Listener function to handle given event.
+	 * @param option {boolean} Optional boolean parameter to set CAPTURING_PHASE of the event listener to either true or false.
+	 * @return {Fuxcel} Fuxcel Object of the selected element
 	 */
-	off(...events: string[]): FuxcelInstance;
+	upon(events: object | string[] | string, listener?: EventListener | boolean, option?: boolean): Fuxcel;
 	
 	
 	/**
@@ -809,58 +1571,33 @@ export interface FuxcelInstance {
 	 *
 	 * @param event {string} Event to trigger on selected element(s).
 	 * @param type {"mouse" | "keyboard" | "custom" | null} Type of Event (Mouse, Keyboard, Custom). _Defaults to Event when nothing is passed._
-	 * @returns {FuxcelInstance}
+	 * @returns {Fuxcel}
 	 */
-	trigger(event: string, type?: 'mouse' | 'keyboard' | 'custom' | null): FuxcelInstance;
+	trigger(event: string, type?: 'mouse' | 'keyboard' | 'custom' | null): Fuxcel;
 	
-	// ─── Form Helpers ─────────────────────────────────────────────────────────
+	// ─── Value ─────────────────────────────────────────────────────────
 	/**
 	 * Get the value of the selected element.
 	 *
-	 * @return {FuxcelInstance|string|null} The value of the selected element.
+	 * @return {StringOrNull} The value of the selected element.
 	 */
-	value(): string | null;
+	value(): StringOrNull | string[];
 	
 	/**
 	 * Set the value of the selected element.
 	 *
-	 * @param value {string|null=null} Value to set for the given element.
-	 * @return {FuxcelInstance} Fuxcel object of the selected element otherwise.
+	 * @param value {string} Value to set for the given element (If available).
+	 * @return {Fuxcel} Fuxcel object of the selected element.
 	 */
-	value(value: any): FuxcelInstance;
+	value(value: string): Fuxcel;
 	
 	/**
 	 * Get or set the value of the selected element.
 	 *
-	 * @param value {string|null=null} Value to set for the given element (If available).
-	 * @return {FuxcelInstance|string|null} The value of the selected element if no parameter is passed for value; Fuxcel object of the selected element otherwise.
+	 * @param value {StringOrNull = null} Value to set for the given element (If available).
+	 * @return {StringOrNull | Fuxcel} The value of the selected element if no parameter is passed for value; Fuxcel object of the selected element otherwise.
 	 */
-	value(value?: any): FuxcelInstance | string | null;
-	
-	/**
-	 * A convenient wrapper for the `fx.fetch(options)` function to automatically parse form-data and submit the form using fetch request using the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
-	 *
-	 * _Additional form-data can also be passed_
-	 *
-	 * @param options {FXFormSubmitType}
-	 */
-	handleFormSubmit(options?: FXFormSubmitType): Promise<any>;
-	
-	/**
-	 * Toggle the disabled state (property) of the selected element [a button preferably].
-	 *
-	 * @param isLoading {boolean} Determines the state of the button.
-	 * @return {Promise<FuxcelInstance>} Promise of Fuxcel Object of the selected element.
-	 */
-	toggleButtonLoadState(isLoading?: boolean): Promise<FuxcelInstance>;
-	
-	/**
-	 * Toggles the submit button state of the selected form.
-	 *
-	 * @param isLoading {boolean} Determines the state of the button.
-	 * @return {Promise<FuxcelInstance>} Promise of Fuxcel Object of the selected element.
-	 */
-	toggleFormSubmitButtonState(isLoading?: boolean): Promise<FuxcelInstance>;
+	value(value?: StringOrNull): StringOrNull | string[] | Fuxcel;
 	
 	// ─── Getters ──────────────────────────────────────────────────────────────
 	/** Get the class list of element. **/ readonly classes: DOMTokenList;
@@ -873,8 +1610,8 @@ export interface FuxcelInstance {
 	/** The Outer Text value of the given element. **/ outerText: string;
 	
 	// Sub-system accessors
-	/** A new instance of the Fuxcel Form Validator. **/ readonly formValidator: FuxcelValidatorInstance;
-	/** A new instance of the Fuxcel Modal. **/ readonly modal: FuxcelModalInstance;
+	/** A new instance of the Fuxcel Form Validator. **/ readonly formValidator: FuxcelValidator;
+	/** A new instance of the Fuxcel Modal. **/ readonly modal: FuxcelModal;
 }
 
 /** Public API of a FuxcelValidator instance. */
@@ -885,13 +1622,23 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * _Throws an error if non form elements are selected._
 	 *
 	 * @param config {ValidatorConfigObject} user config object.
-	 * @return {FuxcelStepsInstance | FuxcelValidatorInstance} Fuxcel Validator Object of the forms.
+	 * @return {FuxcelSteps | FuxcelValidator} Fuxcel Validator Object of the forms.
 	 */
-	init(config?: ValidatorConfigObject | null): FuxcelValidatorInstance | FuxcelStepsInstance;
+	init(config?: ValidatorConfigObject | null): FuxcelValidator | FuxcelSteps;
 	
 	
 	/** Validate the selected field. **/
-	validateField(): FuxcelValidatorInstance;
+	validateField(): FuxcelValidator;
+	
+	/**
+	 * Validate the selected field.
+	 *
+	 * _Automatically generates and displays an error message._
+	 *
+	 * @param isError {boolean=false} an automatic error message is generated.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateField(isError: boolean): FuxcelValidator;
 	
 	/**
 	 * Validate the selected field.
@@ -899,9 +1646,18 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * _Displays a success message._
 	 *
 	 * @param message {string} Validation message to display.
-	 * @returns {FuxcelValidatorInstance}
+	 * @returns {FuxcelValidator}
 	 */
-	validateField(message: string): FuxcelValidatorInstance;
+	validateField(message: string): FuxcelValidator;
+	
+	/**
+	 * Validate the selected field.
+	 *
+	 * @param message {StringOrNull} Validation message to display.
+	 * @param isError {boolean=false} Is Validation message an error? _[defaults to false]._
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateField(message: StringOrNull, isError?: boolean): FuxcelValidator;
 	
 	/**
 	 * Validate the selected field.
@@ -910,20 +1666,35 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 *
 	 * @param message {StringOrNull} Validation message to display.
 	 * @param isError {boolean=false} If true and the message parameter is null, an automatic error message is generated.
-	 * @returns {FuxcelValidatorInstance}
+	 * @returns {FuxcelValidator}
 	 */
-	validateField(message: StringOrNull, isError: boolean): FuxcelValidatorInstance;
+	validateField(message: StringOrNull | boolean, isError?: boolean): FuxcelValidator;
 	
 	/**
-	 * Validate the selected field.
+	 * Validate Email field using Regular Expression
 	 *
-	 * @param message {string|null=null} Validation message to display.
-	 * @param isError {boolean=false} If true and the message parameter is null, an automatic error message is generated.
+	 * @param regExp {RegExp} Regular expression to use.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateField(message?: StringOrNull, isError?: boolean): FuxcelValidatorInstance;
+	validateEmail(regExp: RegExp): FuxcelValidator;
 	
-	validateEmail(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidatorInstance;
+	/**
+	 * Validate Email field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use.
+	 * @param customFormatEx {StringOrNull} Custom format example to show user.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateEmail(regExp: RegExp, customFormatEx: StringOrNull): FuxcelValidator;
+	
+	/**
+	 * Validate Email field using Regular Expression
+	 *
+	 * @param regExp {RegExp} Regular expression to use.
+	 * @param customFormatEx {StringOrNull = null} Custom format example to show user.
+	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
+	 */
+	validateEmail(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidator;
 	
 	
 	/**
@@ -932,16 +1703,16 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param regExp {RegExp} Regular expression to use
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validatePassword(regExp: RegExp): FuxcelValidatorInstance;
+	validatePassword(regExp: RegExp): FuxcelValidator;
 	
 	/**
 	 * Validate Password field using Regular Expression
 	 *
 	 * @param regExp {RegExp} Regular expression to use
-	 * @param customFormatEx {string} Custom format example to show user.
+	 * @param customFormatEx {StringOrNull} Custom format example to show user.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validatePassword(regExp: RegExp, customFormatEx: string): FuxcelValidatorInstance;
+	validatePassword(regExp: RegExp, customFormatEx: StringOrNull): FuxcelValidator;
 	
 	/**
 	 * Validate Password field using Regular Expression
@@ -950,7 +1721,7 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param customFormatEx {string|null=null} Custom format example to show user.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validatePassword(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidatorInstance;
+	validatePassword(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidator;
 	
 	
 	/**
@@ -959,16 +1730,16 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param regExp {RegExp} Regular expression to use.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateName(regExp: RegExp): FuxcelValidatorInstance;
+	validateName(regExp: RegExp): FuxcelValidator;
 	
 	/**
 	 * Validate Name field using Regular Expression
 	 *
 	 * @param regExp {RegExp} Regular expression to use.
-	 * @param customFormatEx {string} Custom format example to show user.
+	 * @param customFormatEx {StringOrNull} Custom format example to show user.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateName(regExp: RegExp, customFormatEx: string): FuxcelValidatorInstance;
+	validateName(regExp: RegExp, customFormatEx: StringOrNull): FuxcelValidator;
 	
 	/**
 	 * Validate Name field using Regular Expression
@@ -977,7 +1748,7 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param customFormatEx {string|null=null} Custom format example to show user.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateName(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidatorInstance;
+	validateName(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidator;
 	
 	
 	/**
@@ -986,16 +1757,16 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param regExp {RegExp} Regular expression to use
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validatePhone(regExp: RegExp): FuxcelValidatorInstance;
+	validatePhone(regExp: RegExp): FuxcelValidator;
 	
 	/**
 	 * Validate Phone field using Regular Expression
 	 *
 	 * @param regExp {RegExp} Regular expression to use
-	 * @param customFormatEx {string} Custom format example to show user.
+	 * @param customFormatEx {StringOrNull} Custom format example to show user.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validatePhone(regExp: RegExp, customFormatEx: string): FuxcelValidatorInstance;
+	validatePhone(regExp: RegExp, customFormatEx: StringOrNull): FuxcelValidator;
 	
 	/**
 	 * Validate Phone field using Regular Expression
@@ -1004,7 +1775,7 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param customFormatEx {string|null=null} Custom format example to show user.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validatePhone(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidatorInstance;
+	validatePhone(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidator;
 	
 	
 	/**
@@ -1013,16 +1784,16 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param regExp {RegExp} Regular expression to use
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateUsername(regExp: RegExp): FuxcelValidatorInstance;
+	validateUsername(regExp: RegExp): FuxcelValidator;
 	
 	/**
 	 * Validate Username field using Regular Expression
 	 *
 	 * @param regExp {RegExp} Regular expression to use
-	 * @param customFormatEx {string} Custom format example to show user.
+	 * @param customFormatEx {StringOrNull} Custom format example to show user.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateUsername(regExp: RegExp, customFormatEx: string): FuxcelValidatorInstance;
+	validateUsername(regExp: RegExp, customFormatEx: StringOrNull): FuxcelValidator;
 	
 	/**
 	 * Validate Username field using Regular Expression
@@ -1031,7 +1802,7 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param customFormatEx {string|null=null} Custom format example to show user.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateUsername(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidatorInstance;
+	validateUsername(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidator;
 	
 	
 	/**
@@ -1040,16 +1811,16 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param regExp {RegExp} Regular expression to use.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateCardCVV(regExp: RegExp): FuxcelValidatorInstance;
+	validateCardCVV(regExp: RegExp): FuxcelValidator;
 	
 	/**
 	 * Validate Card CVV field using Regular Expression
 	 *
 	 * @param regExp {RegExp} Regular expression to use.
-	 * @param customFormatEx {string} Custom format example to show user.
+	 * @param customFormatEx {StringOrNull} Custom format example to show user.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateCardCVV(regExp: RegExp, customFormatEx: string): FuxcelValidatorInstance;
+	validateCardCVV(regExp: RegExp, customFormatEx: StringOrNull): FuxcelValidator;
 	
 	/**
 	 * Validate Card CVV field using Regular Expression
@@ -1058,7 +1829,7 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param customFormatEx {string|null=null} Custom format example to show user.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateCardCVV(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidatorInstance;
+	validateCardCVV(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidator;
 	
 	
 	/**
@@ -1067,16 +1838,16 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param regExp {RegExp} Regular expression to use.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateCardNumber(regExp: RegExp): FuxcelValidatorInstance;
+	validateCardNumber(regExp: RegExp): FuxcelValidator;
 	
 	/**
 	 * Validate Card Number field using Regular Expression
 	 *
 	 * @param regExp {RegExp} Regular expression to use.
-	 * @param customFormatEx {string} Custom format example to show user
+	 * @param customFormatEx {StringOrNull} Custom format example to show user
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateCardNumber(regExp: RegExp, customFormatEx: string): FuxcelValidatorInstance;
+	validateCardNumber(regExp: RegExp, customFormatEx: StringOrNull): FuxcelValidator;
 	
 	/**
 	 * Validate Card Number field using Regular Expression
@@ -1085,7 +1856,7 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param customFormatEx {string|null=null} Custom format example to show user
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateCardNumber(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidatorInstance;
+	validateCardNumber(regExp: RegExp, customFormatEx?: StringOrNull): FuxcelValidator;
 	
 	
 	/**
@@ -1094,16 +1865,16 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param regExpOrFn {Function} Function to use.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateRegex(regExpOrFn: Function): FuxcelValidatorInstance;
+	validateRegex(regExpOrFn: Function): FuxcelValidator;
 	
 	/**
 	 * Validate field using Regular Expression.
 	 *
 	 * @param regExpOrFn {RegExp} Regular Expression to use.
-	 * @param message {string} Validation message.
+	 * @param message {StringOrNull} Validation message.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateRegex(regExpOrFn: RegExp, message: string): FuxcelValidatorInstance;
+	validateRegex(regExpOrFn: RegExp, message: StringOrNull): FuxcelValidator;
 	
 	/**
 	 * Validate field using Regular Expression or a callback function.
@@ -1112,7 +1883,7 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param message {string|null=null} Validation message.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the selected element.
 	 */
-	validateRegex(regExpOrFn: RegExp | Function, message?: StringOrNull): FuxcelValidatorInstance;
+	validateRegex(regExpOrFn: RegExp | Function, message?: StringOrNull): FuxcelValidator;
 	
 	
 	/**
@@ -1125,10 +1896,10 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	/**
 	 * Show validation error for the selected field.
 	 *
-	 * @param message {string} Validation message.
+	 * @param message {StringOrNull} Validation message.
 	 * @return {void}
 	 */
-	showError(message: string): void;
+	showError(message: StringOrNull): void;
 	
 	/**
 	 * Show validation error for the selected field.
@@ -1149,15 +1920,15 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	/**
 	 * Show validation success.
 	 *
-	 * @param message {string} Validation message.
+	 * @param message {StringOrNull} Validation message.
 	 * @return {void}
 	 */
-	showSuccess(message: string): void;
+	showSuccess(message: StringOrNull): void;
 	
 	/**
 	 * Show validation success.
 	 *
-	 * @param message {string|null=null} Validation message.
+	 * @param message {StringOrNull = null} Validation message.
 	 * @return {void}
 	 */
 	showSuccess(message?: StringOrNull): void;
@@ -1167,7 +1938,7 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 *
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the forms.
 	 */
-	toggleValidation(): FuxcelValidatorInstance;
+	toggleValidation(): FuxcelValidator;
 	
 	/**
 	 * Remove validation from the selected field element. Also remove the error from the error bag if destroyValidation parameter is set tot true.
@@ -1175,10 +1946,10 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param destroyValidation {boolean = false}
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the forms.
 	 */
-	undoValidation(destroyValidation?: boolean): FuxcelValidatorInstance;
+	undoValidation(destroyValidation?: boolean): FuxcelValidator;
 	
 	/** Reset validation message. **/
-	renderMessage(): FuxcelValidatorInstance;
+	renderMessage(): FuxcelValidator;
 	
 	/**
 	 * Render validation message.
@@ -1186,16 +1957,16 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param message {string} message to display.
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the current selected element.
 	 */
-	renderMessage(message: string): FuxcelValidatorInstance;
+	renderMessage(message: string): FuxcelValidator;
 	
 	/**
 	 * Render validation message.
 	 *
-	 * @param message {string} message to display.
-	 * @param renderType {'error'|'success'} validation type.
+	 * @param message {StringOrNull = null} message to display [optional]
+	 * @param renderClass {StringOrNull} validation type
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the current selected element.
 	 */
-	renderMessage(message: string, renderType: 'error' | 'success'): FuxcelValidatorInstance;
+	renderMessage(message?: StringOrNull, renderClass?: StringOrNull): FuxcelValidator;
 	
 	/**
 	 * Render validation message.
@@ -1204,42 +1975,52 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param renderType {('error'|'success'|null)} validation type
 	 * @return {FuxcelValidator} Fuxcel Validator Object of the current selected element.
 	 */
-	renderMessage(message?: StringOrNull, renderType?: 'error' | 'success' | null): FuxcelValidatorInstance;
+	renderMessage(message?: StringOrNull, renderType?: 'error' | 'success' | null): FuxcelValidator;
 	
 	
-	renderValidationErrors(errors: { [key: string]: any }): FuxcelValidatorInstance;
+	/**
+	 * Display all validation errors for the selected form.
+	 *
+	 * @param errors {{ [key: string]: any }}
+	 * @return FuxcelValidator
+	 */
+	renderValidationErrors(errors: { [key: string]: any }): FuxcelValidator;
 	
 	/**
 	 * Display all validation errors for the selected form.
 	 *
 	 * @param errors {null}
-	 * @param messageOrFn {((fx: FuxcelValidatorInstance, e?: CustomEvent) => any)}
+	 * @param messageOrFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
+	 * @return FuxcelValidator
 	 */
-	renderValidationErrors(errors: null, messageOrFn: ((fx: FuxcelValidatorInstance, e?: CustomEvent) => any)): FuxcelValidatorInstance;
+	renderValidationErrors(errors: null, messageOrFn: ((fx: FuxcelValidator, e?: CustomEvent) => any)): FuxcelValidator;
 	
 	/**
 	 * Display all validation errors for the selected form.
 	 *
 	 * @param errors {null}
 	 * @param messageOrFn {string}
+	 * @return FuxcelValidator
 	 */
-	renderValidationErrors(errors: null, messageOrFn: string): FuxcelValidatorInstance;
+	renderValidationErrors(errors: null, messageOrFn: string): FuxcelValidator;
 	
 	/**
 	 * Display all validation errors for the selected form.
 	 *
 	 * @param errors {{ [key: string]: any }} An object containing the errors. The keys are the form field ids and their values are the errors for the fields respectively.
-	 * @param messageOrFn {((fx: FuxcelValidatorInstance, e?: CustomEvent) => any)}
+	 * @param messageOrFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
+	 * @return FuxcelValidator
 	 */
-	renderValidationErrors(errors: { [key: string]: any }, messageOrFn: ((fx: FuxcelValidatorInstance, e?: CustomEvent) => any)): FuxcelValidatorInstance;
+	renderValidationErrors(errors: { [key: string]: any }, messageOrFn: ((fx: FuxcelValidator, e?: CustomEvent) => any)): FuxcelValidator;
 	
 	/**
 	 * Display all validation errors for the selected form.
 	 *
 	 * @param errors {{ [key: string]: any }} An object containing the errors. The keys are the form field ids and their values are the errors for the fields respectively.
 	 * @param messageOrFn {string}
+	 * @return FuxcelValidator
 	 */
-	renderValidationErrors(errors: { [key: string]: any }, messageOrFn: string): FuxcelValidatorInstance;
+	renderValidationErrors(errors: { [key: string]: any }, messageOrFn: string): FuxcelValidator;
 	
 	/**
 	 * Display all validation errors for the selected form.
@@ -1247,8 +2028,9 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param errors {{ [key: string]: any }} An object containing the errors. The keys are the form field ids and their values are the errors for the fields respectively.
 	 * @param messageOrFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
 	 * @param callbackFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
+	 * @return FuxcelValidator
 	 */
-	renderValidationErrors(errors: { [key: string]: any }, messageOrFn: ((fx: FuxcelValidatorInstance, e?: CustomEvent) => any), callbackFn: ((fx: FuxcelValidatorInstance, e?: CustomEvent) => any)): FuxcelValidatorInstance;
+	renderValidationErrors(errors: { [key: string]: any }, messageOrFn: ((fx: FuxcelValidator, e?: CustomEvent) => any), callbackFn: ((fx: FuxcelValidator, e?: CustomEvent) => any)): FuxcelValidator;
 	
 	/**
 	 * Display all validation errors for the selected form.
@@ -1256,8 +2038,9 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param errors {{ [key: string]: any }} An object containing the errors. The keys are the form field ids and their values are the errors for the fields respectively.
 	 * @param messageOrFn {string}
 	 * @param callbackFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
+	 * @return FuxcelValidator
 	 */
-	renderValidationErrors(errors: { [key: string]: any }, messageOrFn: string, callbackFn: ((fx: FuxcelValidatorInstance, e?: CustomEvent) => any)): FuxcelValidatorInstance;
+	renderValidationErrors(errors: { [key: string]: any }, messageOrFn: string, callbackFn: ((fx: FuxcelValidator, e?: CustomEvent) => any)): FuxcelValidator;
 	
 	/**
 	 * Display all validation errors for the selected form.
@@ -1265,8 +2048,9 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param errors {{ [key: string]: any } | null = null} An object containing the errors. The keys are the form field ids and their values are the errors for the fields respectively.
 	 * @param messageOrFn {((fx: FuxcelValidator, e?: CustomEvent) => any)|StringOrNull}
 	 * @param callbackFn {((fx: FuxcelValidator, e?: CustomEvent) => any)}
+	 * @return FuxcelValidator
 	 */
-	renderValidationErrors(errors?: { [key: string]: any } | null, messageOrFn?: ((fx: FuxcelValidatorInstance, e?: CustomEvent) => any) | StringOrNull, callbackFn?: ((fx: FuxcelValidatorInstance, e?: CustomEvent) => any) | null): FuxcelValidatorInstance;
+	renderValidationErrors(errors?: { [key: string]: any } | null, messageOrFn?: ((fx: FuxcelValidator, e?: CustomEvent) => any) | StringOrNull, callbackFn?: ((fx: FuxcelValidator, e?: CustomEvent) => any) | null): FuxcelValidator;
 	
 	
 	stepErrorBag(step: number): object | null;
@@ -1319,6 +2103,17 @@ export interface FuxcelStepsInstance extends FuxcelValidatorInstance {
 
 /** Public API of a FuxcelModal instance. */
 export interface FuxcelModalInstance extends FuxcelInstance {
+	
+	/** Remove the selected modal element from the DOM entirely. **/
+	destroy(): void;
+	
+	/**
+	 * Hide (and optionally destroy) the selected modal.
+	 *
+	 * @param destroy {boolean=false} Whether to remove the element from the DOM after hiding.
+	 */
+	hide(destroy?: boolean): void;
+	
 	/**
 	 * Open selected modal.
 	 *
@@ -1326,39 +2121,25 @@ export interface FuxcelModalInstance extends FuxcelInstance {
 	 */
 	show(escKey?: boolean): void;
 	
-	/**
-	 * Close selected modal.
-	 *
-	 * @param destroy {boolean}
-	 */
-	hide(destroy?: boolean): void;
-	
-	/**
-	 * Toggle between close and open of the selected modal.
-	 */
+	/** Toggle between hide and show state of the selected modal. **/
 	toggle(): void;
-	
-	/**
-	 * Destroy selected modal.
-	 */
-	destroy(): void;
 }
 
 // ─── Constructor Interfaces ───────────────────────────────────────────────────
 
 export interface FuxcelConstructor {
-	new(selector: string | IterableElement | SingleElement, context?: string | IterableElement | SingleElement): FuxcelInstance;
+	new(selector: string | IterableElement | SingleElement, context?: string | IterableElement | SingleElement): Fuxcel;
 	
-	(selector: string | IterableElement | SingleElement, context?: string | IterableElement | SingleElement): FuxcelInstance;
+	(selector: string | IterableElement | SingleElement, context?: string | IterableElement | SingleElement): Fuxcel;
 	
 	buttonLoaderClass: string;
-	path: string | null;
-	readonly isMobileDevice: boolean;
-	readonly pointerIsTouch: boolean;
+	/** The Plugin path. **/ path: string | null;
+	/** `true` if the current device is a mobile device. **/ readonly isMobileDevice: boolean;
+	/** `true` if the pointer is coarse (touch). **/ readonly pointerIsTouch: boolean;
 }
 
 export interface FuxcelValidatorConstructor {
-	new(selector: string | IterableElement | SingleElement, context?: string | IterableElement | SingleElement): FuxcelValidatorInstance;
+	new(selector: string | IterableElement | SingleElement, context?: string | IterableElement | SingleElement): FuxcelValidator;
 	
 	readonly defaultValidatorConfig: ValidatorConfigObject;
 	readonly passwordCapslockAlertClass: string;
@@ -1367,18 +2148,24 @@ export interface FuxcelValidatorConstructor {
 }
 
 export interface FuxcelStepsConstructor {
-	new(selected: FuxcelValidatorInstance): FuxcelStepsInstance;
+	new(selected: FuxcelValidator): FuxcelStepsInstance;
 	
 	currentlySelected: object;
 }
 
 export interface FuxcelModalConstructor {
-	new(selector: string | IterableElement | SingleElement, context?: string | IterableElement | SingleElement, autoActions?: boolean): FuxcelModalInstance;
+	new(selector: string | IterableElement | SingleElement, context?: string | IterableElement | SingleElement, autoActions?: boolean): FuxcelModal;
 	
-	readonly currentModal: FuxcelModalInstance | null;
-	readonly hasOpenModals: boolean;
-	readonly modalTriggers: FuxcelInstance;
+	/** The most recently opened modal, or `null` if none is open. **/ readonly currentModal: FuxcelModal | null;
+	/** `true` if any modals are currently open. **/ readonly hasOpenModals: boolean;
+	/** All elements with `[data-fx-target="modal"]`. **/ readonly modalTriggers: Fuxcel;
 	
+	/**
+	 * Builds a modal DOM structure and returns the root element.
+	 *
+	 * @param {ModalInit} options
+	 * @returns {HTMLElement}
+	 */
 	init(options: ModalInit): HTMLElement;
 }
 
@@ -1426,7 +2213,7 @@ export interface FXInterface {
 	 * fx.modal({ type: 'success', content: 'Saved!' });
 	 * fx.modal({ type: 'error', content: 'Failed.', confirmButtonText: 'Retry', onConfirm: (e, modal) => {} });
 	 */
-	modal: (options?: FXModalType) => FuxcelModalInstance;
+	modal: (options?: FXModalType) => FuxcelModal;
 	
 	/**
 	 * Register a callback on DOMContentLoaded.
@@ -1434,13 +2221,16 @@ export interface FXInterface {
 	 * @example
 	 * fx.onDocumentLoad(() => console.log('DOM ready'));
 	 */
-	onDocumentLoad: (listener: (e: Event) => void) => void;
+	onDocumentLoad: (listener: (e: Event) => void) => Fuxcel;
 	
 	/**
-	 * Validate a card number against the Luhn algorithm.
+	 * Check if the given input passes the Luhn Algorithm test.
+	 * Commonly used to validate credit card numbers.
 	 *
+	 * @param input {string | number} The number to validate.
 	 * @example
 	 * fx.passLuhnAlgo('4532015112830366'); // true
+	 * @returns {boolean} `true` if the number passes the Luhn check; `false` otherwise.
 	 */
 	passLuhnAlgo: (input: string | number) => boolean;
 }
@@ -1492,7 +2282,7 @@ declare global {
 	 * @example
 	 * fxModal({ type: 'success', content: 'Saved!' });
 	 */
-	function fxModal(options?: FXModalType): FuxcelModalInstance;
+	function fxModal(options?: FXModalType): FuxcelModal;
 	
 	/**
 	 * Perform an HTTP fetch request.
@@ -1546,7 +2336,7 @@ declare global {
 		FuxcelValidator: FuxcelValidatorConstructor;
 		FuxcelSteps: FuxcelStepsConstructor;
 		FuxcelModal: FuxcelModalConstructor;
-		fxModal: (options?: FXModalType) => FuxcelModalInstance;
+		fxModal: (options?: FXModalType) => FuxcelModal;
 		fxFetch: (options: FXRequestType) => void;
 		passLuhnAlgo: (input: string | number) => boolean;
 		isBool: (value: any) => boolean;
