@@ -14,6 +14,10 @@ form {
         border-color: var(--fx-error) !important;
       }
 
+      .bootstrap-select {
+        border: 1px solid var(--fx-error) !important;
+      }
+
       .validation-text {
         color: var(--fx-error);
       }
@@ -22,6 +26,10 @@ form {
     &.fx-valid-success {
       .form-field {
         border-color: var(--fx-success) !important;
+      }
+
+      .bootstrap-select {
+        border: 1px solid var(--fx-success) !important;
       }
 
       .validation-text {
@@ -106,7 +114,7 @@ form {
                   transform: translateY(-50%);
                   left: 0.75rem !important;
                   //padding: 0 .25rem;
-                  transition: all .2s;
+                  transition: all .1s;
                 }
 
                 &::placeholder {

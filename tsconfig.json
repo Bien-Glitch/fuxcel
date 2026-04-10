@@ -7,12 +7,33 @@
     "strict": true,
     "sourceMap": true,
     "declaration": true,
-    "declarationMap": true,
+    "emitDeclarationOnly": false,
+    "declarationMap": false,
     "removeComments": false,
-    "useDefineForClassFields": true
+    "useDefineForClassFields": true,
+    // Module resolution for your structure:
+    "moduleResolution": "bundler",
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "node"
+    ],
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "ignoreDeprecations": "5.0"
   },
+  "include": [
+    "src/ts/**/*"
+  ],
   "exclude": [
-    "dist/*/**",
+    "dist",
     "node_modules"
   ]
 }

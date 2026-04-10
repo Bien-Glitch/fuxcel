@@ -10,11 +10,17 @@ form .form-group.fx-default-style {
 form .form-group.fx-valid-error .form-field {
   border-color: var(--fx-error) !important;
 }
+form .form-group.fx-valid-error .bootstrap-select {
+  border: 1px solid var(--fx-error) !important;
+}
 form .form-group.fx-valid-error .validation-text {
   color: var(--fx-error);
 }
 form .form-group.fx-valid-success .form-field {
   border-color: var(--fx-success) !important;
+}
+form .form-group.fx-valid-success .bootstrap-select {
+  border: 1px solid var(--fx-success) !important;
 }
 form .form-group.fx-valid-success .validation-text {
   color: var(--fx-success);
