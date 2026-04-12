@@ -1340,8 +1340,6 @@ var fuxcel = (function (exports) {
                                         resolve({ JSON: response, text: xhr.responseText, status, form });
                                     }
                                     else {
-                                        // const {fxModal} = require('../modal/fxModal');
-                                        // const fxModal = Fuxcel._fxModal;
                                         if (status === 401)
                                             fx.modal({ type: 'error', content: response.message ?? 'Unauthorized Request', cancelButtonText: 'Cancel', onCancel: () => form.toggleFormSubmitButtonState(false) });
                                         if (status === 419)

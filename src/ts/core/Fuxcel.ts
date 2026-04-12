@@ -5,13 +5,12 @@ import {
 	Selector,
 	Direction,
 	Position,
-	EventInterfaces,
 	HTMLElementWithListenerArray,
 	FXInterface,
 	FXAnimationOptions,
 	FXFormSubmitType,
 	HTTPRequestMethod,
-	FuxcelInstance, HTMLListenerArray, ResponseData,
+	FuxcelInstance, HTMLListenerArray, ResponseData, FXFormResponse,
 } from '../types';
 import {FuxcelBase} from './FuxcelBase';
 import {animations} from '../animations';
@@ -1686,7 +1685,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @param handleError {boolean} Auto-handle 422 errors.
 	 * @return {Promise<{JSON?: any, text?: string, status: number, form: FuxcelValidator}>}
 	 */
-	handleFormSubmit({uri = '', method = null, data = null, dataType = 'json', headers = null, beforeSend = null, timeout = 10000, handleError = false,}: FXFormSubmitType = {}): Promise<{ JSON?: any, text?: string, status: number, form: FuxcelValidator }> {
+	handleFormSubmit({uri = '', method = null, data = null, dataType = 'json', headers = null, beforeSend = null, timeout = 10000, handleError = false,}: FXFormSubmitType = {}): Promise<FXFormResponse> {
 		const selected: IterableElement = <HTMLElement[]>this.toArray;
 		
 		return new Promise((resolve, reject) =>
@@ -1723,8 +1722,6 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 									if ((status > 199 && status < 300) || status === 308) {
 										resolve({JSON: response, text: xhr.responseText, status, form});
 									} else {
-										// const {fxModal} = require('../modal/fxModal');
-										// const fxModal = Fuxcel._fxModal;
 										if (status === 401)
 											fx.modal({type: 'error', content: response.message ?? 'Unauthorized Request', cancelButtonText: 'Cancel', onCancel: () => form.toggleFormSubmitButtonState(false)});
 										if (status === 419)

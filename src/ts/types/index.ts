@@ -240,6 +240,13 @@ export type FXFormSubmitType = {
 	/** Auto-handle 422 errors. */        handleError?: boolean;
 };
 
+export type FXFormResponse = {
+	/** JSON Object returned from the request **/ JSON?: any,
+	/** Text Object returned from the request **/ text?: string,
+	/** The request's HTTP response status **/ status: number,
+	/** FuxcelValidator instance of the submitted form **/ form: FuxcelValidator
+}
+
 export interface ResponseData extends Response {
 	ok: boolean;
 	status: number;
@@ -1447,7 +1454,7 @@ export interface FuxcelInstance {
 	 * @param options {FXFormSubmitType}
 	 * @return {Promise<{JSON?: any, text?: string, status: number, form: FuxcelValidator}>}
 	 */
-	handleFormSubmit(options?: FXFormSubmitType): Promise<{ JSON?: any, text?: string, status: number, form: FuxcelValidator }>;
+	handleFormSubmit(options?: FXFormSubmitType): Promise<FXFormResponse>;
 	
 	/**
 	 * Toggle the disabled state (property) of the selected element [a button preferably].

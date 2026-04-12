@@ -6,7 +6,7 @@
     "outDir": "dist/js",
     "strict": true,
     "sourceMap": true,
-    "declaration": true,
+    "declaration": false,
     "emitDeclarationOnly": false,
     "declarationMap": false,
     "removeComments": false,
