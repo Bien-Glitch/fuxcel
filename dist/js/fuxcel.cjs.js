@@ -1292,7 +1292,7 @@ class Fuxcel extends FuxcelBase {
      * a plain string, or a `Fuxcel` instance. When inserting a `Fuxcel` instance into
      * multiple targets, each child is cloned automatically.
      *
-     * @param nodes {HTMLElement | Fuxcel | string | (HTMLElement | Fuxcel | string)[]} Node(s) to insert.
+     * @param nodes {HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]} Node(s) to insert.
      * @param position {InsertPosition = 'append'} Where to insert relative to the selected element. Defaults to `'append'`.
      * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
      *
@@ -4053,10 +4053,10 @@ class FuxcelValidator extends Fuxcel {
             config: { step: '.fx-step', slides: false, switch: '[data-step]' },
         },
         texts: {
-            capslockFormat: '⚠ Caps Lock is on',
+            capslockFormat: '⚠ Caps Lock is on.',
             emailFormat: null,
             nameFormat: null,
-            passwordFormat: 'Password requires between 8-32 characters',
+            passwordFormat: 'Password requires between 8-32 characters.',
             phoneFormat: null,
             usernameFormat: null,
         },
@@ -5718,9 +5718,7 @@ const fxFetch = function ({ uri = '', method = 'get', data = null, dataType = 'j
         try {
             // @ts-ignore
             const consumed = response[dataType]();
-            return (consumed && (responseData.ok || (status > 199 && status < 300) || allowedErrorStatuses.has(status)))
-                ? consumed
-                : Promise.reject(response);
+            return (consumed && (responseData.ok || (status > 199 && status < 300) || allowedErrorStatuses.has(status))) ? consumed : Promise.reject(response);
         }
         catch (e) {
             return Promise.reject(e);

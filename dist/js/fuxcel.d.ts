@@ -1312,14 +1312,14 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      * Accepts a single node or an array of nodes. Each node can be a raw `HTMLElement`,
      * a plain string, or a `Fuxcel` instance.
      *
-     * @param nodes {HTMLElement | Fuxcel | string | (HTMLElement | Fuxcel | string)[]} Node(s) to insert.
+     * @param nodes {HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]} Node(s) to insert.
      * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
      *
      * @example
      * fx('#container').insertNode('<p>Hello</p>');
      * fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')]);
      */
-    insertNode(nodes: HTMLElement | Fuxcel | string | (HTMLElement | Fuxcel | string)[]): Fuxcel;
+    insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]): this;
     /**
      * Insert one or more nodes relative to each selected element at the given position.
      *
@@ -1362,7 +1362,7 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      * // Chainable
      * fx('#container').insertNode('<p>Hello</p>', 'prepend').addClass('loaded').fadein(300);
      */
-    insertNode(nodes: HTMLElement | Fuxcel | string | (HTMLElement | Fuxcel | string)[], position: InsertPositions): Fuxcel;
+    insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[], position: InsertPositions): this;
     /**
      * Remove selected element(s) from DOM.
      *
@@ -1785,6 +1785,7 @@ type FormValidationRegistryBag = Record<string, {
         count: number;
     }>;
 }>;
+type Strength = 'weak' | 'fair' | 'good' | 'strong';
 interface ExtractedRule {
     name: string;
     regex: RegExp;
@@ -1792,7 +1793,7 @@ interface ExtractedRule {
 }
 interface StrengthResult {
     score: number;
-    label: 'weak' | 'fair' | 'good' | 'strong';
+    label: Strength;
     passed: string[];
     failed: string[];
     rules: ExtractedRule[];
@@ -2805,14 +2806,14 @@ interface FuxcelInstance {
      * Accepts a single node or an array of nodes. Each node can be a raw `HTMLElement`,
      * a plain string, or a `Fuxcel` instance.
      *
-     * @param nodes {HTMLElement | Fuxcel | string | (HTMLElement | Fuxcel | string)[]} Node(s) to insert.
+     * @param nodes {HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]} Node(s) to insert.
      * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
      *
      * @example
      * fx('#container').insertNode('<p>Hello</p>');
      * fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')]);
      */
-    insertNode(nodes: HTMLElement | Fuxcel | string | (HTMLElement | Fuxcel | string)[]): Fuxcel;
+    insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]): this;
     /**
      * Insert one or more nodes relative to each selected element at the given position.
      *
@@ -2827,7 +2828,7 @@ interface FuxcelInstance {
      * a plain string, or a `Fuxcel` instance. When inserting a `Fuxcel` instance into
      * multiple targets, each child is cloned automatically.
      *
-     * @param nodes {HTMLElement | Fuxcel | string | (HTMLElement | Fuxcel | string)[]} Node(s) to insert.
+     * @param nodes {HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]} Node(s) to insert.
      * @param position {InsertPosition} Where to insert relative to the selected element. Defaults to `'append'`.
      * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
      *
@@ -2855,7 +2856,7 @@ interface FuxcelInstance {
      * // Chainable
      * fx('#container').insertNode('<p>Hello</p>', 'prepend').addClass('loaded').fadein(300);
      */
-    insertNode(nodes: HTMLElement | Fuxcel | string | (HTMLElement | Fuxcel | string)[], position: InsertPositions): Fuxcel;
+    insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[], position: InsertPositions): this;
     /**
      * Insert one or more nodes relative to each selected element at the given position.
      *
@@ -2870,7 +2871,7 @@ interface FuxcelInstance {
      * a plain string, or a `Fuxcel` instance. When inserting a `Fuxcel` instance into
      * multiple targets, each child is cloned automatically.
      *
-     * @param nodes {HTMLElement | Fuxcel | string | (HTMLElement | Fuxcel | string)[]} Node(s) to insert.
+     * @param nodes {HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]} Node(s) to insert.
      * @param position {InsertPosition = 'append'} Where to insert relative to the selected element. Defaults to `'append'`.
      * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
      *
@@ -2898,7 +2899,7 @@ interface FuxcelInstance {
      * // Chainable
      * fx('#container').insertNode('<p>Hello</p>', 'prepend').addClass('loaded').fadein(300);
      */
-    insertNode(nodes: HTMLElement | Fuxcel | string | (HTMLElement | Fuxcel | string)[], position?: InsertPositions): Fuxcel;
+    insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[], position?: InsertPositions): this;
     /**
      * Remove selected element(s) from DOM.
      *
@@ -4033,4 +4034,4 @@ declare global {
     }
 }
 
-export type { CustomEventType, Direction, EventInterfaces, ExtractedRule, FXAnimation, FXAnimationOptions, FXAnimationReturn, FXAnimationType, FXFormResponse, FXFormSubmitType, FXInterface, FXModalType, FXRequestType, FieldAttributes, FormValidationRegistryBag, FuxcelConstructor, FuxcelInstance, FuxcelModalConstructor, FuxcelModalInstance, FuxcelStepsConstructor, FuxcelStepsInstance, FuxcelValidatorConstructor, FuxcelValidatorInstance, FxFetchPage, FxPageLoader, FxPageNavigate, HTMLElementWithListenerArray, HTMLListenerArray, HTTPRequestMethod, InsertPositions, IterableElement, ModalInit, ResponseData, Selector, SingleElement, StrengthResult, StringOrNull, ValidationProps, ValidatorConfigObject };
+export type { CustomEventType, Direction, EventInterfaces, ExtractedRule, FXAnimation, FXAnimationOptions, FXAnimationReturn, FXAnimationType, FXFormResponse, FXFormSubmitType, FXInterface, FXModalType, FXRequestType, FieldAttributes, FormValidationRegistryBag, FuxcelConstructor, FuxcelInstance, FuxcelModalConstructor, FuxcelModalInstance, FuxcelStepsConstructor, FuxcelStepsInstance, FuxcelValidatorConstructor, FuxcelValidatorInstance, FxFetchPage, FxPageLoader, FxPageNavigate, HTMLElementWithListenerArray, HTMLListenerArray, HTTPRequestMethod, InsertPositions, IterableElement, ModalInit, ResponseData, Selector, SingleElement, Strength, StrengthResult, StringOrNull, ValidationProps, ValidatorConfigObject };
