@@ -5,11 +5,13 @@
  *   import type { FXRequestType, ValidatorConfigObject } from '../types';
  */
 
+import {fxFetchPage, fxPageLoader, fxPageNavigate} from './http/fxPageNavigate';
+
 export type {
 	IterableElement,
 	SingleElement,
 	Direction,
-	Position,
+	InsertPositions,
 	Selector,
 	StringOrNull,
 	EventInterfaces,
@@ -71,6 +73,12 @@ FuxcelValidator._fxModal = fxModal;
 
 fx.fetch = fxFetch;
 
+fx.fetchPage = fxFetchPage;
+
+fx.pageLoader = fxPageLoader;
+
+fx.pageNavigate = fxPageNavigate;
+
 fx.modal = fxModal;
 
 fx.onDocumentLoad = (listener: (e: Event) => void) => fx(document).off().upon('DOMContentLoaded', listener);
@@ -101,6 +109,8 @@ pushPropsToWindow({
 	
 	// Standalone functions
 	fxFetch,
+	fxFetchPage,
+	fxPageLoader,
 	fxModal,
 	passLuhnAlgo,
 	

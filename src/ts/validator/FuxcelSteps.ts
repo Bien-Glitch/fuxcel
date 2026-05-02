@@ -72,7 +72,7 @@ export class FuxcelSteps extends FuxcelValidator implements FuxcelStepsInstance 
 	 * @param step {number|string|null=null} Specific step to query. If null, returns errors for all steps.
 	 */
 	stepErrors(step: number | string | null = null): object | void {
-		const selected: IterableElement = <HTMLElement[]>this.context.toArray;
+		const selected = <HTMLElement[]>this.context.toArray;
 		let errors: Record<string, any> = {};
 		
 		if (step === null) {

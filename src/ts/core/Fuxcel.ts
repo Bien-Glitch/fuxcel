@@ -4,13 +4,12 @@ import {
 	StringOrNull,
 	Selector,
 	Direction,
-	Position,
 	HTMLElementWithListenerArray,
 	FXInterface,
 	FXAnimationOptions,
 	FXFormSubmitType,
 	HTTPRequestMethod,
-	FuxcelInstance, HTMLListenerArray, ResponseData, FXFormResponse,
+	FuxcelInstance, HTMLListenerArray, ResponseData, FXFormResponse, InsertPositions,
 } from '../types';
 import {FuxcelBase} from './FuxcelBase';
 import {animations} from '../animations';
@@ -68,7 +67,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	}
 	
 	#_setAttrib(name: string | object, value?: string): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		if (isString(name) && (isString(value) || isDefined(value))) {
 			selected.forEach((el: HTMLElement) => el.setAttribute(<string>name, <string>value));
 		} else if (isObject(name)) {
@@ -83,7 +82,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	}
 	
 	#_setDataAttrib(name: string | object, value?: string): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		if (isString(name) && (isString(value) || isDefined(value))) {
 			selected.forEach((el: HTMLElement) => (el.dataset[<any>name] = value));
 		} else if (isObject(name)) {
@@ -103,7 +102,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	}
 	
 	#_setProp(name: string | object, value?: string): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		if (isString(name) && (isString(value) || isBool(value) || isDefined(value))) {
 			selected.forEach((el: HTMLElement) => ((<any>el)[<any>name] = value));
 		} else if (isObject(name)) {
@@ -118,7 +117,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	}
 	
 	#_setStyle(name: string | object, value?: string): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		if (isString(name) && (isString(value) || isBool(value) || isDefined(value))) {
 			selected.forEach((el: HTMLElement) => ((<any>el.style)[<any>name] = value));
 		} else if (isObject(name)) {
@@ -141,7 +140,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Promise<Fuxcel>}
 	 */
 	#_animate(animation: FXAnimationOptions): Promise<Fuxcel> {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		return new Promise(resolve =>
 			selected.forEach((element: Element) => {
 				Object.keys(animation.onBegin).length && fx(element).style(animation.onBegin);
@@ -859,6 +858,73 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	}
 	
 	/**
+	 * Perform _Shake_ animation on selected element.
+	 *
+	 * @returns {Promise<Fuxcel>}
+	 */
+	shake(): Promise<Fuxcel>;
+	/**
+	 * Perform _Shake_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	shake(timeout: number): Promise<Fuxcel>;
+	/**
+	 * Perform _Shake_ animation on selected element.
+	 *
+	 * @param {string} scale Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	shake(scale: string): Promise<Fuxcel>;
+	/**
+	 * Perform _Shake_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	shake(timeout: number, iteration: number): Promise<Fuxcel>;
+	/**
+	 * Perform _Shake_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {string} scale Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	shake(timeout: number, scale: string): Promise<Fuxcel>;
+	/**
+	 * Perform _Shake_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @param {string} scale Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	shake(timeout: number, iteration: number, scale: string): Promise<Fuxcel>;
+	/**
+	 * Perform _Shake_ animation on selected element.
+	 *
+	 * @param {string | number} timeout Animation duration.
+	 * @param {string | number} iteration Animation iteration count.
+	 * @param {string} scale Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	shake(timeout?: number | string, iteration?: number | string, scale?: string): Promise<Fuxcel> {
+		if (typeof timeout === 'string') {
+			scale = timeout;
+			timeout = 500;
+		} else if (timeout && typeof iteration === 'string') {
+			scale = iteration;
+			iteration = 1;
+		}
+		const shake = animations({timeout, iterations: <number>iteration}).staticShake;
+		shake.onBegin = {...shake.onBegin, ...(scale?.length ? {transform: `scale(${scale})`} : {})};
+		
+		return this.#_animate(shake);
+	}
+	
+	/**
 	 * Perform _Zoom-in_ animation on selected element.
 	 *
 	 * @returns {Promise<Fuxcel>}
@@ -930,11 +996,31 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 		return (<HTMLElement[]>this.toArray)[0].classList;
 	}
 	
+	/** Returns the `FieldAttributes` of the first selected element. */
+	get fieldAttributes() {
+		const selected = <HTMLElement[]>this.toArray;
+		const field = selected[0];
+		const fieldId = field.getAttribute('id')?.toLowerCase();
+		const dataId = field.dataset.id;
+		const fxName = field.dataset.fxName ?? (dataId?.length && fieldId?.endsWith(dataId) ?
+			fieldId.replace(`_${dataId}`, '') :
+			fieldId);
+		
+		return {
+			id: fieldId,
+			fxName,
+			type: selected[0].getAttribute('type')?.toLowerCase() ?? null,
+			fxId: selected[0].getAttribute('type')?.toLowerCase() ?? null,
+			fxRole: selected[0].getAttribute('type')?.toLowerCase() ?? null,
+			formId: (selected[0] as any).form?.id?.toLowerCase() ?? null,
+		};
+	}
+	
 	/**
 	 *  @return {Promise<boolean>} A promise with a boolean argument; true if the given element has the mouse focus; false otherwise.
 	 */
 	get hasFocus(): Promise<boolean> {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		const selector = FuxcelBase.pointerIsTouch ? ':focus' : ':hover';
 		return new Promise(resolve =>
 			selected.forEach((el: HTMLElement) => resolve(fx(el).matchSelector(selector)))
@@ -998,7 +1084,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {boolean} Returns true if the selected element is a form element.
 	 */
 	get isFormElement(): boolean {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		if (typeof selected[0].cloneNode !== 'function') return false;
 		try {
 			const form = document.createElement('form');
@@ -1128,12 +1214,34 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	
 	// ─── Iteration ────────────────────────────────────────────────────────────
 	/**
-	 * Perform callback on each selected item
+	 * Perform a callback once for each selected element.
 	 *
-	 * @param callback {((element: Fuxcel, index: number) => void)}
+	 * @param callback {((element: this, index: number, elements: HTMLElement[]) => void)}
 	 */
-	each(callback: ((element: Fuxcel, index: number) => void)): void {
-		(<[]>this.toArray).forEach((el, i) => callback(fx(el), i));
+	each(callback: (element: this, index: number, elements: HTMLElement[]) => void): void {
+		// (<[]>this.toArray).forEach((el, i) => callback(fx(el), i));
+		for (let i = 0; i < this.length; i++) {
+			// Wrap each element in the current class type (Fuxcel or FuxcelValidator)
+			const wrapped = new (this.constructor as any)([this[i]]) as this;
+			callback(wrapped, i, wrapped.toArray as HTMLElement[]);
+		}
+	}
+	
+	/**
+	 * Creates a [shallow copy](https://developer.mozilla.org/en-us/docs/Glossary/Shallow_copy) of a portion of a given set of selected elements, filtered down to just the elements from the given array that pass the test implemented by the provided function.
+	 *
+	 * @param callback {((element: this, index: number, elements: HTMLElement[]) => boolean)}
+	 */
+	filter(callback: (element: this, index: number, elements: HTMLElement[]) => boolean): this {
+		const filtered: HTMLElement[] = [];
+		for (let i = 0; i < this.length; i++) {
+			// Wrap each element in the current class type
+			const wrapped = new (this.constructor as any)([this[i]]) as this;
+			if (callback(wrapped, i, wrapped.toArray as HTMLElement[])) {
+				filtered.push(this[i]);
+			}
+		}
+		return new (this.constructor as any)(filtered) as this;
 	}
 	
 	// ─── Attribute / Property / Style Accessors ───────────────────────────────
@@ -1173,7 +1281,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel|string}
 	 */
 	attrib(name: string | object, value?: boolean | string | null): Fuxcel | string | null {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		return selected.length ? <Fuxcel | string>(name && !value && isString(name) ?
 				<string>selected[0].getAttribute(<string>name) :
 				<Fuxcel>(isObject(name) ?
@@ -1218,7 +1326,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel | string}
 	 */
 	dataAttrib(name: string | object, value?: boolean | string | null): Fuxcel | string {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		const formatted = this.#_formatDataAttrib(<string>name);
 		return <Fuxcel | string>(
 			name && !value && isString(name)
@@ -1263,7 +1371,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel | string}
 	 */
 	prop(name: string | object, value?: boolean | string | null): Fuxcel | string {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		return <Fuxcel | string>(
 			name && !value && isString(name)
 				? <string>selected[0][<keyof HTMLElement>name]
@@ -1307,7 +1415,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel | string}
 	 */
 	style(name: string | object, value?: boolean | string | null): Fuxcel | string {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		return <Fuxcel | string>(
 			name && !value && isString(name)
 				? <string>window.getComputedStyle(selected[0]).getPropertyValue(<string>name)
@@ -1321,7 +1429,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Object} A Key-value-pair object containing the attributes of the selected element.
 	 */
 	listAttrib(): object {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		const list: Record<string, string> = {};
 		Array.from((<HTMLElement>selected[0]).attributes).forEach((a: Attr) => (list[a.name] = a.value));
 		return list;
@@ -1333,7 +1441,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Object} A Key-value-pair object containing the properties of the selected element.
 	 */
 	listProp(): object {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		const list: Record<string, string> = {};
 		Object.keys(<HTMLElement>selected[0])
 			.filter(p => Number.isNaN(parseInt(p)) && (<any>selected[0])[p])
@@ -1342,6 +1450,127 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	}
 	
 	// ─── DOM Mutation ─────────────────────────────────────────────────────────
+	/**
+	 * Insert one or more nodes relative to each selected element using the default `'append'` position.
+	 *
+	 * Accepts a single node or an array of nodes. Each node can be a raw `HTMLElement`,
+	 * a plain string, or a `Fuxcel` instance.
+	 *
+	 * @param nodes {HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]} Node(s) to insert.
+	 * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * fx('#container').insertNode('<p>Hello</p>');
+	 * fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')]);
+	 */
+	insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]): this;
+	/**
+	 * Insert one or more nodes relative to each selected element at the given position.
+	 *
+	 * | Position   | Description                                      |
+	 * |------------|--------------------------------------------------|
+	 * | `'append'` | Insert as the last child _(default)_             |
+	 * | `'prepend'` | Insert as the first child                       |
+	 * | `'before'` | Insert before the element itself in the DOM      |
+	 * | `'after'`  | Insert after the element itself in the DOM       |
+	 *
+	 * Accepts a single node or an array of nodes. Each node can be a raw `HTMLElement`,
+	 * a plain string, or a `Fuxcel` instance. When inserting a `Fuxcel` instance into
+	 * multiple targets, each child is cloned automatically.
+	 *
+	 * @param nodes {HTMLElement | Fuxcel | string | (HTMLElement | Fuxcel | string)[]} Node(s) to insert.
+	 * @param position {InsertPosition} Where to insert relative to the selected element. Defaults to `'append'`.
+	 * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * // Append (default)
+	 * fx('#container').insertNode('<p>Hello</p>', 'append');
+	 *
+	 * @example
+	 * // Prepend
+	 * fx('#container').insertNode(fx('#header'), 'prepend');
+	 *
+	 * @example
+	 * // Insert before
+	 * fx('#container').insertNode(document.createElement('hr'), 'before');
+	 *
+	 * @example
+	 * // Insert after
+	 * fx('#container').insertNode('<p>Footer</p>', 'after');
+	 *
+	 * @example
+	 * // Multiple nodes as array
+	 * fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')], 'prepend');
+	 *
+	 * @example
+	 * // Chainable
+	 * fx('#container').insertNode('<p>Hello</p>', 'prepend').addClass('loaded').fadein(300);
+	 */
+	insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[], position: InsertPositions): this;
+	/**
+	 * Insert one or more nodes relative to each selected element at the given position.
+	 *
+	 * | Position   | Description                                      |
+	 * |------------|--------------------------------------------------|
+	 * | `'append'` | Insert as the last child _(default)_             |
+	 * | `'prepend'` | Insert as the first child                       |
+	 * | `'before'` | Insert before the element itself in the DOM      |
+	 * | `'after'`  | Insert after the element itself in the DOM       |
+	 *
+	 * Accepts a single node or an array of nodes. Each node can be a raw `HTMLElement`,
+	 * a plain string, or a `Fuxcel` instance. When inserting a `Fuxcel` instance into
+	 * multiple targets, each child is cloned automatically.
+	 *
+	 * @param nodes {HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]} Node(s) to insert.
+	 * @param position {InsertPosition = 'append'} Where to insert relative to the selected element. Defaults to `'append'`.
+	 * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * // Append (default)
+	 * fx('#container').insertNode('<p>Hello</p>', 'append');
+	 *
+	 * @example
+	 * // Prepend
+	 * fx('#container').insertNode(fx('#header'), 'prepend');
+	 *
+	 * @example
+	 * // Insert before
+	 * fx('#container').insertNode(document.createElement('hr'), 'before');
+	 *
+	 * @example
+	 * // Insert after
+	 * fx('#container').insertNode('<p>Footer</p>', 'after');
+	 *
+	 * @example
+	 * // Multiple nodes as array
+	 * fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')], 'prepend');
+	 *
+	 * @example
+	 * // Chainable
+	 * fx('#container').insertNode('<p>Hello</p>', 'prepend').addClass('loaded').fadein(300);
+	 */
+	insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[], position: InsertPositions = 'append'): this {
+		const selected = this.toArray as HTMLElement[];
+		const positions: Record<InsertPositions, InsertPosition> = {
+			before: 'beforebegin',
+			prepend: 'afterbegin',
+			append: 'beforeend',
+			after: 'afterend',
+		};
+		
+		const multiTarget = selected.length > 1;
+		const nodeArray = Array.isArray(nodes) ? nodes : [nodes];
+		
+		// Pre-resolve Fuxcel instances to raw HTMLElement arrays once
+		const resolved = nodeArray.map(node => node instanceof Fuxcel ? node.toArray : [node]) as HTMLElement[][];
+		
+		selected.forEach((el: HTMLElement) => resolved.forEach((items: HTMLElement[]) => items.forEach((child: HTMLElement) => {
+			const item = multiTarget ? child.cloneNode(true) as HTMLElement : child;
+			el.insertAdjacentElement(positions[position], item);
+		})));
+		return this;
+	}
+	
 	/**
 	 * Remove selected element(s) from DOM.
 	 *
@@ -1374,7 +1603,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel} Fuxcel Object of the selected element
 	 */
 	removeAttrib(...name: string[]): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		selected.length && name.length &&
 		selected.forEach((el: HTMLElement) => name.forEach(a => el.removeAttribute(a)));
 		return this;
@@ -1387,7 +1616,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel} Fuxcel Object of the selected element
 	 */
 	removeDataAttrib(...name: string[]): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		selected.length && name.length &&
 		selected.forEach((el: HTMLElement) =>
 			name.forEach(n => {
@@ -1404,51 +1633,113 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel} Fuxcel Object of the selected element
 	 */
 	removeProp(...name: string[]): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		selected.length && name.length &&
 		selected.forEach((el: HTMLElement) => name.forEach(p => ((<any>el)[p] = null)));
 		return this;
 	}
 	
 	/**
-	 * Inserts the given HTML string to the given position of the selected element.
+	 * Set the `innerHTML` of each selected element, replacing all existing content.
 	 *
-	 * _Defaults to innerHTML._
+	 * When no position is provided, the inner HTML of the element is replaced entirely.
 	 *
-	 * @param value {string} HTML string to insert
-	 * @return {Fuxcel} Fuxcel Object of the selected element
+	 * @param value {string} HTML string to insert.
+	 * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * // Replace inner HTML entirely
+	 * fx('#container').insertHTML('<p>Hello</p>');
+	 *
+	 * @example
+	 * // Chainable
+	 * fx('#container').insertHTML('<p>Hello</p>').addClass('loaded');
 	 */
 	insertHTML(value: string): Fuxcel;
 	/**
-	 * Inserts the given HTML string to the given position of the selected element.
+	 * Insert an HTML string relative to each selected element at the given position.
 	 *
-	 * @param value {string} HTML string to insert
-	 * @param position {Position} Position to place given HTML string.
-	 * @return {Fuxcel} Fuxcel Object of the selected element
+	 * | Position    | Description                               |
+	 * |-------------|-------------------------------------------|
+	 * | `'before'`  | Insert before the element itself          |
+	 * | `'prepend'` | Insert as the first child                 |
+	 * | `'append'`  | Insert as the last child                  |
+	 * | `'after'`   | Insert after the element itself           |
+	 *
+	 * @param value {string} HTML string to insert.
+	 * @param position {InsertPositions} Where to insert relative to the selected element.
+	 * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * // Insert before the element
+	 * fx('#container').insertHTML('<hr>', 'before');
+	 *
+	 * @example
+	 * // Prepend as first child
+	 * fx('#container').insertHTML('<p>First</p>', 'prepend');
+	 *
+	 * @example
+	 * // Append as last child
+	 * fx('#container').insertHTML('<p>Last</p>', 'append');
+	 *
+	 * @example
+	 * // Insert after the element
+	 * fx('#container').insertHTML('<hr>', 'after');
+	 *
+	 * @example
+	 * // Chainable
+	 * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
 	 */
-	insertHTML(value: string, position: Position): Fuxcel;
+	insertHTML(value: string, position: InsertPositions): Fuxcel;
 	/**
-	 * Inserts the given HTML string to the given position of the selected element.
+	 * Insert an HTML string relative to each selected element at the given position.
 	 *
-	 * _Inserts the HTML string as inner HTML if no position is given._
+	 * | Position    | Description                               |
+	 * |-------------|-------------------------------------------|
+	 * | `'before'`  | Insert before the element itself          |
+	 * | `'prepend'` | Insert as the first child                 |
+	 * | `'append'`  | Insert as the last child                  |
+	 * | `'after'`   | Insert after the element itself           |
 	 *
-	 * @param value {string} HTML string to insert
-	 * @param position {Position | null = null} Position to place given HTML string.
-	 * @return {Fuxcel} Fuxcel Object of the selected element
+	 * @param value {string} HTML string to insert.
+	 * @param position {InsertPositions | null = null} Where to insert relative to the selected element.
+	 * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * // Insert before the element
+	 * fx('#container').insertHTML('<hr>', 'before');
+	 *
+	 * @example
+	 * // Prepend as first child
+	 * fx('#container').insertHTML('<p>First</p>', 'prepend');
+	 *
+	 * @example
+	 * // Append as last child
+	 * fx('#container').insertHTML('<p>Last</p>', 'append');
+	 *
+	 * @example
+	 * // Insert after the element
+	 * fx('#container').insertHTML('<hr>', 'after');
+	 *
+	 * @example
+	 * // Chainable
+	 * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
 	 */
-	insertHTML(value: string, position: Position | null = null): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
-		const positions: Record<string, InsertPosition> = {
-			affix: 'beforebegin', prefix: 'afterbegin',
-			postfix: 'afterend', suffix: 'beforeend',
+	insertHTML(value: string, position: InsertPositions | null = null): this {
+		const selected = this.toArray as HTMLElement[];
+		const positions: Record<InsertPositions, InsertPosition> = {
+			before: 'beforebegin',
+			prepend: 'afterbegin',
+			append: 'beforeend',
+			after: 'afterend',
 		};
-		if (isString(position) && !positions[<string>position])
-			throw `Invalid position option. Valid: 'affix', 'prefix', 'postfix', 'suffix'`;
-		selected.forEach((el: HTMLElement) =>
-			isString(position) ?
-				el.insertAdjacentHTML(positions[<string>position], value) :
-				(el.innerHTML = value)
-		);
+		
+		if (position !== null && !positions[position])
+			throw new Error(`Invalid position "${position}". Valid options: 'before', 'prepend', 'append', 'after'.`);
+		
+		selected.forEach((el: HTMLElement) => position !== null ?
+			el.insertAdjacentHTML(positions[position], value) :
+			(el.innerHTML = value));
 		return this;
 	}
 	
@@ -1475,7 +1766,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel} Fuxcel Object of the selected child(ren)
 	 */
 	children(selector: Selector = null): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		const result: HTMLElement[] = [];
 		(<HTMLElement[]>Array.from(selected[0].children)).forEach((child: HTMLElement) => {
 			if (isString(selector)) {
@@ -1507,7 +1798,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel} Fuxcel Object of the selected descendant(s)
 	 */
 	descendants(selector: Selector = null): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		const result: HTMLElement[] = [];
 		(<HTMLElement[]>fx('*', selected[0]).toArray).forEach((d: HTMLElement) => {
 			if (isString(selector)) {
@@ -1539,9 +1830,9 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel} Fuxcel Object of the selected parent(s)
 	 */
 	parents(selector: Selector = null): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		const result: HTMLElement[] = [];
-		let parentNode = selected[0].parentNode;
+		let parentNode = selected[0].parentNode as HTMLElement | null;
 		while (parentNode) {
 			if (isString(selector)) {
 				if (parentNode.constructor.name.toLowerCase().includes('element')) {
@@ -1553,7 +1844,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 			} else {
 				if (parentNode !== selected[0]) result.push(<HTMLElement>parentNode);
 			}
-			parentNode = parentNode.parentNode;
+			parentNode = parentNode.parentNode as HTMLElement | null;
 		}
 		return fx(result).#_setPrev(this);
 	}
@@ -1580,7 +1871,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel} Fuxcel Object of the selected previous sibling(s)
 	 */
 	prevSiblings(selector: Selector = null): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		const result: HTMLElement[] = [];
 		let prev = selected[0].previousElementSibling;
 		while (prev) {
@@ -1619,7 +1910,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel} Fuxcel Object of the selected sibling(s)
 	 */
 	siblings(selector: Selector = null): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		const result: HTMLElement[] = [];
 		Array.from(<ArrayLike<any>>selected[0].parentNode?.children).forEach((sib: HTMLElement) => {
 			if (isString(selector)) {
@@ -1639,7 +1930,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {boolean} true if the selected elements' tag name matches the given tag name; false otherwise.
 	 */
 	isElement(tagName: string | HTMLElementTagNameMap): boolean {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		if (isString(tagName)) return selected[0].tagName.toLowerCase() === tagName.toString().toLowerCase();
 		throw `\`isElement()\` expects 1 string argument.`;
 	}
@@ -1651,7 +1942,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {boolean} true if the selected element would be selected; false otherwise.
 	 */
 	matchSelector(selector: Selector): boolean {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		if (isString(selector)) return (selected[0].matches).call(selected[0], <string>selector);
 		throw `\`matchSelector()\` expects 1 argument. 0 given`;
 	}
@@ -1663,7 +1954,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {boolean} true if the selected element has a scrollbar in the specified direction; false otherwise.
 	 */
 	hasScrollBar(direction: (Direction | null) = 'vertical'): boolean {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		const scroll: Record<string, string> = {vertical: 'scrollHeight', horizontal: 'scrollWidth'};
 		const client: Record<string, string> = {vertical: 'clientHeight', horizontal: 'clientWidth'};
 		if (isString(direction) && scroll[<string>direction])
@@ -1686,7 +1977,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Promise<{JSON?: any, text?: string, status: number, form: FuxcelValidator}>}
 	 */
 	handleFormSubmit({uri = '', method = null, data = null, dataType = 'json', headers = null, beforeSend = null, timeout = 10000, handleError = false,}: FXFormSubmitType = {}): Promise<FXFormResponse> {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		
 		return new Promise((resolve, reject) =>
 			selected.forEach((element: HTMLElement) => {
@@ -1759,7 +2050,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 */
 	toggleButtonLoadState(isLoading: boolean = true): Promise<Fuxcel> {
 		return new Promise(resolve => {
-			const selected: IterableElement = <HTMLElement[]>this.toArray;
+			const selected = <HTMLElement[]>this.toArray;
 			const button = fx(selected[0]);
 			const loaderElement = fx(Fuxcel.buttonLoaderClass, button);
 			const resolveDisable = (disabled = true) => {
@@ -1788,7 +2079,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 */
 	toggleFormSubmitButtonState(isLoading: boolean = true): Promise<Fuxcel> {
 		return new Promise(resolve => {
-			const selected: IterableElement = <HTMLFormElement[]>this.toArray;
+			const selected = <HTMLFormElement[]>this.toArray;
 			if (this.isElement('form')) {
 				const submitButton = fx('button[type="submit"]', <SingleElement>selected[0]).length
 					? fx('button[type="submit"]', <SingleElement>selected[0])
@@ -1822,7 +2113,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel} Fuxcel Object of the selected element.
 	 */
 	off(...events: string[]): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		selected.forEach((element: HTMLElementWithListenerArray) => {
 			element.listeners && element.listeners.forEach((listener, index) => {
 				if (events?.length) {
@@ -1910,7 +2201,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel} Fuxcel Object of the selected element
 	 */
 	upon(events: object | string[] | string, listener?: EventListener | boolean, option: boolean = true): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		if (isObject(events) && listener === undefined) listener = true;
 		
 		selected.forEach((element: HTMLElementWithListenerArray) => {
@@ -1938,15 +2229,43 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	/**
 	 * Trigger a new event on the selected element(s).
 	 *
+	 * @param {Event} event
+	 * @returns {Fuxcel}
+	 */
+	trigger(event: Event): Fuxcel;
+	/**
+	 * Trigger a new event on the selected element(s).
+	 *
+	 * @param {string} event
+	 * @returns {Fuxcel}
+	 */
+	trigger(event: string): Fuxcel;
+	/**
+	 * Trigger a new event on the selected element(s).
+	 *
 	 * @param {string} event
 	 * @param {"mouse" | "keyboard" | "custom" | null} type
 	 * @returns {Fuxcel}
 	 */
-	trigger(event: string, type: ('mouse' | 'keyboard' | 'custom' | null) = null): Fuxcel {
-		const selected: IterableElement = <HTMLElement[]>this.toArray;
-		const match: Record<string, any> = {mouse: MouseEvent, custom: CustomEvent, keyboard: KeyboardEvent};
-		const InitEvent = !type ? Event : match[type.toLowerCase()];
-		const newEvent = new InitEvent(event, {bubbles: true, cancelable: true});
+	trigger(event: string, type: ('mouse' | 'keyboard' | 'custom' | null)): Fuxcel;
+	/**
+	 * Trigger a new event on the selected element(s).
+	 *
+	 * @param {string} event
+	 * @param {"mouse" | "keyboard" | "custom" | null} type
+	 * @returns {Fuxcel}
+	 */
+	trigger(event: string | Event, type: ('mouse' | 'keyboard' | 'custom' | null) = null): Fuxcel {
+		const selected = <HTMLElement[]>this.toArray;
+		let newEvent;
+		
+		if (event instanceof Event) {
+			newEvent = event;
+		} else {
+			const match: Record<string, any> = {mouse: MouseEvent, custom: CustomEvent, keyboard: KeyboardEvent};
+			const InitEvent = !type ? Event : match[type.toLowerCase()];
+			newEvent = new InitEvent(event, {bubbles: true, cancelable: true});
+		}
 		selected.forEach((el: HTMLElement) => el.dispatchEvent(newEvent));
 		return this;
 	}
@@ -1972,7 +2291,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {StringOrNull | string[] | Fuxcel} The value of the selected element if no parameter is passed for value; Fuxcel object of the selected element otherwise.
 	 */
 	value(value: StringOrNull = null): StringOrNull | string[] | Fuxcel {
-		const selected: IterableElement = <HTMLFormElement[]>this.toArray;
+		const selected = <HTMLElement[]>this.toArray;
 		if (isString(value) || isDefined(value)) {
 			selected.forEach((el: HTMLElement) =>
 				parseBool(el.contentEditable) ?
@@ -1982,28 +2301,25 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 			return this;
 		}
 		
-		let returnValue;
-		
 		switch ((<HTMLElement>selected[0]).tagName.toLowerCase()) {
 			case 'select':
 				const el = selected[0] as HTMLSelectElement;
 				if (el.attributes.getNamedItem('multiple')) {
-					returnValue = [];
-					Array.from(el.selectedOptions).forEach((option) => returnValue.push(option.value));
+					const values: string[] = [];
+					Array.from(el.selectedOptions).forEach((option) => values.push(option.value));
+					return values.length ? values : null;
 				} else
-					returnValue = el.value;
-				break;
+					return el.value;
 			default:
-				returnValue = parseBool((<HTMLElement>selected[0]).contentEditable) ?
+				return parseBool((<HTMLElement>selected[0]).contentEditable) ?
 					(<HTMLElement>selected[0]).innerText :
 					(<HTMLFormElement>selected[0]).value;
 		}
-		return returnValue;
 	}
 	
 	testValidateAfter(formGroup: any) {
 		const form = this.formValidator;
-		const group = fx(formGroup).toArray;
+		const group = fx(formGroup).toArray as HTMLElement[];
 		return form.validateFromGroup(<HTMLElement>group[0]);
 	}
 }

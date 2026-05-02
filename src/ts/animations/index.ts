@@ -2,7 +2,7 @@ import type {FXAnimation, FXAnimationReturn, FXAnimationType} from '../types';
 
 /**
  * Returns a map of all supported Web Animations API keyframe definitions,
- * parametrised by duration, iteration count, and display value.
+ * parametrized by duration, iteration count, and display value.
  */
 export const animations: FXAnimation = ({
 	timeout = 300,
@@ -164,6 +164,26 @@ export const animations: FXAnimation = ({
 		onFinished: {marginRight: '3px'},
 		options: {
 			keyFrames: [{marginRight: '3px'}, {marginRight: '3px'}],
+			timing: {duration: timeout, iterations},
+		},
+	},
+	
+	staticShake: {
+		name: 'staticshake',
+		onBegin: {},
+		onFinished: {transform: 'scale(1)'},
+		options: {
+			keyFrames: [
+				{transform: 'scale(1)'},
+				{transform: 'scale(1.02)'},
+				{transform: 'scale(1.04)'},
+				{transform: 'scale(1.02)'},
+				{transform: 'scale(1)'},
+				{transform: 'scale(1.02)'},
+				{transform: 'scale(1.04)'},
+				{transform: 'scale(1.02)'},
+				{transform: 'scale(1)'}
+			],
 			timing: {duration: timeout, iterations},
 		},
 	},

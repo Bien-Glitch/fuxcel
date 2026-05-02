@@ -35,7 +35,7 @@
   }
 }
 
-@-webkit-keyframes slideOutDown {
+@keyframes slideOutDown {
   from {
     transform: translate3d(0, 0, 0);
     visibility: visible;
@@ -44,5 +44,23 @@
   to {
     transform: translate3d(0, 100%, 0);
     visibility: hidden;
+  }
+}
+
+@keyframes static-shake {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.02);
+  }
+  50% {
+    transform: scale(1);
+  }
+  75% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
   }
 }

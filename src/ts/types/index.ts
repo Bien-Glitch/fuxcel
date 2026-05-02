@@ -24,10 +24,14 @@ import {Fuxcel} from '../core/Fuxcel';
 import {FuxcelValidator} from '../validator/FuxcelValidator';
 import {FuxcelModal} from '../modal/FuxcelModal';
 import {FuxcelSteps} from '../validator/FuxcelSteps';
+import {FuxcelBase} from '../core/FuxcelBase';
 
 // ─── Primitive / Element Types ────────────────────────────────────────────────
+
+/** Array of elements **/
 export type IterableElement =
-	| any
+	{}
+	| FuxcelBase
 	| NodeList
 	| HTMLCollection
 	| HTMLElement[]
@@ -48,11 +52,17 @@ export type SingleElement =
 	| Element;
 
 export type Direction = 'horizontal' | 'vertical';
-export type Position = 'affix' | 'prefix' | 'postfix' | 'suffix';
-export type Selector = StringOrNull;
+export type InsertPositions = 'before' | 'prepend' | 'append' | 'after';
 export type StringOrNull = string | null;
+export type Selector = StringOrNull;
 
 // ─── Event Types ──────────────────────────────────────────────────────────────
+
+export type CustomEventType = CustomEvent<{
+	plugin: string,
+	interface: string,
+	timestamp: number
+}>;
 
 export type EventInterfaces =
 	| AnimationEvent | ClipboardEvent | CompositionEvent | CustomEvent
@@ -114,6 +124,7 @@ export type ValidatorConfigObject = {
 		validateUsername?: boolean;
 		nativeValidation?: boolean;
 		useDefaultStyling?: boolean;
+		showPasswordStrength?: boolean;
 		passwordConfirmId?: 'password_confirmation' | string;
 		passwordId?: 'password' | string;
 		initWrapper?: '.form-group' | string;
@@ -128,7 +139,7 @@ export type ValidatorConfigObject = {
 		};
 	};
 	texts?: {
-		capslock?: string;
+		capslockFormat?: string;
 		emailFormat?: string | null;
 		nameFormat?: string | null;
 		phoneFormat?: string | null;
@@ -141,11 +152,29 @@ export type FormValidationRegistryBag = Record<string, {
 	configObject: ValidatorConfigObject;
 	bag: { [key: string]: any };
 	count: number;
+	passwordStrength?: StrengthResult | null;
 	steps: Record<string, {
 		bag: { [key: string]: any };
 		count: number
 	}>;
 }>
+
+export type Strength = 'weak' | 'fair' | 'good' | 'strong';
+
+export interface ExtractedRule {
+	name: string;
+	regex: RegExp;
+	weight: number;
+}
+
+export interface StrengthResult {
+	score: number;
+	label: Strength;
+	passed: string[];
+	failed: string[];
+	rules: ExtractedRule[];
+	color: string;
+}
 
 // ─── Animation Types ──────────────────────────────────────────────────────────
 
@@ -182,6 +211,7 @@ export type FXAnimationReturn = {
 	slideOutRight: FXAnimationOptions;
 	spaceLettersBig: FXAnimationOptions;
 	spaceLettersSmall: FXAnimationOptions;
+	staticShake: FXAnimationOptions;
 	unspaceLetters: FXAnimationOptions;
 	zoomIn: FXAnimationOptions;
 };
@@ -191,12 +221,12 @@ export type FXAnimation = (args: FXAnimationType) => FXAnimationReturn;
 // ─── Modal Types ──────────────────────────────────────────────────────────────
 
 export type ModalInit = {
-	title: StringOrNull;
-	html: boolean;
-	isStatic: boolean;
-	content: string;
 	id: string;
-	hasFooter: boolean;
+	title: StringOrNull;
+	content?: StringOrNull;
+	html?: boolean;
+	isStatic?: boolean;
+	hasFooter?: boolean;
 };
 
 export type FXModalType = {
@@ -936,6 +966,67 @@ export interface FuxcelInstance {
 	blink(timeout?: number | string, iteration?: number | string, display?: string): Promise<Fuxcel>;
 	
 	/**
+	 * Perform _Shake_ animation on selected element.
+	 *
+	 * @returns {Promise<Fuxcel>}
+	 */
+	shake(): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Shake_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	shake(timeout: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Shake_ animation on selected element.
+	 *
+	 * @param {string} scale Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	shake(scale: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Shake_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	shake(timeout: number, iteration: number): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Shake_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {string} scale Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	shake(timeout: number, scale: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Shake_ animation on selected element.
+	 *
+	 * @param {number} timeout Animation duration.
+	 * @param {number} iteration Animation iteration count.
+	 * @param {string} scale Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	shake(timeout: number, iteration: number, scale: string): Promise<Fuxcel>;
+	
+	/**
+	 * Perform _Shake_ animation on selected element.
+	 *
+	 * @param {string | number} timeout Animation duration.
+	 * @param {string | number} iteration Animation iteration count.
+	 * @param {string} scale Initial CSS display.
+	 * @returns {Promise<Fuxcel>}
+	 */
+	shake(timeout?: number | string, iteration?: number | string, scale?: string): Promise<Fuxcel>
+	
+	/**
 	 * Perform _Zoom-in_ animation on selected element.
 	 *
 	 * @returns {Promise<Fuxcel>}
@@ -1038,11 +1129,18 @@ export interface FuxcelInstance {
 	
 	// ─── Iteration ────────────────────────────────────────────────────────────
 	/**
-	 * Perform callback on each selected item
+	 * Perform a callback once for each selected element.
 	 *
-	 * @param callback {((element: Fuxcel, index: number) => void)}
+	 * @param callback {((element: this, index: number, elements: HTMLElement[]) => void)}
 	 */
-	each(callback: ((element: Fuxcel, index: number) => void)): void;
+	each(callback: (element: this, index: number, elements: HTMLElement[]) => void): void;
+	
+	/**
+	 * Creates a [shallow copy](https://developer.mozilla.org/en-us/docs/Glossary/Shallow_copy) of a portion of a given set of selected elements, filtered down to just the elements from the given array that pass the test implemented by the provided function.
+	 *
+	 * @param callback {((element: this, index: number, elements: HTMLElement[]) => boolean)}
+	 */
+	filter(callback: (element: this, index: number, elements: HTMLElement[]) => boolean): this;
 	
 	// ─── Attributes / Properties / Style Accessors ───────────────────────────────
 	/**
@@ -1225,6 +1323,109 @@ export interface FuxcelInstance {
 	
 	// ─── DOM Mutation ─────────────────────────────────────────────────────────
 	/**
+	 * Insert one or more nodes relative to each selected element using the default `'append'` position.
+	 *
+	 * Accepts a single node or an array of nodes. Each node can be a raw `HTMLElement`,
+	 * a plain string, or a `Fuxcel` instance.
+	 *
+	 * @param nodes {HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]} Node(s) to insert.
+	 * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * fx('#container').insertNode('<p>Hello</p>');
+	 * fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')]);
+	 */
+	insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]): this;
+	
+	/**
+	 * Insert one or more nodes relative to each selected element at the given position.
+	 *
+	 * | Position   | Description                                      |
+	 * |------------|--------------------------------------------------|
+	 * | `'append'` | Insert as the last child _(default)_             |
+	 * | `'prepend'` | Insert as the first child                       |
+	 * | `'before'` | Insert before the element itself in the DOM      |
+	 * | `'after'`  | Insert after the element itself in the DOM       |
+	 *
+	 * Accepts a single node or an array of nodes. Each node can be a raw `HTMLElement`,
+	 * a plain string, or a `Fuxcel` instance. When inserting a `Fuxcel` instance into
+	 * multiple targets, each child is cloned automatically.
+	 *
+	 * @param nodes {HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]} Node(s) to insert.
+	 * @param position {InsertPosition} Where to insert relative to the selected element. Defaults to `'append'`.
+	 * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * // Append (default)
+	 * fx('#container').insertNode('<p>Hello</p>', 'append');
+	 *
+	 * @example
+	 * // Prepend
+	 * fx('#container').insertNode(fx('#header'), 'prepend');
+	 *
+	 * @example
+	 * // Insert before
+	 * fx('#container').insertNode(document.createElement('hr'), 'before');
+	 *
+	 * @example
+	 * // Insert after
+	 * fx('#container').insertNode('<p>Footer</p>', 'after');
+	 *
+	 * @example
+	 * // Multiple nodes as array
+	 * fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')], 'prepend');
+	 *
+	 * @example
+	 * // Chainable
+	 * fx('#container').insertNode('<p>Hello</p>', 'prepend').addClass('loaded').fadein(300);
+	 */
+	insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[], position: InsertPositions): this;
+	
+	/**
+	 * Insert one or more nodes relative to each selected element at the given position.
+	 *
+	 * | Position   | Description                                      |
+	 * |------------|--------------------------------------------------|
+	 * | `'append'` | Insert as the last child _(default)_             |
+	 * | `'prepend'` | Insert as the first child                       |
+	 * | `'before'` | Insert before the element itself in the DOM      |
+	 * | `'after'`  | Insert after the element itself in the DOM       |
+	 *
+	 * Accepts a single node or an array of nodes. Each node can be a raw `HTMLElement`,
+	 * a plain string, or a `Fuxcel` instance. When inserting a `Fuxcel` instance into
+	 * multiple targets, each child is cloned automatically.
+	 *
+	 * @param nodes {HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]} Node(s) to insert.
+	 * @param position {InsertPosition = 'append'} Where to insert relative to the selected element. Defaults to `'append'`.
+	 * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * // Append (default)
+	 * fx('#container').insertNode('<p>Hello</p>', 'append');
+	 *
+	 * @example
+	 * // Prepend
+	 * fx('#container').insertNode(fx('#header'), 'prepend');
+	 *
+	 * @example
+	 * // Insert before
+	 * fx('#container').insertNode(document.createElement('hr'), 'before');
+	 *
+	 * @example
+	 * // Insert after
+	 * fx('#container').insertNode('<p>Footer</p>', 'after');
+	 *
+	 * @example
+	 * // Multiple nodes as array
+	 * fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')], 'prepend');
+	 *
+	 * @example
+	 * // Chainable
+	 * fx('#container').insertNode('<p>Hello</p>', 'prepend').addClass('loaded').fadein(300);
+	 */
+	insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[], position?: InsertPositions): this
+	
+	/**
 	 * Remove selected element(s) from DOM.
 	 *
 	 * @return void
@@ -1264,34 +1465,95 @@ export interface FuxcelInstance {
 	removeProp(...name: string[]): Fuxcel;
 	
 	/**
-	 * Inserts the given HTML string to the given position of the selected element.
+	 * Set the `innerHTML` of each selected element, replacing all existing content.
 	 *
-	 * _Defaults to innerHTML._
+	 * When no position is provided, the inner HTML of the element is replaced entirely.
 	 *
-	 * @param value {string} HTML string to insert
-	 * @return {Fuxcel} Fuxcel Object of the selected element
+	 * @param value {string} HTML string to insert.
+	 * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * // Replace inner HTML entirely
+	 * fx('#container').insertHTML('<p>Hello</p>');
+	 *
+	 * @example
+	 * // Chainable
+	 * fx('#container').insertHTML('<p>Hello</p>').addClass('loaded');
 	 */
 	insertHTML(value: string): Fuxcel;
 	
 	/**
-	 * Inserts the given HTML string to the given position of the selected element.
+	 * Insert an HTML string relative to each selected element at the given position.
 	 *
-	 * @param value {string} HTML string to insert
-	 * @param position {Position} Position to place given HTML string.
-	 * @return {Fuxcel} Fuxcel Object of the selected element
+	 * | Position    | Description                               |
+	 * |-------------|-------------------------------------------|
+	 * | `'before'`  | Insert before the element itself          |
+	 * | `'prepend'` | Insert as the first child                 |
+	 * | `'append'`  | Insert as the last child                  |
+	 * | `'after'`   | Insert after the element itself           |
+	 *
+	 * @param value {string} HTML string to insert.
+	 * @param position {InsertPositions} Where to insert relative to the selected element.
+	 * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * // Insert before the element
+	 * fx('#container').insertHTML('<hr>', 'before');
+	 *
+	 * @example
+	 * // Prepend as first child
+	 * fx('#container').insertHTML('<p>First</p>', 'prepend');
+	 *
+	 * @example
+	 * // Append as last child
+	 * fx('#container').insertHTML('<p>Last</p>', 'append');
+	 *
+	 * @example
+	 * // Insert after the element
+	 * fx('#container').insertHTML('<hr>', 'after');
+	 *
+	 * @example
+	 * // Chainable
+	 * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
 	 */
-	insertHTML(value: string, position: Position): Fuxcel;
+	insertHTML(value: string, position: InsertPositions): Fuxcel;
 	
 	/**
-	 * Inserts the given HTML string to the given position of the selected element.
+	 * Insert an HTML string relative to each selected element at the given position.
 	 *
-	 * _Inserts the HTML string as inner HTML if no position is given._
+	 * | Position    | Description                               |
+	 * |-------------|-------------------------------------------|
+	 * | `'before'`  | Insert before the element itself          |
+	 * | `'prepend'` | Insert as the first child                 |
+	 * | `'append'`  | Insert as the last child                  |
+	 * | `'after'`   | Insert after the element itself           |
 	 *
-	 * @param value {string} HTML string to insert
-	 * @param position {Position | null = null} Position to place given HTML string.
-	 * @return {Fuxcel} Fuxcel Object of the selected element
+	 * @param value {string} HTML string to insert.
+	 * @param position {InsertPositions | null = null} Where to insert relative to the selected element.
+	 * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * // Insert before the element
+	 * fx('#container').insertHTML('<hr>', 'before');
+	 *
+	 * @example
+	 * // Prepend as first child
+	 * fx('#container').insertHTML('<p>First</p>', 'prepend');
+	 *
+	 * @example
+	 * // Append as last child
+	 * fx('#container').insertHTML('<p>Last</p>', 'append');
+	 *
+	 * @example
+	 * // Insert after the element
+	 * fx('#container').insertHTML('<hr>', 'after');
+	 *
+	 * @example
+	 * // Chainable
+	 * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
 	 */
-	insertHTML(value: string, position: Position): Fuxcel;
+	insertHTML(value: string, position?: InsertPositions): Fuxcel;
+	
 	
 	// ─── Traversal ───────────────────────────────────────────────────────
 	/**
@@ -1576,11 +1838,36 @@ export interface FuxcelInstance {
 	/**
 	 * Trigger a new event on the selected element(s).
 	 *
+	 * @param {Event} event
+	 * @returns {Fuxcel}
+	 */
+	trigger(event: Event): Fuxcel;
+	
+	/**
+	 * Trigger a new event on the selected element(s).
+	 *
+	 * @param {string} event
+	 * @returns {Fuxcel}
+	 */
+	trigger(event: string): Fuxcel;
+	
+	/**
+	 * Trigger a new event on the selected element(s).
+	 *
+	 * @param {string} event
+	 * @param {"mouse" | "keyboard" | "custom" | null} type
+	 * @returns {Fuxcel}
+	 */
+	trigger(event: string, type: ('mouse' | 'keyboard' | 'custom' | null)): Fuxcel;
+	
+	/**
+	 * Trigger a new event on the selected element(s).
+	 *
 	 * @param event {string} Event to trigger on selected element(s).
 	 * @param type {"mouse" | "keyboard" | "custom" | null} Type of Event (Mouse, Keyboard, Custom). _Defaults to Event when nothing is passed._
 	 * @returns {Fuxcel}
 	 */
-	trigger(event: string, type?: 'mouse' | 'keyboard' | 'custom' | null): Fuxcel;
+	trigger(event: string | Event, type?: 'mouse' | 'keyboard' | 'custom' | null): Fuxcel;
 	
 	// ─── Value ─────────────────────────────────────────────────────────
 	/**
@@ -1631,7 +1918,7 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * @param config {ValidatorConfigObject} user config object.
 	 * @return {FuxcelSteps | FuxcelValidator} Fuxcel Validator Object of the forms.
 	 */
-	init(config?: ValidatorConfigObject | null): FuxcelValidator | FuxcelSteps;
+	init(config?: ValidatorConfigObject | null): FuxcelValidator | FuxcelSteps | void;
 	
 	
 	/** Validate the selected field. **/
@@ -2088,6 +2375,7 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	/** Checks if the selected field element can be validated by checking thw value of `[data-fx-validate]` data-attribute or the parent form-group is not hidden. **/ readonly canBeValidated: boolean;
 	/** Get the error bag for the current selected form. **/ readonly errorBag: object | null;
 	/** Get the error count for the current selected form. **/ readonly errorCount: number;
+	/** Get the password strength for the current selected form of password field. **/ readonly passwordStrength: StrengthResult | null;
 	/** An object containing the error bag and error count for the current selected form(s). Logs an error to the console if selected element(s) not form element(s). **/ readonly getErrors: object | void;
 	/** An object containing all form field elements for the current selected form(s). Logs an error to the console if selected element(s) not form element(s). **/ readonly formFieldElements: object | void;
 	/** Checks if the selected form field element is an email field. **/ readonly isEmailField: boolean;
@@ -2176,7 +2464,83 @@ export interface FuxcelModalConstructor {
 	init(options: ModalInit): HTMLElement;
 }
 
-// ─── FXInterface ──────────────────────────────────────────────────────────────
+// ─── FXInterfaces ──────────────────────────────────────────────────────────────
+/**
+ * Fetches a page resource using a custom `fx.fetch` method if available,
+ * otherwise falls back to the native `fetch` API.
+ */
+export interface FxFetchPage {
+	/**
+	 * Fetches a URL expecting a **text response**.
+	 *
+	 * @param url - The URL to request.
+	 * @param dataType - Must be `'text'`.
+	 * @param beforeSend - Optional callback executed before the request is sent.
+	 * @returns A promise that resolves with the response text.
+	 */
+	(url: string, dataType: 'text', beforeSend?: (() => void) | null): Promise<string>;
+	
+	/**
+	 * Fetches a URL expecting a **JSON response** (returned as string).
+	 *
+	 * @param url - The URL to request.
+	 * @param dataType - Must be `'json'`.
+	 * @param beforeSend - Optional callback executed before the request is sent.
+	 * @returns A promise that resolves with the raw JSON string.
+	 *
+	 * @remarks
+	 * The response is not parsed automatically.
+	 */
+	(url: string, dataType: 'json', beforeSend?: (() => void) | null): Promise<string>;
+	
+	/**
+	 * Fetches a URL expecting a **JSON response** (returned as string).
+	 *
+	 * @param url - The URL to request.
+	 * @param dataType {'json' | 'text'}.
+	 * @param beforeSend - Optional callback executed before the request is sent.
+	 * @returns A promise that resolves with the raw JSON string.
+	 *
+	 * @remarks
+	 * The response is not parsed automatically.
+	 */
+	(url: string, dataType: 'json' | 'text', beforeSend?: (() => void) | null): Promise<string>;
+}
+
+/**
+ * Controls a top progress bar used during page navigation/loading.
+ */
+export interface FxPageLoader {
+	/**
+	 * Starts the progress bar animation.
+	 */
+	start(): void;
+	
+	/**
+	 * Completes and hides the progress bar.
+	 */
+	finish(): void;
+}
+
+/**
+ * Navigates to a new page using AJAX and updates browser history.
+ */
+export interface FxPageNavigate {
+	/**
+	 * Navigate and push a new history entry.
+	 */
+	(options: { url: string; dataType?: 'json' | 'text'; replace?: false; }): Promise<string>;
+	
+	/**
+	 * Navigate and replace the current history entry.
+	 */
+	(options: { url: string; dataType?: 'json' | 'text'; replace: true; }): Promise<string>;
+	
+	/**
+	 * Navigation with optional URL (may reject).
+	 */
+	(options: { url?: string | null; dataType?: 'json' | 'text'; replace?: boolean; }): Promise<string>;
+}
 
 /**
  * The full type of the fx / fuxcel selector function,
@@ -2213,6 +2577,10 @@ export interface FXInterface {
 	 */
 	fetch: (options: FXRequestType) => void;
 	
+	fetchPage: FxFetchPage;
+	
+	pageLoader: FxPageLoader;
+	
 	/**
 	 * Create a quick alert / confirm modal.
 	 *
@@ -2221,6 +2589,8 @@ export interface FXInterface {
 	 * fx.modal({ type: 'error', content: 'Failed.', confirmButtonText: 'Retry', onConfirm: (e, modal) => {} });
 	 */
 	modal: (options?: FXModalType) => FuxcelModal;
+	
+	pageNavigate: FxPageNavigate;
 	
 	/**
 	 * Register a callback on DOMContentLoaded.

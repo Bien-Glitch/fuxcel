@@ -27,10 +27,13 @@ body {
   display: flex;
   justify-content: center;
   cursor: pointer;
-  background: url("../images/close.svg") center center no-repeat;
   -webkit-appearance: button;
 
-  &:hover {
-    background: url("../images/close-hover.svg") center center no-repeat;
+  > * {
+    opacity: .8;
+
+    &:hover {
+      opacity: 1;
+    }
   }
 }

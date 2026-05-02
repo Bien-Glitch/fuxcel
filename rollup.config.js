@@ -2,6 +2,27 @@ import typescript from '@rollup/plugin-typescript';
 import {nodeResolve} from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 import {dts} from "rollup-plugin-dts";
+import MagicString from "magic-string";
+
+function restoreNames() {
+	return {
+		name: 'restore-names',
+		renderChunk(code, chunk, options) {
+			const s = new MagicString(code);
+			const regex = /\bfx\$\d+\b/g;
+			let match;
+			while ((match = regex.exec(code)) !== null) {
+				s.overwrite(match.index, match.index + match[0].length, 'fx');
+			}
+			return {
+				code: s.toString(),
+				map: s.generateMap({hires: true})
+			};
+		}
+	};
+}
+
+const restoreNamesPlugin = [restoreNames()];
 
 export default [
 	{
@@ -13,7 +34,8 @@ export default [
 				format: 'iife',
 				name: 'fuxcel',
 				exports: 'named',
-				sourcemap: true
+				sourcemap: true,
+				plugins: restoreNamesPlugin
 			},
 			// Minified build
 			{
@@ -22,7 +44,7 @@ export default [
 				name: 'fuxcel',
 				sourcemap: true,
 				exports: 'named',
-				plugins: [terser()]
+				plugins: [restoreNames(), terser()]
 			},
 			// CommonJS Build
 			{
@@ -30,13 +52,15 @@ export default [
 				format: 'cjs',
 				exports: 'named',
 				sourcemap: true,
+				plugins: restoreNamesPlugin
 			},
 			// ES Module build
 			{
 				file: 'dist/js/fuxcel.esm.js',
 				format: 'es',
 				exports: 'named',
-				sourcemap: true
+				sourcemap: true,
+				plugins: restoreNamesPlugin
 			}
 		],
 		plugins: [

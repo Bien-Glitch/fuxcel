@@ -72,9 +72,7 @@ export const fxFetch = function ({
 			try {
 				// @ts-ignore
 				const consumed = response[dataType]();
-				return (consumed && (responseData.ok || (status > 199 && status < 300) || allowedErrorStatuses.has(status)))
-					? consumed
-					: Promise.reject(response);
+				return (consumed && (responseData.ok || (status > 199 && status < 300) || allowedErrorStatuses.has(status))) ? consumed : Promise.reject(response);
 			} catch (e) {
 				return Promise.reject(e);
 			}

@@ -35,9 +35,13 @@
     "@rollup/plugin-typescript": "^12.3.0",
     "@types/node": "^25.5.0",
     "esbuild": "^0.25.4",
+    "magic-string": "^0.30.21",
     "rollup": "^4.60.1",
     "rollup-plugin-dts": "^6.4.1",
     "tslib": "^2.8.1",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "regexpp": "^3.2.0"
   }
 }
