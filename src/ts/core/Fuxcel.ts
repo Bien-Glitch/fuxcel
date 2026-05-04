@@ -1462,6 +1462,8 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @example
 	 * fx('#container').insertNode('<p>Hello</p>');
 	 * fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')]);
+	 *
+	 * @since 2.0.0
 	 */
 	insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]): this;
 	/**
@@ -1654,6 +1656,10 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @example
 	 * // Chainable
 	 * fx('#container').insertHTML('<p>Hello</p>').addClass('loaded');
+	 *
+	 * @deprecated The `position` option has changed from `affix`,`prefix`,`suffix`,`postfix` to `before`,`prepend`,`append`,`after` been moved to a direct parameter.
+	 * Use {@link InsertPositions} with the new signature instead.
+	 * @see {@link InsertPositions}
 	 */
 	insertHTML(value: string): Fuxcel;
 	/**
@@ -1724,6 +1730,10 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @example
 	 * // Chainable
 	 * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
+	 *
+	 * @deprecated The `position` option has changed from `affix`,`prefix`,`suffix`,`postfix` to `before`,`prepend`,`append`,`after` been moved to a direct parameter.
+	 * Use {@link InsertPositions} with the new signature instead.
+	 * @see {@link InsertPositions}
 	 */
 	insertHTML(value: string, position: InsertPositions | null = null): this {
 		const selected = this.toArray as HTMLElement[];

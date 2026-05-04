@@ -1318,6 +1318,8 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      * @example
      * fx('#container').insertNode('<p>Hello</p>');
      * fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')]);
+     *
+     * @since 2.0.0
      */
     insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]): this;
     /**
@@ -1412,6 +1414,10 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      * @example
      * // Chainable
      * fx('#container').insertHTML('<p>Hello</p>').addClass('loaded');
+     *
+     * @deprecated The `position` option has changed from `affix`,`prefix`,`suffix`,`postfix` to `before`,`prepend`,`append`,`after` been moved to a direct parameter.
+     * Use {@link InsertPositions} with the new signature instead.
+     * @see {@link InsertPositions}
      */
     insertHTML(value: string): Fuxcel;
     /**
@@ -1884,6 +1890,12 @@ type FXFormResponse = {
     /** Text Object returned from the request **/ text?: string;
     /** The request's HTTP response status **/ status: number;
     /** FuxcelValidator instance of the submitted form **/ form: FuxcelValidator;
+};
+type FXPageNavigateOptions = {
+    url?: string | null;
+    selector?: string | null;
+    dataType?: 'json' | 'text';
+    replace?: boolean;
 };
 interface ResponseData extends Response {
     ok: boolean;
@@ -2984,6 +2996,10 @@ interface FuxcelInstance {
      * @example
      * // Chainable
      * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
+     *
+     * @deprecated The `position` option has changed from `affix`,`prefix`,`suffix`,`postfix` to `before`,`prepend`,`append`,`after` been moved to a direct parameter.
+     * Use {@link InsertPositions} with the new signature instead.
+     * @see {@link InsertPositions}
      */
     insertHTML(value: string, position: InsertPositions): Fuxcel;
     /**
@@ -3019,6 +3035,11 @@ interface FuxcelInstance {
      * @example
      * // Chainable
      * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
+     *
+     *
+     * @deprecated The `position` option has changed from `affix`,`prefix`,`suffix`,`postfix` to `before`,`prepend`,`append`,`after` been moved to a direct parameter.
+     * Use {@link InsertPositions} with the new signature instead.
+     * @see {@link InsertPositions}
      */
     insertHTML(value: string, position?: InsertPositions): Fuxcel;
     /**
@@ -3807,85 +3828,789 @@ interface FuxcelModalConstructor {
     init(options: ModalInit): HTMLElement;
 }
 /**
- * Fetches a page resource using a custom `fx.fetch` method if available,
- * otherwise falls back to the native `fetch` API.
+ * Type definition for the page fetching function interface.
+ *
+ * Defines the contract for a function that fetches page resources using either
+ * a custom HTTP client (`fx.fetch`) or the native Fetch API as a fallback.
+ * This interface is implemented by the `fxFetchPage` function.
+ *
+ * The function is designed for AJAX-based page navigation in single-page applications (SPAs)
+ * and supports both JSON and plain text responses. It provides a unified API regardless
+ * of which underlying fetch mechanism is used.
+ *
+ * @interface FxFetchPage
+ * @category HTTP Client
+ * @category Page Navigation
+ *
+ * @example
+ * // Implementing the interface
+ * const myFetchPage: FxFetchPage = (url, dataType, beforeSend?) => {
+ *   // Implementation that returns Promise<string>
+ *   return fetch(url).then(r => r.text());
+ * };
+ *
+ * @example
+ * // Using the interface as a type guard
+ * function isFetchPageFunction(fn: any): fn is FxFetchPage {
+ *   return typeof fn === 'function' && fn.length >= 2;
+ * }
+ *
+ * @see {@link fxFetchPage} - Implementation of this interface
+ * @see {@link FxPageNavigate} - Related navigation interface
+ * @since 2.0.0
  */
 interface FxFetchPage {
     /**
-     * Fetches a URL expecting a **text response**.
+     * Fetches a URL and returns the response as a text string.
      *
-     * @param url - The URL to request.
-     * @param dataType - Must be `'text'`.
-     * @param beforeSend - Optional callback executed before the request is sent.
-     * @returns A promise that resolves with the response text.
+     * This overload expects a **text response** and is typically used for fetching
+     * HTML pages, plain text files, or any content that should be returned as-is
+     * without parsing.
+     *
+     * @param {string} url - The URL to request. Must be a valid absolute or relative URL.
+     * @param {"text"} dataType - Must be the literal string `"text"` for this overload.
+     *   Indicates that the response should be treated as plain text.
+     * @param {(() => void) | null} [beforeSend] - Optional callback executed immediately
+     *   before the HTTP request is sent. Useful for:
+     *   - Starting loading indicators
+     *   - Showing progress bars
+     *   - Logging request initiation
+     *   - Setting up request state
+     *
+     * @returns {Promise<string>} A Promise that resolves with the response body as a string.
+     *   The Promise will reject if the request fails due to network errors, timeouts,
+     *   or HTTP error status codes.
+     *
+     * @throws {Error} Network errors, timeouts, or HTTP error responses
+     *
+     * @example
+     * // Fetch HTML page
+     * const fetchPage: FxFetchPage = fxFetchPage;
+     *
+     * fetchPage('/about.html', 'text')
+     *   .then(html => {
+     *     document.getElementById('content').innerHTML = html;
+     *   })
+     *   .catch(err => console.error('Failed to load page:', err));
+     *
+     * @example
+     * // With beforeSend callback
+     * fetchPage('/page.html', 'text', () => {
+     *   console.log('Fetching page...');
+     *   showLoadingSpinner();
+     * }).then(html => {
+     *   hideLoadingSpinner();
+     *   renderPage(html);
+     * });
+     *
+     * @example
+     * // Using async/await
+     * async function loadAboutPage() {
+     *   const html = await fetchPage('/about', 'text', () => {
+     *     fxPageLoader.start();
+     *   });
+     *   document.body.innerHTML = html;
+     *   fxPageLoader.finish();
+     * }
      */
     (url: string, dataType: 'text', beforeSend?: (() => void) | null): Promise<string>;
     /**
-     * Fetches a URL expecting a **JSON response** (returned as string).
+     * Fetches a URL and returns the response as a JSON string (unparsed).
      *
-     * @param url - The URL to request.
-     * @param dataType - Must be `'json'`.
-     * @param beforeSend - Optional callback executed before the request is sent.
-     * @returns A promise that resolves with the raw JSON string.
+     * This overload expects a **JSON response** but returns it as a string rather
+     * than parsing it automatically. This gives the caller control over when and how
+     * to parse the JSON, useful for error handling or custom parsing logic.
+     *
+     * **Important:** The response is NOT automatically parsed into a JavaScript object.
+     * You must call `JSON.parse()` on the returned string to get the object.
+     *
+     * @param {string} url - The URL to request. Should point to a JSON endpoint or file.
+     * @param {"json"} dataType - Must be the literal string `"json"` for this overload.
+     *   Indicates that the response is expected to be valid JSON (though it's returned unparsed).
+     * @param {(() => void) | null} [beforeSend] - Optional callback executed immediately
+     *   before the HTTP request is sent. Useful for:
+     *   - Starting loading indicators
+     *   - Logging API calls
+     *   - Analytics tracking
+     *   - Request state management
+     *
+     * @returns {Promise<string>} A Promise that resolves with the raw JSON response as a string.
+     *   **The JSON is NOT parsed** - you must parse it yourself using `JSON.parse()`.
+     *   The Promise will reject if the request fails.
+     *
+     * @throws {Error} Network errors, timeouts, or HTTP error responses
+     *
+     * @example
+     * // Fetch and parse JSON
+     * const fetchPage: FxFetchPage = fxFetchPage;
+     *
+     * fetchPage('/api/users.json', 'json')
+     *   .then(jsonString => {
+     *     const users = JSON.parse(jsonString);
+     *     console.log(users);
+     *   })
+     *   .catch(err => console.error('Failed to load users:', err));
+     *
+     * @example
+     * // With error handling for invalid JSON
+     * fetchPage('/api/data.json', 'json', () => {
+     *   console.log('Fetching data...');
+     * })
+     *   .then(jsonString => {
+     *     try {
+     *       const data = JSON.parse(jsonString);
+     *       return data;
+     *     } catch (parseError) {
+     *       console.error('Invalid JSON:', parseError);
+     *       throw new Error('Server returned invalid JSON');
+     *     }
+     *   })
+     *   .then(data => updateUI(data));
+     *
+     * @example
+     * // Using async/await with custom parsing
+     * async function loadUserData() {
+     *   try {
+     *     const jsonString = await fetchPage('/api/user', 'json', () => {
+     *       showLoader();
+     *     });
+     *
+     *     const userData = JSON.parse(jsonString);
+     *
+     *     if (!userData.id) {
+     *       throw new Error('Invalid user data');
+     *     }
+     *
+     *     return userData;
+     *   } catch (error) {
+     *     console.error('Failed to load user:', error);
+     *     return null;
+     *   } finally {
+     *     hideLoader();
+     *   }
+     * }
      *
      * @remarks
-     * The response is not parsed automatically.
+     * **Why return unparsed JSON?**
+     * - Allows custom error handling for parsing errors
+     * - Gives caller control over parsing (e.g., using reviver function)
+     * - Consistent return type with 'text' dataType
+     * - Avoids double-parsing if response needs to be stored as string
      */
     (url: string, dataType: 'json', beforeSend?: (() => void) | null): Promise<string>;
     /**
-     * Fetches a URL expecting a **JSON response** (returned as string).
+     * Fetches a URL with the specified data type and optional beforeSend callback.
      *
-     * @param url - The URL to request.
-     * @param dataType {'json' | 'text'}.
-     * @param beforeSend - Optional callback executed before the request is sent.
-     * @returns A promise that resolves with the raw JSON string.
+     * This is the unified signature that encompasses both the 'text' and 'json' overloads.
+     * It provides maximum flexibility by accepting either data type and always returning
+     * the raw response string.
+     *
+     * This signature is particularly useful for:
+     * - Generic wrapper functions
+     * - Dynamic data type selection
+     * - Type-safe implementations
+     * - Library integration
+     *
+     * @param {string} url - The URL of the resource to fetch. Can be absolute or relative.
+     * @param {"json" | "text"} dataType - The expected response format:
+     *   - `"json"` - Response is expected to be JSON (returned as unparsed string)
+     *   - `"text"` - Response is expected to be plain text/HTML
+     * @param {(() => void) | null} [beforeSend] - Optional callback invoked immediately
+     *   before the request starts. Can be `null`, `undefined`, or a function.
+     *
+     * @returns {Promise<string>} A Promise that resolves with the response content as a string.
+     *   For JSON responses, the string contains unparsed JSON that must be parsed separately.
+     *   For text responses, the string contains the raw text content.
+     *
+     * @throws {Error} Rejects with error for network failures, timeouts, or HTTP errors
+     *
+     * @example
+     * // Dynamic data type based on file extension
+     * function smartFetch(url: string) {
+     *   const dataType = url.endsWith('.json') ? 'json' : 'text';
+     *   return fxFetchPage(url, dataType, () => {
+     *     console.log(`Fetching ${dataType} from ${url}`);
+     *   });
+     * }
+     *
+     * @example
+     * // Generic wrapper with logging
+     * async function fetchWithLogging(
+     *   url: string,
+     *   type: 'json' | 'text'
+     * ): Promise<string> {
+     *   const startTime = Date.now();
+     *
+     *   const content = await fxFetchPage(url, type, () => {
+     *     console.log(`Starting fetch: ${url}`);
+     *   });
+     *
+     *   const duration = Date.now() - startTime;
+     *   console.log(`Fetch completed in ${duration}ms`);
+     *
+     *   return content;
+     * }
+     *
+     * @example
+     * // Type-safe implementation
+     * class PageLoader {
+     *   private fetcher: FxFetchPage;
+     *
+     *   constructor(fetcher: FxFetchPage) {
+     *     this.fetcher = fetcher;
+     *   }
+     *
+     *   async loadPage(url: string): Promise<string> {
+     *     return this.fetcher(url, 'text', () => {
+     *       this.showSpinner();
+     *     });
+     *   }
+     *
+     *   async loadData(url: string): Promise<any> {
+     *     const jsonString = await this.fetcher(url, 'json', () => {
+     *       this.showSpinner();
+     *     });
+     *     return JSON.parse(jsonString);
+     *   }
+     *
+     *   private showSpinner() {
+     *     // Show loading indicator
+     *   }
+     * }
      *
      * @remarks
-     * The response is not parsed automatically.
+     * **Implementation Notes:**
+     * - The function MUST support both 'json' and 'text' data types
+     * - The beforeSend callback MUST be optional and nullable
+     * - The return value MUST always be a Promise<string>
+     * - JSON responses MUST NOT be automatically parsed
+     * - The function SHOULD add appropriate headers (e.g., X-Requested-With)
+     * - The function SHOULD handle both successful and error responses
+     *
+     * **Type Safety:**
+     * - TypeScript will enforce that dataType is either 'json' or 'text'
+     * - The beforeSend parameter accepts undefined, null, or a function
+     * - Return type is always Promise<string> regardless of dataType
+     *
+     * @see {@link fxFetchPage} - Standard implementation
      */
     (url: string, dataType: 'json' | 'text', beforeSend?: (() => void) | null): Promise<string>;
 }
 /**
- * Controls a top progress bar used during page navigation/loading.
+ * Type definition for the page loader interface.
+ *
+ * Defines the contract for an object that controls a top progress bar for visual
+ * feedback during asynchronous operations, particularly page navigation and AJAX requests.
+ * This interface is implemented by the `fxPageLoader` object.
+ *
+ * The loader provides a YouTube/Medium-style thin progress bar that appears at the
+ * top of the viewport, animates from 0% to 100%, and automatically fades out when
+ * the operation completes. It's designed to give users immediate visual feedback
+ * that something is happening.
+ *
+ * @interface FxPageLoader
+ * @category UI Components
+ * @category Loading States
+ * @category User Feedback
+ *
+ * @example
+ * // Implementing the interface
+ * const myLoader: FxPageLoader = {
+ *   start() {
+ *     // Show progress bar
+ *   },
+ *   finish() {
+ *     // Hide progress bar
+ *   }
+ * };
+ *
+ * @example
+ * // Type guard for loader objects
+ * function isPageLoader(obj: any): obj is FxPageLoader {
+ *   return obj && typeof obj.start === 'function' && typeof obj.finish === 'function';
+ * }
+ *
+ * @example
+ * // Using as a type for dependency injection
+ * class PageManager {
+ *   constructor(private loader: FxPageLoader) {}
+ *
+ *   async loadPage(url: string) {
+ *     this.loader.start();
+ *     try {
+ *       const content = await fetch(url);
+ *       return content;
+ *     } finally {
+ *       this.loader.finish();
+ *     }
+ *   }
+ * }
+ *
+ * @see {@link fxPageLoader} - Implementation of this interface
+ * @see {@link FxPageNavigate} - Often used together with page navigation
+ * @see {@link FxFetchPage} - Often used together with page fetching
+ * @since 2.0.0
  */
 interface FxPageLoader {
     /**
-     * Starts the progress bar animation.
+     * Starts the page loading progress bar animation.
+     *
+     * Creates and displays a fixed progress bar at the top of the viewport, then
+     * animates it from 0% to approximately 90% width using randomized increments.
+     * The animation continues until `finish()` is called, providing ongoing visual
+     * feedback to the user that an operation is in progress.
+     *
+     * **Key Behaviors:**
+     * - Creates progress bar element on first call (reused for subsequent calls)
+     * - Starts at 10% width for immediate visual feedback
+     * - Increments randomly to 90% (never reaches 100% until finish() is called)
+     * - Updates every 200ms for smooth, realistic progress feel
+     * - Safe to call multiple times (will reset existing bar)
+     *
+     * @function
+     * @memberof FxPageLoader
+     *
+     * @returns {void} This method does not return a value.
+     *
+     * @example
+     * // Basic usage
+     * const loader: FxPageLoader = fxPageLoader;
+     *
+     * loader.start();
+     * fetch('/api/data')
+     *   .then(response => response.json())
+     *   .then(data => console.log(data))
+     *   .finally(() => loader.finish());
+     *
+     * @example
+     * // With async/await
+     * async function loadData() {
+     *   const loader: FxPageLoader = fxPageLoader;
+     *   loader.start();
+     *
+     *   try {
+     *     const data = await fetchData();
+     *     return data;
+     *   } finally {
+     *     loader.finish();  // Always called, even on error
+     *   }
+     * }
+     *
+     * @example
+     * // Multiple concurrent operations
+     * const loader: FxPageLoader = fxPageLoader;
+     * loader.start();
+     *
+     * Promise.all([
+     *   fetch('/api/users'),
+     *   fetch('/api/posts'),
+     *   fetch('/api/comments')
+     * ]).finally(() => {
+     *   loader.finish();
+     * });
+     *
+     * @example
+     * // Integration with page navigation
+     * fxFetchPage('/page.html', 'text', fxPageLoader.start)
+     *   .then(html => {
+     *     document.body.innerHTML = html;
+     *     fxPageLoader.finish();
+     *   });
+     *
+     * @remarks
+     * **Visual Specifications:**
+     * - Position: Fixed at top of viewport (top: 0, left: 0)
+     * - Height: 5px
+     * - Color: #4f46e5 (Indigo 600)
+     * - Z-index: 99999 (appears above all content)
+     * - Transition: 0.2s ease for width, 0.3s ease for opacity
+     *
+     * **Animation Behavior:**
+     * - Initial width: 10% (immediate visual feedback)
+     * - Update interval: 200ms
+     * - Increment: Random 0-10% per update
+     * - Maximum width: 90% (caps at 90 until finish() called)
+     * - Never completes automatically (requires finish() call)
+     *
+     * **Implementation Details:**
+     * - Creates `<div id="fx-progress">` element
+     * - Appends to document.body
+     * - Uses setInterval for animation loop
+     * - Stores interval ID for cleanup in finish()
+     * - Element persists and is reused across calls
+     *
+     * **Performance:**
+     * - Lightweight (single DOM element)
+     * - Hardware-accelerated CSS transitions
+     * - Efficient interval-based animation
+     * - Minimal JavaScript execution
+     *
+     * **Best Practices:**
+     * - Always pair with finish() call
+     * - Use try/finally to ensure finish() is called
+     * - Safe to call start() multiple times
+     * - Don't rely on animation reaching 100% (it won't)
+     *
+     * @see {@link FxPageLoader.finish} - Completes and hides the progress bar
      */
     start(): void;
     /**
-     * Completes and hides the progress bar.
+     * Completes the page loading progress bar animation and hides it.
+     *
+     * Immediately sets the progress bar to 100% width to show completion, then
+     * fades it out and resets it after a brief delay. Also clears the animation
+     * interval started by `start()` to prevent memory leaks and unnecessary processing.
+     *
+     * **Key Behaviors:**
+     * - Clears animation interval immediately
+     * - Jumps to 100% width for completion visual
+     * - Waits 300ms at 100% (allows user to see completion)
+     * - Fades out via opacity transition
+     * - Resets to 0% width (ready for next use)
+     * - Safe to call even if start() was never called
+     * - Safe to call multiple times (idempotent)
+     *
+     * @function
+     * @memberof FxPageLoader
+     *
+     * @returns {void} This method does not return a value.
+     *
+     * @example
+     * // Basic usage
+     * const loader: FxPageLoader = fxPageLoader;
+     *
+     * loader.start();
+     * fetch('/api/data')
+     *   .then(response => response.json())
+     *   .then(data => console.log(data))
+     *   .catch(err => console.error(err))
+     *   .finally(() => loader.finish());  // Always called
+     *
+     * @example
+     * // Guaranteed cleanup with try/finally
+     * async function loadPage() {
+     *   const loader: FxPageLoader = fxPageLoader;
+     *   loader.start();
+     *
+     *   try {
+     *     const html = await fxFetchPage('/page.html', 'text');
+     *     document.body.innerHTML = html;
+     *   } catch (error) {
+     *     console.error('Load failed:', error);
+     *   } finally {
+     *     loader.finish();  // Ensures cleanup even on error
+     *   }
+     * }
+     *
+     * @example
+     * // Multiple operations with single loader
+     * const loader: FxPageLoader = fxPageLoader;
+     * loader.start();
+     *
+     * Promise.allSettled([
+     *   fetch('/api/users'),
+     *   fetch('/api/posts'),
+     *   fetch('/api/comments')
+     * ]).then(results => {
+     *   results.forEach(result => {
+     *     if (result.status === 'fulfilled') {
+     *       console.log('Success:', result.value);
+     *     } else {
+     *       console.error('Failed:', result.reason);
+     *     }
+     *   });
+     * }).finally(() => {
+     *   loader.finish();
+     * });
+     *
+     * @example
+     * // Safe to call without prior start()
+     * const loader: FxPageLoader = fxPageLoader;
+     * loader.finish();  // Does nothing if bar not started
+     *
+     * @example
+     * // Integration with custom error handling
+     * class DataLoader {
+     *   private loader: FxPageLoader;
+     *
+     *   constructor(loader: FxPageLoader) {
+     *     this.loader = loader;
+     *   }
+     *
+     *   async load(url: string) {
+     *     this.loader.start();
+     *
+     *     try {
+     *       const response = await fetch(url);
+     *       if (!response.ok) throw new Error('HTTP error');
+     *       return await response.json();
+     *     } catch (error) {
+     *       this.handleError(error);
+     *       throw error;
+     *     } finally {
+     *       this.loader.finish();  // Always cleanup
+     *     }
+     *   }
+     *
+     *   private handleError(error: any) {
+     *     console.error('Load error:', error);
+     *   }
+     * }
+     *
+     * @remarks
+     * **Animation Sequence:**
+     * 1. Interval cleared (stops width animation)
+     * 2. Width set to 100% (~200ms CSS transition)
+     * 3. 300ms delay at 100% width
+     * 4. Opacity set to 0 (~300ms CSS transition)
+     * 5. Width reset to 0% (no visual impact, already invisible)
+     *
+     * **Timing Breakdown:**
+     * - Transition to 100%: ~200ms
+     * - Pause at completion: 300ms
+     * - Fade out duration: ~300ms
+     * - Total time: ~800ms from finish() to fully hidden
+     *
+     * **Memory Management:**
+     * - Clears interval timer to prevent leaks
+     * - Progress bar element remains in DOM (reused)
+     * - No event listeners to clean up
+     * - Minimal memory footprint
+     *
+     * **Edge Cases:**
+     * - If progressBar is null: Returns immediately (no-op)
+     * - If start() never called: Returns immediately (no-op)
+     * - Multiple calls: Safe, resets fade-out timer
+     * - Called during fade-out: Resets animation state
+     *
+     * **Visual Behavior:**
+     * - Immediate jump to 100% (no gradual animation)
+     * - Brief pause at 100% (satisfying completion visual)
+     * - Smooth fade out (opacity transition)
+     * - Invisible reset to 0% (preparation for next use)
+     *
+     * **Best Practices:**
+     * - Always use try/finally blocks
+     * - Call in Promise.finally() for safety
+     * - Don't assume timing (use events if needed)
+     * - Safe to call multiple times
+     * - No need to check if started
+     *
+     * @see {@link FxPageLoader.start} - Starts the progress bar
      */
     finish(): void;
 }
 /**
- * Navigates to a new page using AJAX and updates browser history.
+ * Interface for the `fxPageNavigate` function that enables SPA-style navigation
+ * by fetching page content via AJAX, updating the browser history, and injecting
+ * the fetched content into a specified DOM container — with automatic fallback to
+ * hard navigation on failure.
+ *
+ * ---
+ *
+ * **Navigation Flow:**
+ * 1. Validates the URL — rejects if `null` or same as current location
+ * 2. Starts the page loader via `fxPageLoader.start`
+ * 3. Fetches the new page content via `fxFetchPage`
+ * 4. Adds `fx-leaving` class to `<html>` for transition animations
+ * 5. Updates browser history via `pushState` or `replaceState`
+ * 6. Injects fetched content into the target DOM container
+ * 7. Dispatches `fxPageNavigateReady` event on `document`
+ * 8. Resolves with the fetched HTML string
+ *
+ * ---
+ *
+ * **On Failure:**
+ * - Logs the error to the console
+ * - Calls `fxPageLoader.finish()` to hide the loading indicator
+ * - Removes the `fx-leaving` class from `<html>`
+ * - Falls back to hard navigation via `window.location.href`
+ * - Rejects the Promise with the error
+ *
+ * ---
+ *
+ * **CSS Classes:**
+ * - `fx-leaving` — added to `<html>` during navigation, removed on completion or failure.
+ *   Use this class to drive page transition animations.
+ *
+ * ---
+ *
+ * **History Management:**
+ * - `pushState` _(default)_ — creates a new history entry, preserving back-button navigation
+ * - `replaceState` — replaces the current history entry, useful for redirects or tab-like navigation
+ *
+ * ---
+ *
+ * @fires document#fxPageNavigateReady - Dispatched on `document` when navigation completes
+ *   and new content has been injected into the DOM. Use this to re-initialize components,
+ *   bind event listeners, or run scripts that depend on the new page content.
+ *
+ * @see {@link FXPageNavigateOptions} - Options type definition
+ * @see {@link fxFetchPage} - Page fetching function used internally
+ * @see {@link fxPageLoader} - Page loading indicator
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/History_API | History API}
+ * @since 2.0.0
  */
 interface FxPageNavigate {
     /**
-     * Navigate and push a new history entry.
-     */
-    (options: {
-        url: string;
-        dataType?: 'json' | 'text';
-        replace?: false;
-    }): Promise<string>;
-    /**
-     * Navigate and replace the current history entry.
-     */
-    (options: {
-        url: string;
-        dataType?: 'json' | 'text';
-        replace: true;
-    }): Promise<string>;
-    /**
-     * Navigation with optional URL (may reject).
+     * Navigate to a new URL using the default `'json'` response type and `pushState` history mode.
+     *
+     * Fetches the page content at the given URL, updates the browser history with a new entry,
+     * and injects the response into `'#root'` — the default container selector.
+     *
+     * Rejects immediately if `url` is `null` or matches the current location.
+     *
+     * @param options.url {string | null} The URL to navigate to.
+     * @returns {Promise<string>} Resolves with the fetched HTML string on success.
+     *
+     * @throws {string} Rejects with an empty string if `url` is `null` or matches the current location.
+     * @throws {Error} Rejects with the error object if the AJAX fetch fails.
+     *
+     * @example
+     * // Minimal — navigates to /about, injects into #root, uses json, pushState
+     * fxPageNavigate({ url: '/about' })
+     *   .then(html => console.log('Done'))
+     *   .catch(err => console.error(err));
      */
     (options: {
         url?: string | null;
-        dataType?: 'json' | 'text';
-        replace?: boolean;
     }): Promise<string>;
+    /**
+     * Navigate to a new URL and inject the fetched content into a specific DOM container.
+     *
+     * Fetches the page at the given URL and injects the response into the element
+     * matching `selector`. Uses `'json'` as the default response type and `pushState`
+     * as the default history mode.
+     *
+     * Rejects immediately if `url` is `null` or matches the current location.
+     *
+     * @param options.url {string | null} The URL to navigate to.
+     * @param options.selector {string | null} CSS selector of the DOM element to inject content into.
+     *   Defaults to `'#root'` if not specified or `null`.
+     * @returns {Promise<string>} Resolves with the fetched HTML string on success.
+     *
+     * @throws {string} Rejects with an empty string if `url` is `null` or matches the current location.
+     * @throws {Error} Rejects with the error object if the AJAX fetch fails.
+     *
+     * @example
+     * // Navigate and inject into a custom container
+     * fxPageNavigate({ url: '/about', selector: '#main-content' })
+     *   .then(html => console.log('Injected into #main-content'))
+     *   .catch(err => console.error(err));
+     */
+    (options: {
+        url?: string | null;
+        selector?: string | null;
+    }): Promise<string>;
+    /**
+     * Navigate to a new URL, inject content into a specific container, and specify the response type.
+     *
+     * Fetches the page at the given URL, processes the response according to `dataType`,
+     * and injects it into the element matching `selector`. Uses `pushState` as the
+     * default history mode.
+     *
+     * Rejects immediately if `url` is `null` or matches the current location.
+     *
+     * @param options.url {string | null} The URL to navigate to.
+     * @param options.selector {string | null} CSS selector of the DOM element to inject content into.
+     *   Defaults to `'#root'` if not specified or `null`.
+     * @param options.dataType {"json" | "text"} Expected response type. Determines how the
+     *   response is processed before injection:
+     *   - `'json'` — Response treated as JSON _(default)_
+     *   - `'text'` — Response treated as plain text/HTML
+     * @returns {Promise<string>} Resolves with the fetched HTML string on success.
+     *
+     * @throws {string} Rejects with an empty string if `url` is `null` or matches the current location.
+     * @throws {Error} Rejects with the error object if the AJAX fetch fails.
+     *
+     * @example
+     * // Navigate with text/HTML response type
+     * fxPageNavigate({ url: '/about', selector: '#main-content', dataType: 'text' })
+     *   .then(html => console.log('Done'))
+     *   .catch(err => console.error(err));
+     *
+     * @example
+     * // Navigate with JSON response and post-processing
+     * fxPageNavigate({ url: '/api/page', selector: '#content', dataType: 'json' })
+     *   .then(jsonString => {
+     *     const data = JSON.parse(jsonString);
+     *     updateMetaTags(data.meta);
+     *     setPageTitle(data.title);
+     *   });
+     */
+    (options: {
+        url?: string | null;
+        selector?: string | null;
+        dataType?: 'json' | 'text';
+    }): Promise<string>;
+    /**
+     * Navigate to a new URL with full control over the container, response type, and history mode.
+     *
+     * Fetches the page at the given URL, processes the response according to `dataType`,
+     * injects it into the element matching `selector`, and updates the browser history
+     * using either `pushState` or `replaceState` based on the `replace` flag.
+     *
+     * Rejects immediately if `url` is `null` or matches the current location.
+     *
+     * @param options {FXPageNavigateOptions} Full configuration object for the navigation.
+     * @param options.url {string | null} The URL to navigate to.
+     * @param options.selector {string | null} CSS selector of the DOM element to inject content into.
+     *   Defaults to `'#root'` if not specified or `null`.
+     * @param options.dataType {"json" | "text"} Expected response type. Defaults to `'json'`.
+     *   - `'json'` — Response treated as JSON
+     *   - `'text'` — Response treated as plain text/HTML
+     * @param options.replace {boolean} Whether to replace the current history entry instead of
+     *   creating a new one. Defaults to `false`.
+     *   - `false` — Uses `history.pushState()` — user can navigate back _(default)_
+     *   - `true` — Uses `history.replaceState()` — useful for redirects or tab-like navigation
+     * @returns {Promise<string>} Resolves with the fetched HTML string on success.
+     *
+     * @throws {string} Rejects with an empty string if `url` is `null` or matches the current location.
+     * @throws {Error} Rejects with the error object if the AJAX fetch fails.
+     *
+     * @example
+     * // Full options — replace history entry, text response
+     * fxPageNavigate({
+     *   url: '/dashboard',
+     *   selector: '#app',
+     *   dataType: 'text',
+     *   replace: true
+     * })
+     *   .then(html => console.log('Redirected'))
+     *   .catch(err => console.error(err));
+     *
+     * @example
+     * // Full options — push history entry, json response
+     * fxPageNavigate({
+     *   url: '/profile',
+     *   selector: '#main',
+     *   dataType: 'json',
+     *   replace: false
+     * }).then(jsonString => {
+     *   const data = JSON.parse(jsonString);
+     *   setPageTitle(data.title);
+     * });
+     *
+     * @example
+     * // async/await with full options
+     * async function navigate(url: string) {
+     *   try {
+     *     await fxPageNavigate({ url, selector: '#app', dataType: 'text', replace: false });
+     *     window.scrollTo(0, 0);
+     *     trackPageView(url);
+     *   } catch (error) {
+     *     console.error('Navigation error:', error);
+     *   }
+     * }
+     *
+     * @example
+     * // Listen for navigation ready event to re-initialize components
+     * document.addEventListener('fxPageNavigateReady', () => {
+     *   initializeComponents();
+     *   window.scrollTo(0, 0);
+     * });
+     */
+    (options: FXPageNavigateOptions): Promise<string>;
 }
 /**
  * The full type of the fx / fuxcel selector function,
@@ -4034,4 +4759,4 @@ declare global {
     }
 }
 
-export type { CustomEventType, Direction, EventInterfaces, ExtractedRule, FXAnimation, FXAnimationOptions, FXAnimationReturn, FXAnimationType, FXFormResponse, FXFormSubmitType, FXInterface, FXModalType, FXRequestType, FieldAttributes, FormValidationRegistryBag, FuxcelConstructor, FuxcelInstance, FuxcelModalConstructor, FuxcelModalInstance, FuxcelStepsConstructor, FuxcelStepsInstance, FuxcelValidatorConstructor, FuxcelValidatorInstance, FxFetchPage, FxPageLoader, FxPageNavigate, HTMLElementWithListenerArray, HTMLListenerArray, HTTPRequestMethod, InsertPositions, IterableElement, ModalInit, ResponseData, Selector, SingleElement, Strength, StrengthResult, StringOrNull, ValidationProps, ValidatorConfigObject };
+export type { CustomEventType, Direction, EventInterfaces, ExtractedRule, FXAnimation, FXAnimationOptions, FXAnimationReturn, FXAnimationType, FXFormResponse, FXFormSubmitType, FXInterface, FXModalType, FXPageNavigateOptions, FXRequestType, FieldAttributes, FormValidationRegistryBag, FuxcelConstructor, FuxcelInstance, FuxcelModalConstructor, FuxcelModalInstance, FuxcelStepsConstructor, FuxcelStepsInstance, FuxcelValidatorConstructor, FuxcelValidatorInstance, FxFetchPage, FxPageLoader, FxPageNavigate, HTMLElementWithListenerArray, HTMLListenerArray, HTTPRequestMethod, InsertPositions, IterableElement, ModalInit, ResponseData, Selector, SingleElement, Strength, StrengthResult, StringOrNull, ValidationProps, ValidatorConfigObject };

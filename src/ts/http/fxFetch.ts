@@ -63,36 +63,32 @@ export const fxFetch = function ({
 		body: <BodyInit | null>data,
 		headers: <Headers><unknown>defaultHeaders,
 		signal: controller.signal,
-	})
-		.then(response => {
-			responseData = response as ResponseData;
-			status = responseData.status;
-			statusText = responseData.statusText;
-			
-			try {
-				// @ts-ignore
-				const consumed = response[dataType]();
-				return (consumed && (responseData.ok || (status > 199 && status < 300) || allowedErrorStatuses.has(status))) ? consumed : Promise.reject(response);
-			} catch (e) {
-				return Promise.reject(e);
-			}
-		})
-		.then(parsedData => {
-			responseData.responseJSON = dataType === 'json' && parsedData;
-			responseData.responseText = dataType === 'json'
-				? JSON.stringify(parsedData)
-				: (dataType === 'text' && parsedData);
-			
-			onComplete && isFunction(onComplete) && onComplete(responseData, status, statusText);
-			status > 199 && status < 300 && onSuccess && isFunction(onSuccess) && onSuccess(responseData, status, statusText);
-		})
-		.catch(error => {
-			isFunction(onError) && (error.name === 'AbortError'
-				? (<Function>onError)(
-					new TimeoutError(`⏰ Request timed out\r\nSet Timeout:${(timeout as number) / 1000}s`),
-					408, 'timeout'
-				)
-				: (<Function>onError)(error, status, statusText));
-		})
-		.finally(() => clearTimeout(timeoutID));
+	}).then(response => {
+		responseData = response as ResponseData;
+		status = responseData.status;
+		statusText = responseData.statusText;
+		
+		try {
+			// @ts-ignore
+			const consumed = response[dataType]();
+			return (consumed && (responseData.ok || (status > 199 && status < 300) || allowedErrorStatuses.has(status))) ? consumed : Promise.reject(response);
+		} catch (e) {
+			return Promise.reject(e);
+		}
+	}).then(parsedData => {
+		responseData.responseJSON = dataType === 'json' && parsedData;
+		responseData.responseText = dataType === 'json'
+			? JSON.stringify(parsedData)
+			: (dataType === 'text' && parsedData);
+		
+		onComplete && isFunction(onComplete) && onComplete(responseData, status, statusText);
+		status > 199 && status < 300 && onSuccess && isFunction(onSuccess) && onSuccess(responseData, status, statusText);
+	}).catch(error => {
+		isFunction(onError) && (error.name === 'AbortError'
+			? (<Function>onError)(
+				new TimeoutError(`⏰ Request timed out\r\nSet Timeout:${(timeout as number) / 1000}s`),
+				408, 'timeout'
+			)
+			: (<Function>onError)(error, status, statusText));
+	}).finally(() => clearTimeout(timeoutID));
 };
