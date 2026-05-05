@@ -5888,7 +5888,6 @@ class FuxcelModal extends Fuxcel {
     // ─── Instance Methods ─────────────────────────────────────────────────────
     /** Remove the selected modal element from the DOM entirely. **/
     destroy() {
-        // @ts-ignore
         this[0].remove();
     }
     /**
@@ -5904,7 +5903,6 @@ class FuxcelModal extends Fuxcel {
                 const index = FuxcelModal.#_openModals.indexOf(this);
                 if (index !== -1)
                     FuxcelModal.#_openModals.splice(index, 1);
-                // @ts-ignore
                 this[0].dispatchEvent(FuxcelModal.fxModalHideEvent);
                 destroy && this.destroy();
                 this.#_isHiding = false;
@@ -5932,8 +5930,6 @@ class FuxcelModal extends Fuxcel {
                             FuxcelModal.currentModal?.hide() :
                             modalContent.shake(500, 2);
                 });
-            // }
-            // @ts-ignore
             this[0].dispatchEvent(FuxcelModal.fxModalShowEvent);
         }));
     }
@@ -5988,7 +5984,6 @@ function fxModal({ title = null, type = 'success', content = 'Alert Content', co
 	`;
     // Alert icon
     const alertIcon = type === 'success' ? imageSuccess : (type === 'error' ? imageError : imageWarning);
-    // @ts-ignore
     modalBody[0].prepend(alertIcon);
     // Buttons
     const buttonsWrapper = (btns) => `<div class="fx-modal-alert-buttons">${btns}</div>`;
@@ -5998,7 +5993,7 @@ function fxModal({ title = null, type = 'success', content = 'Alert Content', co
         cancelButton(cancelButtonText) + confirmButton(confirmButtonText) :
         (confirmButtonText ? confirmButton(confirmButtonText) : (cancelButtonText && cancelButton(cancelButtonText)));
     modalBody.style({ display: 'flex', flexDirection: 'column', alignItems: 'center' }) /*.insertHTML(alertIcon, 'prefix')*/;
-    buttons && modalBody.insertHTML(buttonsWrapper(buttons), 'prepend');
+    buttons && modalBody.insertHTML(buttonsWrapper(buttons), 'append');
     body?.append(initialModal);
     fx('.fx-modal-alert-icon', initialModal).style({ visibility: 'visible' }).fadein(2000).then();
     const modal = new FuxcelModal(initialModal);
@@ -6007,7 +6002,9 @@ function fxModal({ title = null, type = 'success', content = 'Alert Content', co
         if (!cancelButtonText)
             modal.off().upon('fx.modal.hide', (e) => typeof onEsc === 'function' ? onEsc(e, modal) : null);
         modal.off('click').upon('click', function (e) {
-            const clickedTarget = fx(e.target);
+            const target = e.target;
+            const _clicked = ((target.tagName.toLowerCase() !== 'button' && target.tagName.toLowerCase() !== 'div') ? (target.tagName.toLowerCase() !== 'svg' ? target.parentElement?.parentElement : target.parentElement) : target);
+            const clickedTarget = fx(_clicked);
             const isCancel = clickedTarget.matchSelector('#fx-modal-cancel') || clickedTarget.matchSelector('#fx-modal-cancel *');
             const isConfirm = clickedTarget.matchSelector('#fx-modal-confirm') || clickedTarget.matchSelector('#fx-modal-confirm *');
             const isClose = clickedTarget.matchSelector(`.close[data-fx-action="close"]`) ||

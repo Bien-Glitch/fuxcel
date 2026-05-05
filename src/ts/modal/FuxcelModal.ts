@@ -142,7 +142,6 @@ export class FuxcelModal extends Fuxcel implements FuxcelModalInstance {
 	// ─── Instance Methods ─────────────────────────────────────────────────────
 	/** Remove the selected modal element from the DOM entirely. **/
 	destroy(): void {
-		// @ts-ignore
 		this[0].remove();
 	}
 	
@@ -160,7 +159,6 @@ export class FuxcelModal extends Fuxcel implements FuxcelModalInstance {
 					const index = FuxcelModal.#_openModals.indexOf(this);
 					if (index !== -1) FuxcelModal.#_openModals.splice(index, 1);
 					
-					// @ts-ignore
 					this[0].dispatchEvent(FuxcelModal.fxModalHideEvent);
 					destroy && this.destroy();
 					this.#_isHiding = false;
@@ -194,9 +192,6 @@ export class FuxcelModal extends Fuxcel implements FuxcelModalInstance {
 								FuxcelModal.currentModal?.hide() :
 								modalContent.shake(500, 2);
 					});
-				// }
-				
-				// @ts-ignore
 				this[0].dispatchEvent(FuxcelModal.fxModalShowEvent);
 			})
 		);

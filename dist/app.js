@@ -71,9 +71,10 @@ fx.onDocumentLoad((e) => {
 	
 	fx.modal({
 		// title: 'Test Modal',
-		type: 'success',
-		content: 'Welcome to the test Modal',
+		type: 'warning',
+		content: '<h4>Welcome to the test Modal</h4>',
 		confirmButtonText: 'Ok',
+		// cancelButtonText: 'Cancel',
 		onConfirm: (e, modal) => {
 			console.log(e, 'Confirmed');
 			modal.hide()

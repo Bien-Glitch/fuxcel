@@ -2,6 +2,7 @@ import type {FXModalType} from '../types';
 import {fx} from '../core/Fuxcel';
 import {FuxcelModal} from './FuxcelModal';
 import {parseBool} from '../utils';
+import {Element} from 'regexpp/ast';
 
 /**
  * Create a quick alert/confirm modal with callbacks.
@@ -64,8 +65,7 @@ export function fxModal({
 	
 	// Alert icon
 	const alertIcon = type === 'success' ? imageSuccess : (type === 'error' ? imageError : imageWarning);
-	// @ts-ignore
-	(<HTMLElement>modalBody[0]).prepend(alertIcon);
+	modalBody[0].prepend(alertIcon);
 	
 	
 	// Buttons
@@ -78,7 +78,7 @@ export function fxModal({
 		(confirmButtonText ? confirmButton(confirmButtonText) : (cancelButtonText && cancelButton(cancelButtonText)));
 	
 	modalBody.style({display: 'flex', flexDirection: 'column', alignItems: 'center'})/*.insertHTML(alertIcon, 'prefix')*/;
-	buttons && modalBody.insertHTML(buttonsWrapper(buttons), 'prepend');
+	buttons && modalBody.insertHTML(buttonsWrapper(buttons), 'append');
 	
 	body?.append(initialModal);
 	fx('.fx-modal-alert-icon', initialModal).style({visibility: 'visible'}).fadein(2000).then();
@@ -91,7 +91,9 @@ export function fxModal({
 			modal.off().upon('fx.modal.hide', (e) => typeof onEsc === 'function' ? onEsc(<CustomEvent>e, modal) : null);
 		
 		modal.off('click').upon('click', function (e) {
-			const clickedTarget = fx(e.target as HTMLElement);
+			const target = e.target as HTMLElement;
+			const _clicked = ((target.tagName.toLowerCase() !== 'button' && target.tagName.toLowerCase() !== 'div') ? (target.tagName.toLowerCase() !== 'svg' ? target.parentElement?.parentElement : target.parentElement) : target) as HTMLElement;
+			const clickedTarget = fx(_clicked);
 			const isCancel = clickedTarget.matchSelector('#fx-modal-cancel') || clickedTarget.matchSelector('#fx-modal-cancel *');
 			const isConfirm = clickedTarget.matchSelector('#fx-modal-confirm') || clickedTarget.matchSelector('#fx-modal-confirm *');
 			const isClose = clickedTarget.matchSelector(`.close[data-fx-action="close"]`) ||
