@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./icon.png" height="64" width="64" style="border-radius:50%" alt="Fuxcel Logo"/>
+<img src="https://github.com/Bien-Glitch/fuxcel/blob/release/2.0.1/icon.png?raw=true" height="64" width="64" style="border-radius:50%" alt="Fuxcel Logo"/>
 
 # Fuxcel
 
