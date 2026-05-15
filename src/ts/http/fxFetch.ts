@@ -7,16 +7,16 @@ import {isFunction, TimeoutError} from '../utils';
  * Wraps `fetch` with timeout support (via `AbortController`), automatic
  * `FormData` coercion, and structured success / error callbacks.
  *
- * @param uri          Request URL.
- * @param method       HTTP method (default: 'get').
- * @param data         Request body data.
- * @param dataType     Expected response type (default: 'json').
- * @param headers      Additional request headers.
- * @param beforeSend   Callback fired before the request is sent.
- * @param timeout      Timeout in seconds before the request is aborted (default: 10).
- * @param onComplete   Callback fired when the request completes (success or error).
- * @param onError      Callback fired on network/timeout errors.
- * @param onSuccess    Callback fired on HTTP 2xx responses.
+ * @param uri {FXRequestType.uri} Request URL.
+ * @param method {FXRequestType.method} HTTP method (default: 'get').
+ * @param data {FXRequestType.data} Request body data.
+ * @param dataType {FXRequestType.dataType} Expected response type (default: 'json').
+ * @param headers {FXRequestType.headers} Additional request headers.
+ * @param beforeSend {FXRequestType.beforeSend} Callback fired before the request is sent.
+ * @param timeout {FXRequestType.timeout} Timeout in seconds before the request is aborted (default: 10).
+ * @param onComplete {FXRequestType.onComplete} Callback fired when the request completes (success or error).
+ * @param onError {FXRequestType.onError} Callback fired on network/timeout errors.
+ * @param onSuccess {FXRequestType.onSuccess} Callback fired on HTTP 2xx responses.
  */
 export const fxFetch = function ({
 	uri = '',

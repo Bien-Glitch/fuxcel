@@ -2,22 +2,21 @@ import type {FXModalType} from '../types';
 import {fx} from '../core/Fuxcel';
 import {FuxcelModal} from './FuxcelModal';
 import {parseBool} from '../utils';
-import {Element} from 'regexpp/ast';
 
 /**
  * Create a quick alert/confirm modal with callbacks.
  *
- * @param {StringOrNull} title Modal title.
- * @param {'success' | 'warning' | 'error'} type Visual type: 'success' | 'warning' | 'error'.
- * @param {StringOrNull} content Body content (HTML or text).
- * @param {StringOrNull} confirmButtonText Label for the confirm button.
- * @param {StringOrNull = null} cancelButtonText Label for the cancel button.
- * @param {boolean} html Render body as HTML (default true).
- * @param {boolean} isStatic Prevent closing on outside click.
- * @param {boolean} closeOnConfirm Auto-close on confirm when no `onConfirm` callback.
- * @param {((e: CustomEvent, modal: FuxcelModal) => void) | null} onConfirm Callback fired when confirm button is clicked.
- * @param {((e: CustomEvent, modal: FuxcelModal) => void) | null} onCancel Callback fired when cancel button is clicked.
- * @param {((e: CustomEvent, modal: FuxcelModal) => void) | null} onEsc Callback fired on Escape (only when no cancel button).
+ * @param title {FXModalType.title = null} Modal title.
+ * @param type {FXModalType.type = 'success'} Visual type: 'success' | 'warning' | 'error'.
+ * @param content {FXModalType.content = 'Alert COntent'} Body content (HTML or text).
+ * @param confirmButtonText {FXModalType.confirmButtonText} Label for the confirm button.
+ * @param cancelButtonText {FXModalType.cancelButtonText = null} Label for the cancel button.
+ * @param html {FXModalType.html = true} Render body as HTML (default true).
+ * @param isStatic {FXModalType.isStatic = false} Prevent closing on outside click.
+ * @param closeOnConfirm {FXModalType.closeOnConfirm = null} Auto-close on confirm when no `onConfirm` callback.
+ * @param onConfirm {FXModalType.onConfirm = null} Callback fired when confirm button is clicked.
+ * @param onCancel {FXModalType.onCancel = null} Callback fired when cancel button is clicked.
+ * @param onEsc {FXModalType.onEsc = null} Callback fired on Escape (only when no cancel button).
  * @return {FuxcelModal}
  */
 export function fxModal({
@@ -42,8 +41,8 @@ export function fxModal({
 	const imageError: SVGElement = document.createElementNS(SVG_NS, 'svg');
 	const imageWarning: SVGElement = document.createElementNS(SVG_NS, 'svg');
 	const sharedSVGAttributes: { [key: string]: any, width: string, height: string, viewBox: string } = {
-		width: '24px',
-		height: '24px',
+		width: '52px',
+		height: '52px',
 		viewBox: '0 0 24 24',
 	};
 	

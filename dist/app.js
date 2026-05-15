@@ -70,8 +70,8 @@ fx.onDocumentLoad((e) => {
 	});
 	
 	fx.modal({
-		// title: 'Test Modal',
-		type: 'warning',
+		title: 'Test Modal',
+		type: 'success',
 		content: '<h4>Welcome to the test Modal</h4>',
 		confirmButtonText: 'Ok',
 		// cancelButtonText: 'Cancel',

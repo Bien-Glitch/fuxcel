@@ -1307,6 +1307,81 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      */
     listProp(): object;
     /**
+     * Set the `innerHTML` of each selected element, replacing all existing content.
+     *
+     * When no position is provided, the inner HTML of the element is replaced entirely.
+     *
+     * @param value {string} HTML string to insert.
+     * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+     *
+     * @example
+     * // Replace inner HTML entirely
+     * fx('#container').insertHTML('<p>Hello</p>');
+     *
+     * @example
+     * // Chainable
+     * fx('#container').insertHTML('<p>Hello</p>').addClass('loaded');
+     */
+    insertHTML(value: string): Fuxcel;
+    /**
+     * Insert an HTML string relative to each selected element at the given position.
+     *
+     * | Position    | Description                               |
+     * |-------------|-------------------------------------------|
+     * | `'before'`  | Insert before the element itself          |
+     * | `'prepend'` | Insert as the first child                 |
+     * | `'append'`  | Insert as the last child                  |
+     * | `'after'`   | Insert after the element itself           |
+     *
+     * @param value {string} HTML string to insert.
+     * @param position {InsertPositions} Where to insert relative to the selected element.
+     * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+     *
+     * @example
+     * // Insert before the element
+     * fx('#container').insertHTML('<hr>', 'before');
+     *
+     * @example
+     * // Prepend as first child
+     * fx('#container').insertHTML('<p>First</p>', 'prepend');
+     *
+     * @example
+     * // Append as last child
+     * fx('#container').insertHTML('<p>Last</p>', 'append');
+     *
+     * @example
+     * // Insert after the element
+     * fx('#container').insertHTML('<hr>', 'after');
+     *
+     * @example
+     * // Chainable
+     * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
+     *
+     * @breaking v2.0.0 - The `position` options has changed.
+     *
+     * @migration
+     * **Before (v1.x.x):**
+     * | Position    | Description                               |
+     * |-------------|-------------------------------------------|
+     * | `'affix'`   | Insert before the element itself          |
+     * | `'prefix'`  | Insert as the first child                 |
+     * | `'suffix'`  | Insert as the last child                  |
+     * | `'postfix'` | Insert after the element itself           |
+     *
+     * -----------------------------------------------------------
+     *
+     * **After (v2.x.x):**
+     * | Position    | Description                               |
+     * |-------------|-------------------------------------------|
+     * | `'before'`  | Insert before the element itself          |
+     * | `'prepend'` | Insert as the first child                 |
+     * | `'append'`  | Insert as the last child                  |
+     * | `'after'`   | Insert after the element itself           |
+     *
+     * @see {@link InsertPositions}
+     */
+    insertHTML(value: string, position: InsertPositions): Fuxcel;
+    /**
      * Insert one or more nodes relative to each selected element using the default `'append'` position.
      *
      * Accepts a single node or an array of nodes. Each node can be a raw `HTMLElement`,
@@ -1399,62 +1474,6 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      * @return {Fuxcel} Fuxcel Object of the selected element
      */
     removeProp(...name: string[]): Fuxcel;
-    /**
-     * Set the `innerHTML` of each selected element, replacing all existing content.
-     *
-     * When no position is provided, the inner HTML of the element is replaced entirely.
-     *
-     * @param value {string} HTML string to insert.
-     * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
-     *
-     * @example
-     * // Replace inner HTML entirely
-     * fx('#container').insertHTML('<p>Hello</p>');
-     *
-     * @example
-     * // Chainable
-     * fx('#container').insertHTML('<p>Hello</p>').addClass('loaded');
-     *
-     * @deprecated The `position` option has changed from `affix`,`prefix`,`suffix`,`postfix` to `before`,`prepend`,`append`,`after` been moved to a direct parameter.
-     * Use {@link InsertPositions} with the new signature instead.
-     * @see {@link InsertPositions}
-     */
-    insertHTML(value: string): Fuxcel;
-    /**
-     * Insert an HTML string relative to each selected element at the given position.
-     *
-     * | Position    | Description                               |
-     * |-------------|-------------------------------------------|
-     * | `'before'`  | Insert before the element itself          |
-     * | `'prepend'` | Insert as the first child                 |
-     * | `'append'`  | Insert as the last child                  |
-     * | `'after'`   | Insert after the element itself           |
-     *
-     * @param value {string} HTML string to insert.
-     * @param position {InsertPositions} Where to insert relative to the selected element.
-     * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
-     *
-     * @example
-     * // Insert before the element
-     * fx('#container').insertHTML('<hr>', 'before');
-     *
-     * @example
-     * // Prepend as first child
-     * fx('#container').insertHTML('<p>First</p>', 'prepend');
-     *
-     * @example
-     * // Append as last child
-     * fx('#container').insertHTML('<p>Last</p>', 'append');
-     *
-     * @example
-     * // Insert after the element
-     * fx('#container').insertHTML('<hr>', 'after');
-     *
-     * @example
-     * // Chainable
-     * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
-     */
-    insertHTML(value: string, position: InsertPositions): Fuxcel;
     /**
      * Returns the direct descendants (Children) of the selected element.
      *

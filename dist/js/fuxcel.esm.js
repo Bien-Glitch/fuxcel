@@ -1648,6 +1648,78 @@ class Fuxcel extends FuxcelBase {
         return list;
     }
     /**
+     * Insert an HTML string relative to each selected element at the given position.
+     *
+     * | Position    | Description                               |
+     * |-------------|-------------------------------------------|
+     * | `'before'`  | Insert before the element itself          |
+     * | `'prepend'` | Insert as the first child                 |
+     * | `'append'`  | Insert as the last child                  |
+     * | `'after'`   | Insert after the element itself           |
+     *
+     * @param value {string} HTML string to insert.
+     * @param position {InsertPositions | null = null} Where to insert relative to the selected element.
+     * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+     *
+     * @example
+     * // Insert before the element
+     * fx('#container').insertHTML('<hr>', 'before');
+     *
+     * @example
+     * // Prepend as first child
+     * fx('#container').insertHTML('<p>First</p>', 'prepend');
+     *
+     * @example
+     * // Append as last child
+     * fx('#container').insertHTML('<p>Last</p>', 'append');
+     *
+     * @example
+     * // Insert after the element
+     * fx('#container').insertHTML('<hr>', 'after');
+     *
+     * @example
+     * // Chainable
+     * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
+     *
+     * @breaking v2.0.0 - The `position` options has changed.
+     *
+     * @migration
+     * **Before (v1.x.x):**
+     * | Position    | Description                               |
+     * |-------------|-------------------------------------------|
+     * | `'affix'`   | Insert before the element itself          |
+     * | `'prefix'`  | Insert as the first child                 |
+     * | `'suffix'`  | Insert as the last child                  |
+     * | `'postfix'` | Insert after the element itself           |
+     *
+     * -----------------------------------------------------------
+     *
+     * **After (v2.x.x):**
+     * | Position    | Description                               |
+     * |-------------|-------------------------------------------|
+     * | `'before'`  | Insert before the element itself          |
+     * | `'prepend'` | Insert as the first child                 |
+     * | `'append'`  | Insert as the last child                  |
+     * | `'after'`   | Insert after the element itself           |
+     *
+     * @see {@link InsertPositions}
+     */
+    insertHTML(value, position = null) {
+        const selected = this.toArray;
+        const positions = {
+            before: 'beforebegin',
+            prepend: 'afterbegin',
+            append: 'beforeend',
+            after: 'afterend',
+        };
+        if (position !== null && !positions[position])
+            throw new Error(`Invalid position "${position}". Valid options: 'before', 'prepend', 'append', 'after'.`);
+        selected.forEach((el) => position !== null ?
+            el.insertAdjacentHTML(positions[position], value) :
+            (el.innerHTML = value));
+        return this;
+    }
+    /**
      * Insert one or more nodes relative to each selected element at the given position.
      *
      * | Position   | Description                                      |
@@ -1702,8 +1774,10 @@ class Fuxcel extends FuxcelBase {
         // Pre-resolve Fuxcel instances to raw HTMLElement arrays once
         const resolved = nodeArray.map(node => node instanceof Fuxcel ? node.toArray : [node]);
         selected.forEach((el) => resolved.forEach((items) => items.forEach((child) => {
-            const item = multiTarget ? child.cloneNode(true) : child;
-            el.insertAdjacentElement(positions[position], item);
+            const item = multiTarget && typeof child !== 'string' ? child.cloneNode(true) : child;
+            typeof item === 'string' ?
+                el.insertAdjacentHTML(positions[position], item) :
+                el.insertAdjacentElement(positions[position], item);
         })));
         return this;
     }
@@ -1767,59 +1841,6 @@ class Fuxcel extends FuxcelBase {
         const selected = this.toArray;
         selected.length && name.length &&
             selected.forEach((el) => name.forEach(p => (el[p] = null)));
-        return this;
-    }
-    /**
-     * Insert an HTML string relative to each selected element at the given position.
-     *
-     * | Position    | Description                               |
-     * |-------------|-------------------------------------------|
-     * | `'before'`  | Insert before the element itself          |
-     * | `'prepend'` | Insert as the first child                 |
-     * | `'append'`  | Insert as the last child                  |
-     * | `'after'`   | Insert after the element itself           |
-     *
-     * @param value {string} HTML string to insert.
-     * @param position {InsertPositions | null = null} Where to insert relative to the selected element.
-     * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
-     *
-     * @example
-     * // Insert before the element
-     * fx('#container').insertHTML('<hr>', 'before');
-     *
-     * @example
-     * // Prepend as first child
-     * fx('#container').insertHTML('<p>First</p>', 'prepend');
-     *
-     * @example
-     * // Append as last child
-     * fx('#container').insertHTML('<p>Last</p>', 'append');
-     *
-     * @example
-     * // Insert after the element
-     * fx('#container').insertHTML('<hr>', 'after');
-     *
-     * @example
-     * // Chainable
-     * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
-     *
-     * @deprecated The `position` option has changed from `affix`,`prefix`,`suffix`,`postfix` to `before`,`prepend`,`append`,`after` been moved to a direct parameter.
-     * Use {@link InsertPositions} with the new signature instead.
-     * @see {@link InsertPositions}
-     */
-    insertHTML(value, position = null) {
-        const selected = this.toArray;
-        const positions = {
-            before: 'beforebegin',
-            prepend: 'afterbegin',
-            append: 'beforeend',
-            after: 'afterend',
-        };
-        if (position !== null && !positions[position])
-            throw new Error(`Invalid position "${position}". Valid options: 'before', 'prepend', 'append', 'after'.`);
-        selected.forEach((el) => position !== null ?
-            el.insertAdjacentHTML(positions[position], value) :
-            (el.innerHTML = value));
         return this;
     }
     /**
@@ -5942,17 +5963,17 @@ class FuxcelModal extends Fuxcel {
 /**
  * Create a quick alert/confirm modal with callbacks.
  *
- * @param {StringOrNull} title Modal title.
- * @param {'success' | 'warning' | 'error'} type Visual type: 'success' | 'warning' | 'error'.
- * @param {StringOrNull} content Body content (HTML or text).
- * @param {StringOrNull} confirmButtonText Label for the confirm button.
- * @param {StringOrNull = null} cancelButtonText Label for the cancel button.
- * @param {boolean} html Render body as HTML (default true).
- * @param {boolean} isStatic Prevent closing on outside click.
- * @param {boolean} closeOnConfirm Auto-close on confirm when no `onConfirm` callback.
- * @param {((e: CustomEvent, modal: FuxcelModal) => void) | null} onConfirm Callback fired when confirm button is clicked.
- * @param {((e: CustomEvent, modal: FuxcelModal) => void) | null} onCancel Callback fired when cancel button is clicked.
- * @param {((e: CustomEvent, modal: FuxcelModal) => void) | null} onEsc Callback fired on Escape (only when no cancel button).
+ * @param title {FXModalType.title = null} Modal title.
+ * @param type {FXModalType.type = 'success'} Visual type: 'success' | 'warning' | 'error'.
+ * @param content {FXModalType.content = 'Alert COntent'} Body content (HTML or text).
+ * @param confirmButtonText {FXModalType.confirmButtonText} Label for the confirm button.
+ * @param cancelButtonText {FXModalType.cancelButtonText = null} Label for the cancel button.
+ * @param html {FXModalType.html = true} Render body as HTML (default true).
+ * @param isStatic {FXModalType.isStatic = false} Prevent closing on outside click.
+ * @param closeOnConfirm {FXModalType.closeOnConfirm = null} Auto-close on confirm when no `onConfirm` callback.
+ * @param onConfirm {FXModalType.onConfirm = null} Callback fired when confirm button is clicked.
+ * @param onCancel {FXModalType.onCancel = null} Callback fired when cancel button is clicked.
+ * @param onEsc {FXModalType.onEsc = null} Callback fired on Escape (only when no cancel button).
  * @return {FuxcelModal}
  */
 function fxModal({ title = null, type = 'success', content = 'Alert Content', confirmButtonText = null, cancelButtonText = null, html = true, isStatic = false, closeOnConfirm = false, onConfirm = null, onCancel = null, onEsc = null, } = {}) {
@@ -5964,8 +5985,8 @@ function fxModal({ title = null, type = 'success', content = 'Alert Content', co
     const imageError = document.createElementNS(SVG_NS, 'svg');
     const imageWarning = document.createElementNS(SVG_NS, 'svg');
     const sharedSVGAttributes = {
-        width: '24px',
-        height: '24px',
+        width: '52px',
+        height: '52px',
         viewBox: '0 0 24 24',
     };
     Object.keys(sharedSVGAttributes).forEach((attr) => {
@@ -6043,16 +6064,16 @@ function fxModal({ title = null, type = 'success', content = 'Alert Content', co
  * Wraps `fetch` with timeout support (via `AbortController`), automatic
  * `FormData` coercion, and structured success / error callbacks.
  *
- * @param uri          Request URL.
- * @param method       HTTP method (default: 'get').
- * @param data         Request body data.
- * @param dataType     Expected response type (default: 'json').
- * @param headers      Additional request headers.
- * @param beforeSend   Callback fired before the request is sent.
- * @param timeout      Timeout in seconds before the request is aborted (default: 10).
- * @param onComplete   Callback fired when the request completes (success or error).
- * @param onError      Callback fired on network/timeout errors.
- * @param onSuccess    Callback fired on HTTP 2xx responses.
+ * @param {FXRequestType.uri} uri Request URL.
+ * @param {FXRequestType.method} method HTTP method (default: 'get').
+ * @param {FXRequestType.data} data Request body data.
+ * @param {FXRequestType.dataType} dataType Expected response type (default: 'json').
+ * @param {FXRequestType.headers} headers Additional request headers.
+ * @param {FXRequestType.beforeSend} beforeSend Callback fired before the request is sent.
+ * @param {FXRequestType.timeout} timeout Timeout in seconds before the request is aborted (default: 10).
+ * @param {FXRequestType.onComplete} onComplete Callback fired when the request completes (success or error).
+ * @param {FXRequestType.onError} onError Callback fired on network/timeout errors.
+ * @param {FXRequestType.onSuccess} onSuccess Callback fired on HTTP 2xx responses.
  */
 const fxFetch = function ({ uri = '', method = 'get', data = null, dataType = 'json', headers = null, beforeSend = null, timeout = 10, onComplete = null, onError = null, onSuccess = null, }) {
     let status;
