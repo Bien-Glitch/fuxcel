@@ -9,22 +9,21 @@
   "description": "A simple lightweight DOM Utitlity",
   "main": "dist/js/fuxcel.js",
   "module": "dist/js/fuxcel.esm.js",
-  "browser": "dist/js/fuxcel.iife.js",
   "types": "dist/js/fuxcel.d.ts",
   "files": [
     "icon.png",
-    "dist",
+    "dist/",
     "README.md"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "exports": {
     ".": {
       "import": "./dist/js/fuxcel.esm.js",
       "require": "./dist/js/fuxcel.cjs.js",
       "types": "./dist/js/fuxcel.d.ts"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "rollup -c",
