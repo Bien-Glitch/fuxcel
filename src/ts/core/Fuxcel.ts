@@ -47,6 +47,13 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 */
 	static _fxFetch: ((options: any) => void) | null = null;
 	
+	/**
+	 * Injectable fxModal function.
+	 * Populated by index.ts — avoids circular imports between Fuxcel and modal/fxModal.
+	 * @internal
+	 */
+	static _fxModal: ((options?: any) => any) | null = null;
+	
 	constructor(selector: string | IterableElement | any, context?: string | IterableElement | any) {
 		super(selector, context);
 	}
@@ -988,172 +995,6 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 		return this.#_animate(animations({timeout, iterations: <number>iteration, display}).zoomIn);
 	}
 	
-	// ─── Getters ──────────────────────────────────────────────────────────────
-	/**
-	 * @return {DOMTokenList} The class list of an element.
-	 */
-	get classes(): DOMTokenList {
-		return (<HTMLElement[]>this.toArray)[0].classList;
-	}
-	
-	/** Returns the `FieldAttributes` of the first selected element. */
-	get fieldAttributes() {
-		const selected = <HTMLElement[]>this.toArray;
-		const field = selected[0];
-		const fieldId = field.getAttribute('id')?.toLowerCase();
-		const dataId = field.dataset.id;
-		const fxName = field.dataset.fxName ?? (dataId?.length && fieldId?.endsWith(dataId) ?
-			fieldId.replace(`_${dataId}`, '') :
-			fieldId);
-		
-		return {
-			id: fieldId,
-			fxName,
-			type: selected[0].getAttribute('type')?.toLowerCase() ?? null,
-			fxId: selected[0].getAttribute('type')?.toLowerCase() ?? null,
-			fxRole: selected[0].getAttribute('type')?.toLowerCase() ?? null,
-			formId: (selected[0] as any).form?.id?.toLowerCase() ?? null,
-		};
-	}
-	
-	/**
-	 *  @return {Promise<boolean>} A promise with a boolean argument; true if the given element has the mouse focus; false otherwise.
-	 */
-	get hasFocus(): Promise<boolean> {
-		const selected = <HTMLElement[]>this.toArray;
-		const selector = FuxcelBase.pointerIsTouch ? ':focus' : ':hover';
-		return new Promise(resolve =>
-			selected.forEach((el: HTMLElement) => resolve(fx(el).matchSelector(selector)))
-		);
-	}
-	
-	/**
-	 * @return {string} The Inner Text value of the given element.
-	 */
-	get innerText(): string {
-		return (<HTMLElement[]>this.toArray)[0].innerText;
-	}
-	
-	/**
-	 * Set The Inner Text value of the given element.
-	 *
-	 * @param text {string} Text to set
-	 */
-	set innerText(text: string) {
-		(<HTMLElement>(<HTMLElement[]>this.toArray)[0]).innerText = text;
-	}
-	
-	/**
-	 * @return {string} The Outer Text value of the given element.
-	 */
-	get outerText(): string {
-		return (<HTMLElement[]>this.toArray)[0].outerText;
-	}
-	
-	/**
-	 * Set The Outer Text value of the given element.
-	 *
-	 * @param text {string} Text to set
-	 */
-	set outerText(text: string) {
-		(<HTMLElement>(<HTMLElement[]>this.toArray)[0]).outerText = text;
-	}
-	
-	/**
-	 * @return {string} The Inner HTML value of the given element.
-	 */
-	get innerHTML(): string {
-		return (<HTMLElement[]>this.toArray)[0].innerHTML;
-	}
-	
-	/**
-	 * @return {string} The Outer HTML value of the given element.
-	 */
-	get outerHTML(): string {
-		return (<HTMLElement[]>this.toArray)[0].outerHTML;
-	}
-	
-	/**
-	 * @return {boolean} Returns true if the selected element has the disabled property; false otherwise.
-	 */
-	get isDisabled(): boolean {
-		return !!this.prop('disabled') || this.hasClass('disabled');
-	}
-	
-	/**
-	 * @return {boolean} Returns true if the selected element is a form element.
-	 */
-	get isFormElement(): boolean {
-		const selected = <HTMLElement[]>this.toArray;
-		if (typeof selected[0].cloneNode !== 'function') return false;
-		try {
-			const form = document.createElement('form');
-			form.style.display = 'none';
-			form.appendChild(selected[0].cloneNode(true));
-			return form.elements.length > 0;
-		} catch {
-			return false;
-		}
-	}
-	
-	/**
-	 * Injectable fxModal function.
-	 * Populated by index.ts — avoids circular imports between Fuxcel and modal/fxModal.
-	 * @internal
-	 */
-	static _fxModal: ((options?: any) => any) | null = null;
-	
-	/** Returns a new `FuxcelValidator` bound to this element. */
-	get formValidator(): FuxcelValidator /* FuxcelValidator — resolved at runtime to avoid circular import */ {
-		/*const {FuxcelValidator} = require('../validator/FuxcelValidator');
-		return new FuxcelValidator(this);*/
-		if (!Fuxcel._validatorFactory)
-			throw new Error('[Fuxcel] formValidator is not available yet. Ensure fuxcel/src/index.ts has been loaded.');
-		return Fuxcel._validatorFactory(this);
-	}
-	
-	/** Returns a new `FuxcelModal` bound to this element. */
-	get modal(): FuxcelModal /* FuxcelModal — resolved at runtime to avoid circular import */ {
-		/*const {FuxcelModal} = require('../modal/FuxcelModal');
-		return new FuxcelModal(this);*/
-		if (!Fuxcel._modalFactory)
-			throw new Error('[Fuxcel] modal is not available yet. Ensure fuxcel/src/index.ts has been loaded.');
-		return Fuxcel._modalFactory(this);
-	}
-	
-	// ─── Static Config ────────────────────────────────────────────────────────
-	/**
-	 * @return {string} The global Button Loader class.
-	 */
-	static get buttonLoaderClass(): string {
-		return Fuxcel.#_buttonLoaderClass;
-	}
-	
-	/**
-	 * Set the Button Loader class globally.
-	 *
-	 * @param token {string} Class selector of button loader.
-	 */
-	static set buttonLoaderClass(token: string) {
-		Fuxcel.#_buttonLoaderClass = token;
-	}
-	
-	/**
-	 * @return {string|null} The Plugin path.
-	 */
-	static get path(): string | null {
-		return `${Fuxcel.#_pluginPath?.replace(/\/$/, '')}/..`;
-	}
-	
-	/**
-	 * Set the Plugin path globally.
-	 *
-	 * @param path {string} the relative path.
-	 */
-	static set path(path: string) {
-		Fuxcel.#_pluginPath = path;
-	}
-	
 	// ─── Class Manipulation ───────────────────────────────────────────────────
 	/**
 	 * Checks if selected element contains given class.
@@ -1501,7 +1342,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * // Chainable
 	 * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
 	 *
-	 * @breaking v2.0.0 - The `position` options has changed.
+	 * @breaking v2.0.1 - The `position` options has changed.
 	 *
 	 * @migration
 	 * **Before (v1.x.x):**
@@ -1559,7 +1400,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * // Chainable
 	 * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
 	 *
-	 * @breaking v2.0.0 - The `position` options has changed.
+	 * @breaking v2.0.1 - The `position` options has changed.
 	 *
 	 * @migration
 	 * **Before (v1.x.x):**
@@ -1613,7 +1454,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * fx('#container').insertNode('<p>Hello</p>');
 	 * fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')]);
 	 *
-	 * @since 2.0.0
+	 * @since 2.0.1
 	 */
 	insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]): this;
 	/**
@@ -1726,13 +1567,77 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	}
 	
 	/**
-	 * Remove selected element(s) from DOM.
+	 * Remove each selected element from the DOM.
 	 *
-	 * @return void
+	 * Removes the element(s) completely.
+	 *
+	 * @returns {void}
+	 *
+	 * @example
+	 * // Full removal
+	 * fx('#banner').remove();
 	 */
-	remove(): void {
-		(<HTMLElement[]>this.toArray).forEach(el => el.remove());
+	remove(): void;
+	/**
+	 * Remove each selected element from the DOM.
+	 *
+	 * Removes the element(s) completely.
+	 *
+	 * @param detach {boolean} Pass `true` to detach instead of fully removing. Defaults to `false`.
+	 * @returns {void}
+	 *
+	 * @example
+	 * // Full removal
+	 * fx('#banner').remove(false);
+	 */
+	remove(detach: false): void;
+	/**
+	 * Detach each selected element from the DOM.
+	 *
+	 * Detach the element(s) from the DOM but its event
+	 * listeners and internal data are preserved, allowing it to be reinserted later.
+	 *
+	 * @param detach {boolean=true} detach instead of fully removing.
+	 * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * // Detach — preserves listeners for reinsertion
+	 * const header = fx('#header').remove(true);
+	 * fx('#new-container').append(header);
+	 */
+	remove(detach: true): Fuxcel;
+	/**
+	 * Remove or detach each selected element from the DOM.
+	 *
+	 * When `detach` is `true`, the element is removed from the DOM but its event
+	 * listeners and internal data are preserved, allowing it to be reinserted later.
+	 * When `false` (default), the element is removed completely.
+	 *
+	 * @param detach {boolean} Pass `true` to detach instead of fully removing. Defaults to `false`.
+	 * @returns {Fuxcel|void} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * // Full removal
+	 * fx('#banner').remove();
+	 *
+	 * @example
+	 * // Detach — preserves listeners for reinsertion
+	 * const header = fx('#header').remove(true);
+	 * fx('#new-container').append(header);
+	 */
+	remove(detach: boolean = false): Fuxcel | void {
+		const selected = this.toArray as HTMLElement[];
+		selected.forEach((el: HTMLElement) => {
+			if (detach)
+				el.parentElement?.removeChild(el);
+			else
+				el.remove();
+		});
+		
+		if (detach)
+			return this;
 	}
+	
 	
 	/**
 	 * Disables or enables the selected element(s).
@@ -1794,6 +1699,49 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	}
 	
 	// ─── Traversal ────────────────────────────────────────────────────────────
+	/**
+	 * Returns the element at index '0' in the current selection.
+	 *
+	 * @returns {Fuxcel} Fuxcel instance of the element at the given index.
+	 *
+	 * @example
+	 * fx('#list li').at()   // first item
+	 */
+	at(): Fuxcel;
+	/**
+	 * Returns the element at the given index in the current selection.
+	 * Supports negative indices — `-1` returns the last element, `-2` the second to last, and so on.
+	 *
+	 * @param index {number} Zero-based index. Negative values count from the end.
+	 * @returns {Fuxcel} Fuxcel instance of the element at the given index.
+	 *
+	 * @example
+	 * fx('#list li').at(0)   // first item
+	 * fx('#list li').at(2)   // third item
+	 * fx('#list li').at(-1)  // last item
+	 * fx('#list li').at(-2)  // second to last
+	 */
+	at(index: number): Fuxcel;
+	/**
+	 * Returns the element at the given index in the current selection.
+	 * Supports negative indices — `-1` returns the last element, `-2` the second to last, and so on.
+	 * Defaults to '0' if no index is given
+	 *
+	 * @param index {number} Zero-based index. Negative values count from the end. Defaults to '0'
+	 * @returns {Fuxcel} Fuxcel instance of the element at the given index.
+	 *
+	 * @example
+	 * fx('#list li').at(0)   // first item
+	 * fx('#list li').at(2)   // third item
+	 * fx('#list li').at(-1)  // last item
+	 * fx('#list li').at(-2)  // second to last
+	 */
+	at(index: number = 0): Fuxcel {
+		const els = this.toArray as HTMLElement[];
+		const el = index < 0 ? els.at(index) : els[index];
+		return new (this.constructor as any)(el ?? null);
+	}
+	
 	/**
 	 * Returns the direct descendants (Children) of the selected element.
 	 *
@@ -1880,7 +1828,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {Fuxcel} Fuxcel Object of the selected parent(s)
 	 */
 	parents(selector: Selector = null): Fuxcel {
-		const selected = <HTMLElement[]>this.toArray;
+		const selected = this.toArray as HTMLElement[];
 		const result: HTMLElement[] = [];
 		let parentNode = selected[0].parentNode as HTMLElement | null;
 		while (parentNode) {
@@ -2371,6 +2319,192 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 		const form = this.formValidator;
 		const group = fx(formGroup).toArray as HTMLElement[];
 		return form.validateFromGroup(<HTMLElement>group[0]);
+	}
+	
+	// ─── Getters ──────────────────────────────────────────────────────────────
+	/**
+	 * @return {DOMTokenList} The class list of an element.
+	 */
+	get classes(): DOMTokenList {
+		return (<HTMLElement[]>this.toArray)[0].classList;
+	}
+	
+	/** Returns the `FieldAttributes` of the first selected element. */
+	get fieldAttributes() {
+		const selected = <HTMLElement[]>this.toArray;
+		const field = selected[0];
+		const fieldId = field.getAttribute('id')?.toLowerCase();
+		const dataId = field.dataset.id;
+		const fxName = field.dataset.fxName ?? (dataId?.length && fieldId?.endsWith(dataId) ?
+			fieldId.replace(`_${dataId}`, '') :
+			fieldId);
+		
+		return {
+			id: fieldId,
+			fxName,
+			type: selected[0].getAttribute('type')?.toLowerCase() ?? null,
+			fxId: selected[0].getAttribute('type')?.toLowerCase() ?? null,
+			fxRole: selected[0].getAttribute('type')?.toLowerCase() ?? null,
+			formId: (selected[0] as any).form?.id?.toLowerCase() ?? null,
+		};
+	}
+	
+	/**
+	 *  @return {Promise<boolean>} A promise with a boolean argument; true if the given element has the mouse focus; false otherwise.
+	 */
+	get hasFocus(): Promise<boolean> {
+		const selected = <HTMLElement[]>this.toArray;
+		const selector = FuxcelBase.pointerIsTouch ? ':focus' : ':hover';
+		return new Promise(resolve =>
+			selected.forEach((el: HTMLElement) => resolve(fx(el).matchSelector(selector)))
+		);
+	}
+	
+	/**
+	 * @return {string} The Inner Text value of the given element.
+	 */
+	get innerText(): string {
+		return (<HTMLElement[]>this.toArray)[0].innerText;
+	}
+	
+	/**
+	 * @return {string} The Outer Text value of the given element.
+	 */
+	get outerText(): string {
+		return (<HTMLElement[]>this.toArray)[0].outerText;
+	}
+	
+	/**
+	 * @return {string} The Inner HTML value of the given element.
+	 */
+	get innerHTML(): string {
+		return (<HTMLElement[]>this.toArray)[0].innerHTML;
+	}
+	
+	/**
+	 * @return {string} The Outer HTML value of the given element.
+	 */
+	get outerHTML(): string {
+		return (<HTMLElement[]>this.toArray)[0].outerHTML;
+	}
+	
+	/**
+	 * @return {boolean} Returns true if the selected element has the disabled property; false otherwise.
+	 */
+	get isDisabled(): boolean {
+		return !!this.prop('disabled') || this.hasClass('disabled');
+	}
+	
+	/**
+	 * @return {boolean} Returns true if the selected element is a form element.
+	 */
+	get isFormElement(): boolean {
+		const selected = <HTMLElement[]>this.toArray;
+		if (typeof selected[0].cloneNode !== 'function') return false;
+		try {
+			const form = document.createElement('form');
+			form.style.display = 'none';
+			form.appendChild(selected[0].cloneNode(true));
+			return form.elements.length > 0;
+		} catch {
+			return false;
+		}
+	}
+	
+	/** TRAVERSAL **/
+	/** Returns the direct parent of the first selected element. */
+	get parent(): this {
+		return new (this.constructor as any)(this[0]?.parentElement ?? null) as this;
+	}
+	
+	/** Returns the next sibling of the first selected element. */
+	get next(): this {
+		return new (this.constructor as any)(this[0]?.nextElementSibling ?? null) as this;
+	}
+	
+	/** Returns the previous sibling of the first selected element. */
+	get previous(): this {
+		return new (this.constructor as any)(this[0]?.previousElementSibling ?? null) as this;
+	}
+	
+	/** Returns the first element in the current selection. */
+	get first(): this {
+		return new (this.constructor as any)(this[0] ?? null) as this;
+	}
+	
+	/** Returns the last element in the current selection. */
+	get last(): this {
+		return new (this.constructor as any)(this[this.length - 1] ?? null) as this;
+	}
+	
+	/** Returns a new `FuxcelValidator` bound to this element. */
+	get formValidator(): FuxcelValidator /* FuxcelValidator — resolved at runtime to avoid circular import */ {
+		/*const {FuxcelValidator} = require('../validator/FuxcelValidator');
+		return new FuxcelValidator(this);*/
+		if (!Fuxcel._validatorFactory)
+			throw new Error('[Fuxcel] formValidator is not available yet. Ensure fuxcel/src/index.ts has been loaded.');
+		return Fuxcel._validatorFactory(this);
+	}
+	
+	/** Returns a new `FuxcelModal` bound to this element. */
+	get modal(): FuxcelModal /* FuxcelModal — resolved at runtime to avoid circular import */ {
+		/*const {FuxcelModal} = require('../modal/FuxcelModal');
+		return new FuxcelModal(this);*/
+		if (!Fuxcel._modalFactory)
+			throw new Error('[Fuxcel] modal is not available yet. Ensure fuxcel/src/index.ts has been loaded.');
+		return Fuxcel._modalFactory(this);
+	}
+	
+	// ─── Setters ──────────────────────────────────────────────────────────────
+	/**
+	 * Set The Inner Text value of the given element.
+	 *
+	 * @param text {string} Text to set
+	 */
+	set innerText(text: string) {
+		(<HTMLElement>(<HTMLElement[]>this.toArray)[0]).innerText = text;
+	}
+	
+	/**
+	 * Set The Outer Text value of the given element.
+	 *
+	 * @param text {string} Text to set
+	 */
+	set outerText(text: string) {
+		(<HTMLElement>(<HTMLElement[]>this.toArray)[0]).outerText = text;
+	}
+	
+	// ─── Static Config ────────────────────────────────────────────────────────
+	/**
+	 * @return {string} The global Button Loader class.
+	 */
+	static get buttonLoaderClass(): string {
+		return Fuxcel.#_buttonLoaderClass;
+	}
+	
+	/**
+	 * Set the Button Loader class globally.
+	 *
+	 * @param token {string} Class selector of button loader.
+	 */
+	static set buttonLoaderClass(token: string) {
+		Fuxcel.#_buttonLoaderClass = token;
+	}
+	
+	/**
+	 * @return {string|null} The Plugin path.
+	 */
+	static get path(): string | null {
+		return `${Fuxcel.#_pluginPath?.replace(/\/$/, '')}/..`;
+	}
+	
+	/**
+	 * Set the Plugin path globally.
+	 *
+	 * @param path {string} the relative path.
+	 */
+	static set path(path: string) {
+		Fuxcel.#_pluginPath = path;
 	}
 }
 

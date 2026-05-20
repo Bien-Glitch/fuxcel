@@ -491,6 +491,12 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      * @internal
      */
     static _fxFetch: ((options: any) => void) | null;
+    /**
+     * Injectable fxModal function.
+     * Populated by index.ts — avoids circular imports between Fuxcel and modal/fxModal.
+     * @internal
+     */
+    static _fxModal: ((options?: any) => any) | null;
     constructor(selector: string | IterableElement | any, context?: string | IterableElement | any);
     /**
      * Perform Fadeout animation on selected element.*
@@ -1078,89 +1084,6 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      */
     zoomin(timeout: number, iteration: number, display: string): Promise<Fuxcel>;
     /**
-     * @return {DOMTokenList} The class list of an element.
-     */
-    get classes(): DOMTokenList;
-    /** Returns the `FieldAttributes` of the first selected element. */
-    get fieldAttributes(): {
-        id: string | undefined;
-        fxName: string | undefined;
-        type: string | null;
-        fxId: string | null;
-        fxRole: string | null;
-        formId: any;
-    };
-    /**
-     *  @return {Promise<boolean>} A promise with a boolean argument; true if the given element has the mouse focus; false otherwise.
-     */
-    get hasFocus(): Promise<boolean>;
-    /**
-     * @return {string} The Inner Text value of the given element.
-     */
-    get innerText(): string;
-    /**
-     * Set The Inner Text value of the given element.
-     *
-     * @param text {string} Text to set
-     */
-    set innerText(text: string);
-    /**
-     * @return {string} The Outer Text value of the given element.
-     */
-    get outerText(): string;
-    /**
-     * Set The Outer Text value of the given element.
-     *
-     * @param text {string} Text to set
-     */
-    set outerText(text: string);
-    /**
-     * @return {string} The Inner HTML value of the given element.
-     */
-    get innerHTML(): string;
-    /**
-     * @return {string} The Outer HTML value of the given element.
-     */
-    get outerHTML(): string;
-    /**
-     * @return {boolean} Returns true if the selected element has the disabled property; false otherwise.
-     */
-    get isDisabled(): boolean;
-    /**
-     * @return {boolean} Returns true if the selected element is a form element.
-     */
-    get isFormElement(): boolean;
-    /**
-     * Injectable fxModal function.
-     * Populated by index.ts — avoids circular imports between Fuxcel and modal/fxModal.
-     * @internal
-     */
-    static _fxModal: ((options?: any) => any) | null;
-    /** Returns a new `FuxcelValidator` bound to this element. */
-    get formValidator(): FuxcelValidator;
-    /** Returns a new `FuxcelModal` bound to this element. */
-    get modal(): FuxcelModal;
-    /**
-     * @return {string} The global Button Loader class.
-     */
-    static get buttonLoaderClass(): string;
-    /**
-     * Set the Button Loader class globally.
-     *
-     * @param token {string} Class selector of button loader.
-     */
-    static set buttonLoaderClass(token: string);
-    /**
-     * @return {string|null} The Plugin path.
-     */
-    static get path(): string | null;
-    /**
-     * Set the Plugin path globally.
-     *
-     * @param path {string} the relative path.
-     */
-    static set path(path: string);
-    /**
      * Checks if selected element contains given class.
      *
      * @param {string} token
@@ -1357,7 +1280,7 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      * // Chainable
      * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
      *
-     * @breaking v2.0.0 - The `position` options has changed.
+     * @breaking v2.0.1 - The `position` options has changed.
      *
      * @migration
      * **Before (v1.x.x):**
@@ -1394,7 +1317,7 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      * fx('#container').insertNode('<p>Hello</p>');
      * fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')]);
      *
-     * @since 2.0.0
+     * @since 2.0.1
      */
     insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]): this;
     /**
@@ -1441,11 +1364,45 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      */
     insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[], position: InsertPositions): this;
     /**
-     * Remove selected element(s) from DOM.
+     * Remove each selected element from the DOM.
      *
-     * @return void
+     * Removes the element(s) completely.
+     *
+     * @returns {void}
+     *
+     * @example
+     * // Full removal
+     * fx('#banner').remove();
      */
     remove(): void;
+    /**
+     * Remove each selected element from the DOM.
+     *
+     * Removes the element(s) completely.
+     *
+     * @param detach {boolean} Pass `true` to detach instead of fully removing. Defaults to `false`.
+     * @returns {void}
+     *
+     * @example
+     * // Full removal
+     * fx('#banner').remove(false);
+     */
+    remove(detach: false): void;
+    /**
+     * Detach each selected element from the DOM.
+     *
+     * Detach the element(s) from the DOM but its event
+     * listeners and internal data are preserved, allowing it to be reinserted later.
+     *
+     * @param detach {boolean=true} detach instead of fully removing.
+     * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+     *
+     * @example
+     * // Detach — preserves listeners for reinsertion
+     * const header = fx('#header').remove(true);
+     * fx('#new-container').append(header);
+     */
+    remove(detach: true): Fuxcel;
     /**
      * Disables or enables the selected element(s).
      *
@@ -1474,6 +1431,29 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      * @return {Fuxcel} Fuxcel Object of the selected element
      */
     removeProp(...name: string[]): Fuxcel;
+    /**
+     * Returns the element at index '0' in the current selection.
+     *
+     * @returns {Fuxcel} Fuxcel instance of the element at the given index.
+     *
+     * @example
+     * fx('#list li').at()   // first item
+     */
+    at(): Fuxcel;
+    /**
+     * Returns the element at the given index in the current selection.
+     * Supports negative indices — `-1` returns the last element, `-2` the second to last, and so on.
+     *
+     * @param index {number} Zero-based index. Negative values count from the end.
+     * @returns {Fuxcel} Fuxcel instance of the element at the given index.
+     *
+     * @example
+     * fx('#list li').at(0)   // first item
+     * fx('#list li').at(2)   // third item
+     * fx('#list li').at(-1)  // last item
+     * fx('#list li').at(-2)  // second to last
+     */
+    at(index: number): Fuxcel;
     /**
      * Returns the direct descendants (Children) of the selected element.
      *
@@ -1689,6 +1669,94 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      */
     value(value: string): Fuxcel;
     testValidateAfter(formGroup: any): void;
+    /**
+     * @return {DOMTokenList} The class list of an element.
+     */
+    get classes(): DOMTokenList;
+    /** Returns the `FieldAttributes` of the first selected element. */
+    get fieldAttributes(): {
+        id: string | undefined;
+        fxName: string | undefined;
+        type: string | null;
+        fxId: string | null;
+        fxRole: string | null;
+        formId: any;
+    };
+    /**
+     *  @return {Promise<boolean>} A promise with a boolean argument; true if the given element has the mouse focus; false otherwise.
+     */
+    get hasFocus(): Promise<boolean>;
+    /**
+     * @return {string} The Inner Text value of the given element.
+     */
+    get innerText(): string;
+    /**
+     * @return {string} The Outer Text value of the given element.
+     */
+    get outerText(): string;
+    /**
+     * @return {string} The Inner HTML value of the given element.
+     */
+    get innerHTML(): string;
+    /**
+     * @return {string} The Outer HTML value of the given element.
+     */
+    get outerHTML(): string;
+    /**
+     * @return {boolean} Returns true if the selected element has the disabled property; false otherwise.
+     */
+    get isDisabled(): boolean;
+    /**
+     * @return {boolean} Returns true if the selected element is a form element.
+     */
+    get isFormElement(): boolean;
+    /** TRAVERSAL **/
+    /** Returns the direct parent of the first selected element. */
+    get parent(): this;
+    /** Returns the next sibling of the first selected element. */
+    get next(): this;
+    /** Returns the previous sibling of the first selected element. */
+    get previous(): this;
+    /** Returns the first element in the current selection. */
+    get first(): this;
+    /** Returns the last element in the current selection. */
+    get last(): this;
+    /** Returns a new `FuxcelValidator` bound to this element. */
+    get formValidator(): FuxcelValidator;
+    /** Returns a new `FuxcelModal` bound to this element. */
+    get modal(): FuxcelModal;
+    /**
+     * Set The Inner Text value of the given element.
+     *
+     * @param text {string} Text to set
+     */
+    set innerText(text: string);
+    /**
+     * Set The Outer Text value of the given element.
+     *
+     * @param text {string} Text to set
+     */
+    set outerText(text: string);
+    /**
+     * @return {string} The global Button Loader class.
+     */
+    static get buttonLoaderClass(): string;
+    /**
+     * Set the Button Loader class globally.
+     *
+     * @param token {string} Class selector of button loader.
+     */
+    static set buttonLoaderClass(token: string);
+    /**
+     * @return {string|null} The Plugin path.
+     */
+    static get path(): string | null;
+    /**
+     * Set the Plugin path globally.
+     *
+     * @param path {string} the relative path.
+     */
+    static set path(path: string);
 }
 
 /**
@@ -2932,11 +3000,65 @@ interface FuxcelInstance {
      */
     insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[], position?: InsertPositions): this;
     /**
-     * Remove selected element(s) from DOM.
+     * Remove each selected element from the DOM.
      *
-     * @return void
+     * Removes the element(s) completely.
+     *
+     * @returns {void}
+     *
+     * @example
+     * // Full removal
+     * fx('#banner').remove();
      */
     remove(): void;
+    /**
+     * Remove each selected element from the DOM.
+     *
+     * Removes the element(s) completely.
+     *
+     * @param detach {boolean} Pass `true` to detach instead of fully removing. Defaults to `false`.
+     * @returns {void}
+     *
+     * @example
+     * // Full removal
+     * fx('#banner').remove(false);
+     */
+    remove(detach: false): void;
+    /**
+     * Detach each selected element from the DOM.
+     *
+     * Detach the element(s) from the DOM but its event
+     * listeners and internal data are preserved, allowing it to be reinserted later.
+     *
+     * @param detach {boolean=true} detach instead of fully removing.
+     * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+     *
+     * @example
+     * // Detach — preserves listeners for reinsertion
+     * const header = fx('#header').remove(true);
+     * fx('#new-container').append(header);
+     */
+    remove(detach: true): Fuxcel;
+    /**
+     * Remove or detach each selected element from the DOM.
+     *
+     * When `detach` is `true`, the element is removed from the DOM but its event
+     * listeners and internal data are preserved, allowing it to be reinserted later.
+     * When `false` (default), the element is removed completely.
+     *
+     * @param detach {boolean} Pass `true` to detach instead of fully removing. Defaults to `false`.
+     * @returns {Fuxcel|void} The current `Fuxcel` instance for chaining.
+     *
+     * @example
+     * // Full removal
+     * fx('#banner').remove();
+     *
+     * @example
+     * // Detach — preserves listeners for reinsertion
+     * const header = fx('#header').remove(true);
+     * fx('#new-container').append(header);
+     */
+    remove(detach?: boolean): Fuxcel | void;
     /**
      * Disables or enables the selected element(s).
      *
@@ -3061,6 +3183,44 @@ interface FuxcelInstance {
      * @see {@link InsertPositions}
      */
     insertHTML(value: string, position?: InsertPositions): Fuxcel;
+    /**
+     * Returns the element at index '0' in the current selection.
+     *
+     * @returns {Fuxcel} Fuxcel instance of the element at the given index.
+     *
+     * @example
+     * fx('#list li').at()   // first item
+     */
+    at(): Fuxcel;
+    /**
+     * Returns the element at the given index in the current selection.
+     * Supports negative indices — `-1` returns the last element, `-2` the second to last, and so on.
+     *
+     * @param index {number} Zero-based index. Negative values count from the end.
+     * @returns {Fuxcel} Fuxcel instance of the element at the given index.
+     *
+     * @example
+     * fx('#list li').at(0)   // first item
+     * fx('#list li').at(2)   // third item
+     * fx('#list li').at(-1)  // last item
+     * fx('#list li').at(-2)  // second to last
+     */
+    at(index: number): Fuxcel;
+    /**
+     * Returns the element at the given index in the current selection.
+     * Supports negative indices — `-1` returns the last element, `-2` the second to last, and so on.
+     * Defaults to '0' if no index is given
+     *
+     * @param index {number} Zero-based index. Negative values count from the end. Defaults to '0'
+     * @returns {Fuxcel} Fuxcel instance of the element at the given index.
+     *
+     * @example
+     * fx('#list li').at(0)   // first item
+     * fx('#list li').at(2)   // third item
+     * fx('#list li').at(-1)  // last item
+     * fx('#list li').at(-2)  // second to last
+     */
+    at(index?: number): Fuxcel;
     /**
      * Returns the direct descendants (Children) of the selected element.
      *
@@ -3364,6 +3524,11 @@ interface FuxcelInstance {
     /** The Outer HTML value of the given element. **/ readonly outerHTML: string;
     /** The Inner Text value of the given element. **/ innerText: string;
     /** The Outer Text value of the given element. **/ outerText: string;
+    /** Returns the direct parent of the first selected element. */ parent: this;
+    /** Returns the next sibling of the first selected element. */ next: this;
+    /** Returns the previous sibling of the first selected element. */ previous: this;
+    /** Returns the first element in the current selection. */ first: this;
+    /** Returns the last element in the current selection. */ last: this;
     /** A new instance of the Fuxcel Form Validator. **/ readonly formValidator: FuxcelValidator;
     /** A new instance of the Fuxcel Modal. **/ readonly modal: FuxcelModal;
 }
@@ -3876,7 +4041,7 @@ interface FuxcelModalConstructor {
  *
  * @see {@link fxFetchPage} - Implementation of this interface
  * @see {@link FxPageNavigate} - Related navigation interface
- * @since 2.0.0
+ * @since 2.0.1
  */
 interface FxFetchPage {
     /**
@@ -4168,7 +4333,7 @@ interface FxFetchPage {
  * @see {@link fxPageLoader} - Implementation of this interface
  * @see {@link FxPageNavigate} - Often used together with page navigation
  * @see {@link FxFetchPage} - Often used together with page fetching
- * @since 2.0.0
+ * @since 2.0.1
  */
 interface FxPageLoader {
     /**
@@ -4468,7 +4633,7 @@ interface FxPageLoader {
  * @see {@link fxFetchPage} - Page fetching function used internally
  * @see {@link fxPageLoader} - Page loading indicator
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/History_API | History API}
- * @since 2.0.0
+ * @since 2.0.1
  */
 interface FxPageNavigate {
     /**
