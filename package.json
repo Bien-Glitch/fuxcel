@@ -6,7 +6,7 @@
   },
   "type": "module",
   "version": "2.1.0",
-  "description": "A simple lightweight DOM Utitlity",
+  "description": "A powerful, lightweight, standalone, zero-dependency JavaScript library for form validation and fluent chainable DOM manipulation.",
   "main": "dist/js/fuxcel.js",
   "module": "dist/js/fuxcel.esm.js",
   "types": "dist/js/fuxcel.d.ts",
