@@ -12,7 +12,9 @@
   "browser": "dist/js/fuxcel.iife.js",
   "types": "dist/js/fuxcel.d.ts",
   "files": [
-    "dist"
+    "icon.png",
+    "dist",
+    "README.md"
   ],
   "publishConfig": {
     "access": "public"
