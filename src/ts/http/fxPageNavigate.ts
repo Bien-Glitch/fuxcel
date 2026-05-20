@@ -117,7 +117,7 @@ const injectHTML = function (selector: Selector, html: string) {
  *
  * @see {@link FxFetchPage} - Interface definition
  * @see {@link fx.fetch} - Custom fetch implementation
- * @since 2.0.0
+ * @since 2.0.1
  */
 export const fxFetchPage: FxFetchPage = function (url: string, dataType: 'json' | 'text', beforeSend?: Function | null): Promise<string> {
 	return new Promise((resolve, reject) => {
@@ -253,7 +253,7 @@ export const fxFetchPage: FxFetchPage = function (url: string, dataType: 'json' 
  * @see {@link fxPageLoader} - Page loading indicator
  * @see {@link injectHTML} - HTML injection utility (internal)
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/History_API|History API}
- * @since 2.0.0
+ * @since 2.0.1
  */
 export const fxPageNavigate: FxPageNavigate = function (options: FXPageNavigateOptions): Promise<string> {
 	return new Promise((resolve, reject) => {
@@ -370,7 +370,7 @@ export const fxPageNavigate: FxPageNavigate = function (options: FXPageNavigateO
  * @see {@link FxPageLoader} - Interface definition
  * @see {@link fxPageNavigate} - Page navigation function that uses this loader
  * @see {@link fxFetchPage} - Page fetching function that can trigger this loader
- * @since 2.0.0
+ * @since 2.0.1
  */
 export const fxPageLoader: FxPageLoader = {
 	/**

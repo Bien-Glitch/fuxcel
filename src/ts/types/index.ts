@@ -2512,7 +2512,7 @@ export interface FuxcelModalConstructor {
  *
  * @see {@link fxFetchPage} - Implementation of this interface
  * @see {@link FxPageNavigate} - Related navigation interface
- * @since 2.0.0
+ * @since 2.0.1
  */
 export interface FxFetchPage {
 	/**
@@ -2807,7 +2807,7 @@ export interface FxFetchPage {
  * @see {@link fxPageLoader} - Implementation of this interface
  * @see {@link FxPageNavigate} - Often used together with page navigation
  * @see {@link FxFetchPage} - Often used together with page fetching
- * @since 2.0.0
+ * @since 2.0.1
  */
 export interface FxPageLoader {
 	/**
@@ -3109,7 +3109,7 @@ export interface FxPageLoader {
  * @see {@link fxFetchPage} - Page fetching function used internally
  * @see {@link fxPageLoader} - Page loading indicator
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/History_API | History API}
- * @since 2.0.0
+ * @since 2.0.1
  */
 export interface FxPageNavigate {
 	

@@ -1501,7 +1501,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * // Chainable
 	 * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
 	 *
-	 * @breaking v2.0.0 - The `position` options has changed.
+	 * @breaking v2.0.1 - The `position` options has changed.
 	 *
 	 * @migration
 	 * **Before (v1.x.x):**
@@ -1559,7 +1559,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * // Chainable
 	 * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
 	 *
-	 * @breaking v2.0.0 - The `position` options has changed.
+	 * @breaking v2.0.1 - The `position` options has changed.
 	 *
 	 * @migration
 	 * **Before (v1.x.x):**
@@ -1613,7 +1613,7 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * fx('#container').insertNode('<p>Hello</p>');
 	 * fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')]);
 	 *
-	 * @since 2.0.0
+	 * @since 2.0.1
 	 */
 	insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]): this;
 	/**
