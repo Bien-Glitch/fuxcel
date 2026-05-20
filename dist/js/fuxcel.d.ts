@@ -1357,7 +1357,7 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      * // Chainable
      * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
      *
-     * @breaking v2.0.0 - The `position` options has changed.
+     * @breaking v2.0.1 - The `position` options has changed.
      *
      * @migration
      * **Before (v1.x.x):**
@@ -1394,7 +1394,7 @@ declare class Fuxcel extends FuxcelBase implements FuxcelInstance {
      * fx('#container').insertNode('<p>Hello</p>');
      * fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')]);
      *
-     * @since 2.0.0
+     * @since 2.0.1
      */
     insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[]): this;
     /**
@@ -3876,7 +3876,7 @@ interface FuxcelModalConstructor {
  *
  * @see {@link fxFetchPage} - Implementation of this interface
  * @see {@link FxPageNavigate} - Related navigation interface
- * @since 2.0.0
+ * @since 2.0.1
  */
 interface FxFetchPage {
     /**
@@ -4168,7 +4168,7 @@ interface FxFetchPage {
  * @see {@link fxPageLoader} - Implementation of this interface
  * @see {@link FxPageNavigate} - Often used together with page navigation
  * @see {@link FxFetchPage} - Often used together with page fetching
- * @since 2.0.0
+ * @since 2.0.1
  */
 interface FxPageLoader {
     /**
@@ -4468,7 +4468,7 @@ interface FxPageLoader {
  * @see {@link fxFetchPage} - Page fetching function used internally
  * @see {@link fxPageLoader} - Page loading indicator
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/History_API | History API}
- * @since 2.0.0
+ * @since 2.0.1
  */
 interface FxPageNavigate {
     /**

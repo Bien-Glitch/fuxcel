@@ -101,7 +101,7 @@ const injectHTML = function (selector, html) {
  *
  * @see {@link FxFetchPage} - Interface definition
  * @see {@link fx.fetch} - Custom fetch implementation
- * @since 2.0.0
+ * @since 2.0.1
  */
 const fxFetchPage = function (url, dataType, beforeSend) {
     return new Promise((resolve, reject) => {
@@ -236,7 +236,7 @@ const fxFetchPage = function (url, dataType, beforeSend) {
  * @see {@link fxPageLoader} - Page loading indicator
  * @see {@link injectHTML} - HTML injection utility (internal)
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/History_API|History API}
- * @since 2.0.0
+ * @since 2.0.1
  */
 const fxPageNavigate = function (options) {
     return new Promise((resolve, reject) => {
@@ -352,7 +352,7 @@ const fxPageNavigate = function (options) {
  * @see {@link FxPageLoader} - Interface definition
  * @see {@link fxPageNavigate} - Page navigation function that uses this loader
  * @see {@link fxFetchPage} - Page fetching function that can trigger this loader
- * @since 2.0.0
+ * @since 2.0.1
  */
 const fxPageLoader = {
     /**
@@ -1681,7 +1681,7 @@ class Fuxcel extends FuxcelBase {
      * // Chainable
      * fx('#container').insertHTML('<p>Hello</p>', 'prepend').addClass('loaded');
      *
-     * @breaking v2.0.0 - The `position` options has changed.
+     * @breaking v2.0.1 - The `position` options has changed.
      *
      * @migration
      * **Before (v1.x.x):**
@@ -6064,16 +6064,16 @@ function fxModal({ title = null, type = 'success', content = 'Alert Content', co
  * Wraps `fetch` with timeout support (via `AbortController`), automatic
  * `FormData` coercion, and structured success / error callbacks.
  *
- * @param {FXRequestType.uri} uri Request URL.
- * @param {FXRequestType.method} method HTTP method (default: 'get').
- * @param {FXRequestType.data} data Request body data.
- * @param {FXRequestType.dataType} dataType Expected response type (default: 'json').
- * @param {FXRequestType.headers} headers Additional request headers.
- * @param {FXRequestType.beforeSend} beforeSend Callback fired before the request is sent.
- * @param {FXRequestType.timeout} timeout Timeout in seconds before the request is aborted (default: 10).
- * @param {FXRequestType.onComplete} onComplete Callback fired when the request completes (success or error).
- * @param {FXRequestType.onError} onError Callback fired on network/timeout errors.
- * @param {FXRequestType.onSuccess} onSuccess Callback fired on HTTP 2xx responses.
+ * @param uri {FXRequestType.uri} Request URL.
+ * @param method {FXRequestType.method} HTTP method (default: 'get').
+ * @param data {FXRequestType.data} Request body data.
+ * @param dataType {FXRequestType.dataType} Expected response type (default: 'json').
+ * @param headers {FXRequestType.headers} Additional request headers.
+ * @param beforeSend {FXRequestType.beforeSend} Callback fired before the request is sent.
+ * @param timeout {FXRequestType.timeout} Timeout in seconds before the request is aborted (default: 10).
+ * @param onComplete {FXRequestType.onComplete} Callback fired when the request completes (success or error).
+ * @param onError {FXRequestType.onError} Callback fired on network/timeout errors.
+ * @param onSuccess {FXRequestType.onSuccess} Callback fired on HTTP 2xx responses.
  */
 const fxFetch = function ({ uri = '', method = 'get', data = null, dataType = 'json', headers = null, beforeSend = null, timeout = 10, onComplete = null, onError = null, onSuccess = null, }) {
     let status;
