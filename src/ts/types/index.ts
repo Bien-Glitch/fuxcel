@@ -1432,12 +1432,70 @@ export interface FuxcelInstance {
 	 */
 	insertNode(nodes: HTMLElement | FuxcelBase | string | (HTMLElement | FuxcelBase | string)[], position?: InsertPositions): this
 	
+	
 	/**
-	 * Remove selected element(s) from DOM.
+	 * Remove each selected element from the DOM.
 	 *
-	 * @return void
+	 * Removes the element(s) completely.
+	 *
+	 * @returns {void}
+	 *
+	 * @example
+	 * // Full removal
+	 * fx('#banner').remove();
 	 */
 	remove(): void;
+	
+	/**
+	 * Remove each selected element from the DOM.
+	 *
+	 * Removes the element(s) completely.
+	 *
+	 * @param detach {boolean} Pass `true` to detach instead of fully removing. Defaults to `false`.
+	 * @returns {void}
+	 *
+	 * @example
+	 * // Full removal
+	 * fx('#banner').remove(false);
+	 */
+	remove(detach: false): void;
+	
+	/**
+	 * Detach each selected element from the DOM.
+	 *
+	 * Detach the element(s) from the DOM but its event
+	 * listeners and internal data are preserved, allowing it to be reinserted later.
+	 *
+	 * @param detach {boolean=true} detach instead of fully removing.
+	 * @returns {Fuxcel} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * // Detach — preserves listeners for reinsertion
+	 * const header = fx('#header').remove(true);
+	 * fx('#new-container').append(header);
+	 */
+	remove(detach: true): Fuxcel;
+	
+	/**
+	 * Remove or detach each selected element from the DOM.
+	 *
+	 * When `detach` is `true`, the element is removed from the DOM but its event
+	 * listeners and internal data are preserved, allowing it to be reinserted later.
+	 * When `false` (default), the element is removed completely.
+	 *
+	 * @param detach {boolean} Pass `true` to detach instead of fully removing. Defaults to `false`.
+	 * @returns {Fuxcel|void} The current `Fuxcel` instance for chaining.
+	 *
+	 * @example
+	 * // Full removal
+	 * fx('#banner').remove();
+	 *
+	 * @example
+	 * // Detach — preserves listeners for reinsertion
+	 * const header = fx('#header').remove(true);
+	 * fx('#new-container').append(header);
+	 */
+	remove(detach?: boolean): Fuxcel | void;
 	
 	/**
 	 * Disables or enables the selected element(s).
@@ -1572,6 +1630,48 @@ export interface FuxcelInstance {
 	
 	
 	// ─── Traversal ───────────────────────────────────────────────────────
+	/**
+	 * Returns the element at index '0' in the current selection.
+	 *
+	 * @returns {Fuxcel} Fuxcel instance of the element at the given index.
+	 *
+	 * @example
+	 * fx('#list li').at()   // first item
+	 */
+	at(): Fuxcel;
+	
+	/**
+	 * Returns the element at the given index in the current selection.
+	 * Supports negative indices — `-1` returns the last element, `-2` the second to last, and so on.
+	 *
+	 * @param index {number} Zero-based index. Negative values count from the end.
+	 * @returns {Fuxcel} Fuxcel instance of the element at the given index.
+	 *
+	 * @example
+	 * fx('#list li').at(0)   // first item
+	 * fx('#list li').at(2)   // third item
+	 * fx('#list li').at(-1)  // last item
+	 * fx('#list li').at(-2)  // second to last
+	 */
+	at(index: number): Fuxcel;
+	
+	/**
+	 * Returns the element at the given index in the current selection.
+	 * Supports negative indices — `-1` returns the last element, `-2` the second to last, and so on.
+	 * Defaults to '0' if no index is given
+	 *
+	 * @param index {number} Zero-based index. Negative values count from the end. Defaults to '0'
+	 * @returns {Fuxcel} Fuxcel instance of the element at the given index.
+	 *
+	 * @example
+	 * fx('#list li').at(0)   // first item
+	 * fx('#list li').at(2)   // third item
+	 * fx('#list li').at(-1)  // last item
+	 * fx('#list li').at(-2)  // second to last
+	 */
+	at(index?: number): Fuxcel;
+	
+	
 	/**
 	 * Returns the direct descendants (Children) of the selected element.
 	 *
@@ -1918,6 +2018,11 @@ export interface FuxcelInstance {
 	/** The Outer HTML value of the given element. **/ readonly outerHTML: string;
 	/** The Inner Text value of the given element. **/ innerText: string;
 	/** The Outer Text value of the given element. **/ outerText: string;
+	/** Returns the direct parent of the first selected element. */ parent: this;
+	/** Returns the next sibling of the first selected element. */ next: this;
+	/** Returns the previous sibling of the first selected element. */ previous: this;
+	/** Returns the first element in the current selection. */ first: this;
+	/** Returns the last element in the current selection. */ last: this;
 	
 	// Sub-system accessors
 	/** A new instance of the Fuxcel Form Validator. **/ readonly formValidator: FuxcelValidator;

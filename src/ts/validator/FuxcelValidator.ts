@@ -172,8 +172,10 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 				score += rule.weight;
 			} else {
 				failed.push(rule.name);
+				// score -= rule.weight;
 			}
 		}
+		// score = Math.max(0, score);
 		
 		// Length bonus — rewards going beyond the minimum
 		const lengthRule = rules.find(r => r.name.includes('characters'));

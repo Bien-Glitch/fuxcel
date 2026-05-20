@@ -5,24 +5,25 @@
     "email": "biennwinate@gmail.com"
   },
   "type": "module",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "A simple lightweight DOM Utitlity",
   "main": "dist/js/fuxcel.js",
   "module": "dist/js/fuxcel.esm.js",
-  "browser": "dist/js/fuxcel.iife.js",
   "types": "dist/js/fuxcel.d.ts",
   "files": [
-    "dist"
+    "icon.png",
+    "dist/",
+    "README.md"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "exports": {
     ".": {
       "import": "./dist/js/fuxcel.esm.js",
       "require": "./dist/js/fuxcel.cjs.js",
       "types": "./dist/js/fuxcel.d.ts"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "rollup -c",
@@ -39,9 +40,7 @@
     "rollup": "^4.60.1",
     "rollup-plugin-dts": "^6.4.1",
     "tslib": "^2.8.1",
-    "typescript": "^6.0.3"
-  },
-  "dependencies": {
+    "typescript": "^6.0.3",
     "regexpp": "^3.2.0"
   }
 }
