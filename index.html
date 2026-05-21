@@ -1,574 +1,1041 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fuxcel — Form Validator & DOM Utility Plugin</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/night-owl.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<style>
-  :root {
-    --bg: #0a0a0f;
-    --bg2: #0f0f18;
-    --bg3: #14141f;
-    --bg4: #1a1a28;
-    --surface: #1e1e2e;
-    --surface2: #252538;
-    --border: #2a2a3e;
-    --border2: #333350;
-    --accent: #7c6af7;
-    --accent2: #a594f9;
-    --accent3: #c8b8ff;
-    --green: #4ade80;
-    --cyan: #22d3ee;
-    --orange: #fb923c;
-    --pink: #f472b6;
-    --text: #e2e0f0;
-    --text2: #a09cc0;
-    --text3: #6b6890;
-    --code-bg: #111120;
-    --sidebar-w: 280px;
-    --header-h: 64px;
-    --radius: 10px;
-    --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; font-size: 16px; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.7;
-    min-height: 100vh;
-  }
-
-  /* ── HEADER ──────────────────────────────── */
-  #site-header {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    height: var(--header-h);
-    background: rgba(10,10,15,0.85);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 24px 0 0;
-  }
-
-  .header-brand {
-    display: flex; align-items: center; gap: 12px;
-    padding: 0 20px;
-    text-decoration: none;
-    height: 100%;
-    border-right: 1px solid var(--border);
-    width: var(--sidebar-w);
-  }
-
-  .header-brand img {
-    width: 32px; height: 32px; border-radius: 50%;
-    box-shadow: 0 0 0 2px var(--accent);
-  }
-
-  .header-brand-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.15rem; color: var(--text); }
-  .header-brand-text span { color: var(--accent2); }
-
-  .header-right { display: flex; align-items: center; gap: 10px; }
-
-  .badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 500;
-    font-family: 'JetBrains Mono', monospace;
-    text-decoration: none; transition: var(--transition);
-  }
-  .badge-npm { background: rgba(203,56,55,0.12); color: #f87171; border: 1px solid rgba(203,56,55,0.25); }
-  .badge-npm:hover { background: rgba(203,56,55,0.2); }
-  .badge-gh { background: rgba(124,106,247,0.12); color: var(--accent2); border: 1px solid rgba(124,106,247,0.25); }
-  .badge-gh:hover { background: rgba(124,106,247,0.2); }
-  .badge-ver { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
-
-  .menu-toggle {
-    display: none; background: none; border: 1px solid var(--border);
-    color: var(--text2); padding: 6px 10px; border-radius: 6px; cursor: pointer;
-    font-size: 1rem; margin-right: 8px;
-  }
-
-  /* ── LAYOUT ──────────────────────────────── */
-  .layout {
-    display: flex;
-    padding-top: var(--header-h);
-    min-height: 100vh;
-  }
-
-  /* ── SIDEBAR ─────────────────────────────── */
-  #sidebar {
-    position: fixed; top: var(--header-h); left: 0; bottom: 0;
-    width: var(--sidebar-w);
-    background: var(--bg2);
-    border-right: 1px solid var(--border);
-    overflow-y: auto; overflow-x: hidden;
-    padding: 20px 0 40px;
-    transition: transform var(--transition);
-    z-index: 90;
-  }
-
-  #sidebar::-webkit-scrollbar { width: 4px; }
-  #sidebar::-webkit-scrollbar-track { background: transparent; }
-  #sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-
-  .sidebar-section { margin-bottom: 4px; }
-
-  .sidebar-section-title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem; font-weight: 500; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--text3);
-    padding: 14px 20px 6px;
-  }
-
-  .sidebar-link {
-    display: flex; align-items: center; gap: 8px;
-    padding: 6px 20px; font-size: 0.84rem; color: var(--text2);
-    text-decoration: none; border-left: 2px solid transparent;
-    transition: var(--transition); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .sidebar-link:hover { color: var(--text); background: rgba(124,106,247,0.06); }
-  .sidebar-link.active { color: var(--accent2); border-left-color: var(--accent); background: rgba(124,106,247,0.08); }
-  .sidebar-link.sub { padding-left: 34px; font-size: 0.8rem; }
-  .sidebar-link.sub2 { padding-left: 50px; font-size: 0.77rem; }
-
-  /* ── MAIN ────────────────────────────────── */
-  #main {
-    margin-left: var(--sidebar-w);
-    flex: 1;
-    min-width: 0;
-    padding: 48px 60px 100px;
-    max-width: calc(100vw - var(--sidebar-w));
-  }
-
-  /* ── HERO ────────────────────────────────── */
-  .hero {
-    text-align: center;
-    padding: 60px 0 80px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hero::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,106,247,0.12) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .hero-logo {
-    width: 72px; height: 72px; border-radius: 50%;
-    box-shadow: 0 0 0 3px var(--accent), 0 0 32px rgba(124,106,247,0.35);
-    margin-bottom: 24px;
-    animation: logoPulse 3s ease-in-out infinite;
-  }
-
-  @keyframes logoPulse {
-    0%, 100% { box-shadow: 0 0 0 3px var(--accent), 0 0 32px rgba(124,106,247,0.35); }
-    50% { box-shadow: 0 0 0 3px var(--accent2), 0 0 48px rgba(124,106,247,0.5); }
-  }
-
-  .hero h1 {
-    font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(2.4rem, 5vw, 3.6rem);
-    letter-spacing: -0.03em; line-height: 1.1;
-    background: linear-gradient(135deg, #fff 30%, var(--accent2) 70%, var(--pink) 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    margin-bottom: 14px;
-  }
-
-  .hero-tagline {
-    font-size: 1.05rem; color: var(--text2); max-width: 520px; margin: 0 auto 28px;
-    font-weight: 300;
-  }
-
-  .hero-badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-
-  .hero-install {
-    display: inline-flex; align-items: center; gap: 10px;
-    margin-top: 32px;
-    background: var(--surface); border: 1px solid var(--border2);
-    border-radius: var(--radius); padding: 12px 20px;
-    font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--accent3);
-    cursor: pointer; transition: var(--transition); position: relative;
-  }
-  .hero-install:hover { border-color: var(--accent); background: var(--surface2); }
-  .hero-install .prompt { color: var(--text3); }
-  .copy-btn {
-    background: none; border: none; color: var(--text3); cursor: pointer;
-    padding: 2px 4px; border-radius: 4px; transition: var(--transition); font-size: 0.85rem;
-  }
-  .copy-btn:hover { color: var(--accent2); }
-  .copy-toast {
-    position: absolute; top: -32px; left: 50%; transform: translateX(-50%);
-    background: var(--accent); color: #fff; font-size: 0.72rem; padding: 3px 10px;
-    border-radius: 20px; opacity: 0; transition: opacity 0.2s; pointer-events: none;
-    white-space: nowrap;
-  }
-  .copy-toast.show { opacity: 1; }
-
-  /* ── FEATURES GRID ───────────────────────── */
-  .features-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;
-    margin: 20px 0 48px;
-  }
-
-  .feature-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 18px;
-    transition: var(--transition);
-  }
-  .feature-card:hover { border-color: var(--border2); background: var(--surface2); transform: translateY(-1px); }
-  .feature-icon { font-size: 1.4rem; margin-bottom: 8px; }
-  .feature-title { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
-  .feature-desc { font-size: 0.78rem; color: var(--text2); line-height: 1.5; }
-
-  /* ── CONTENT ─────────────────────────────── */
-  .content-section {
-    padding-top: 24px;
-    margin-bottom: 56px;
-    border-top: 1px solid var(--border);
-  }
-
-  .content-section:first-of-type { border-top: none; }
-
-  h2 {
-    font-family: 'Syne', sans-serif; font-weight: 700;
-    font-size: 1.65rem; letter-spacing: -0.02em;
-    color: var(--text); margin-bottom: 20px; margin-top: 8px;
-    display: flex; align-items: center; gap: 10px;
-  }
-
-  h2::before {
-    content: ''; display: block;
-    width: 4px; height: 24px; border-radius: 2px;
-    background: linear-gradient(180deg, var(--accent), var(--pink));
-    flex-shrink: 0;
-  }
-
-  h3 {
-    font-family: 'Syne', sans-serif; font-weight: 600;
-    font-size: 1.15rem; color: var(--text);
-    margin: 32px 0 14px; letter-spacing: -0.01em;
-  }
-
-  h4 {
-    font-family: 'Syne', sans-serif; font-weight: 600;
-    font-size: 0.95rem; color: var(--accent3);
-    margin: 24px 0 10px; letter-spacing: 0.01em;
-    text-transform: uppercase; font-size: 0.8rem;
-  }
-
-  h5 {
-    font-family: 'JetBrains Mono', monospace; font-weight: 500;
-    font-size: 0.85rem; color: var(--cyan);
-    margin: 20px 0 8px;
-  }
-
-  p { margin-bottom: 14px; color: var(--text2); font-size: 0.95rem; }
-  p strong { color: var(--text); font-weight: 500; }
-
-  a { color: var(--accent2); text-decoration: none; }
-  a:hover { color: var(--accent3); text-decoration: underline; }
-
-  /* ── CODE ────────────────────────────────── */
-  pre {
-    background: var(--code-bg) !important;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px 24px;
-    overflow-x: auto;
-    margin: 14px 0 20px;
-    position: relative;
-    font-size: 0.83rem;
-    line-height: 1.6;
-  }
-
-  pre::-webkit-scrollbar { height: 4px; }
-  pre::-webkit-scrollbar-track { background: transparent; }
-  pre::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-
-  code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.82rem;
-  }
-
-  p code, li code, td code {
-    background: rgba(124,106,247,0.1);
-    border: 1px solid rgba(124,106,247,0.2);
-    border-radius: 4px; padding: 1px 6px;
-    color: var(--accent3); font-size: 0.8rem;
-  }
-
-  .lang-tag {
-    position: absolute; top: 10px; right: 14px;
-    font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
-    color: var(--text3); letter-spacing: 0.05em; text-transform: uppercase;
-    background: var(--surface); border: 1px solid var(--border);
-    padding: 2px 8px; border-radius: 4px;
-  }
-
-  /* ── TABLES ──────────────────────────────── */
-  .table-wrap { overflow-x: auto; margin: 14px 0 20px; border-radius: var(--radius); }
-
-  table {
-    width: 100%; border-collapse: collapse;
-    font-size: 0.84rem; background: var(--surface);
-    border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
-  }
-
-  thead tr { background: var(--bg4); border-bottom: 1px solid var(--border2); }
-
-  th {
-    text-align: left; padding: 10px 16px;
-    font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.78rem;
-    color: var(--text2); letter-spacing: 0.04em; text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  td { padding: 9px 16px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: top; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(124,106,247,0.04); }
-  td:first-child { color: var(--accent3); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; white-space: nowrap; }
-
-  /* ── BLOCKQUOTE ──────────────────────────── */
-  blockquote {
-    border-left: 3px solid var(--accent);
-    padding: 12px 20px; margin: 14px 0;
-    background: rgba(124,106,247,0.06); border-radius: 0 var(--radius) var(--radius) 0;
-  }
-  blockquote p { margin: 0; font-size: 0.88rem; color: var(--text2); }
-  blockquote p strong { color: var(--accent3); }
-
-  /* ── LISTS ───────────────────────────────── */
-  ul, ol { padding-left: 20px; margin-bottom: 14px; }
-  li { color: var(--text2); font-size: 0.92rem; margin-bottom: 4px; }
-  li strong { color: var(--text); }
-
-  /* ── DIVIDER ─────────────────────────────── */
-  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
-
-  /* ── PEOPLE GRID ─────────────────────────── */
-  .people-grid { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
-  .person-card {
-    display: flex; align-items: center; gap: 12px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 12px 16px;
-    text-decoration: none; transition: var(--transition);
-    min-width: 180px;
-  }
-  .person-card:hover { border-color: var(--accent); background: var(--surface2); text-decoration: none; }
-  .person-card img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--border2); flex-shrink: 0; }
-  .person-name { font-size: 0.84rem; font-weight: 500; color: var(--text); display: block; }
-  .person-handle { font-size: 0.75rem; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
-
-  /* ── CONTACT ─────────────────────────────── */
-  .contact-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-  .contact-list li { display: flex; align-items: center; gap: 12px; }
-  .contact-icon { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; font-size: 0.9rem; flex-shrink: 0; }
-  .contact-icon.email { background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2); }
-  .contact-icon.whatsapp { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.2); }
-
-  /* ── SCROLL TOP ──────────────────────────── */
-  #scroll-top {
-    position: fixed; bottom: 28px; right: 28px;
-    width: 40px; height: 40px;
-    background: var(--accent); border: none; border-radius: 50%;
-    color: #fff; font-size: 1rem; cursor: pointer;
-    display: grid; place-items: center;
-    box-shadow: 0 4px 20px rgba(124,106,247,0.4);
-    opacity: 0; transform: translateY(10px);
-    transition: var(--transition); pointer-events: none;
-  }
-  #scroll-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
-  #scroll-top:hover { background: var(--accent2); }
-
-  /* ── MIGRATION NOTE ──────────────────────── */
-  .migration-note {
-    background: rgba(251,146,60,0.06);
-    border: 1px solid rgba(251,146,60,0.2);
-    border-radius: var(--radius); padding: 12px 16px; margin: 14px 0;
-    font-size: 0.85rem; color: var(--orange);
-  }
-  .migration-note strong { color: var(--orange); }
-
-  /* ── RESPONSIVE ──────────────────────────── */
-  @media (max-width: 900px) {
-    :root { --sidebar-w: 0px; }
-    .header-brand { display: none; }
-    #sidebar {
-      transform: translateX(-280px);
-      width: 280px;
-    }
-    #sidebar.open { transform: translateX(0); }
-    .menu-toggle { display: flex; align-items: center; }
-    #main { margin-left: 0; padding: 32px 24px 80px; max-width: 100vw; }
-  }
-
-  @media (max-width: 600px) {
-    #main { padding: 24px 16px 80px; }
-    .hero h1 { font-size: 2rem; }
-    h2 { font-size: 1.35rem; }
-  }
-
-  /* ── ANIMATIONS ──────────────────────────── */
-  .content-section { animation: fadeUp 0.4s ease both; }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .hljs { background: transparent !important; }
-</style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Fuxcel — Form Validator & DOM Utility Plugin</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="icon" type="image/png" href="https://github.com/Bien-Glitch/fuxcel/raw/refs/heads/release/2.1.0/icon.png">
+	<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/night-owl.min.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+	<style>
+		:root {
+			--bg: #0a0a0f;
+			--bg2: #0f0f18;
+			--bg3: #14141f;
+			--bg4: #1a1a28;
+			--surface: #1e1e2e;
+			--surface2: #252538;
+			--border: #2a2a3e;
+			--border2: #333350;
+			--accent: #7c6af7;
+			--accent2: #a594f9;
+			--accent3: #c8b8ff;
+			--green: #4ade80;
+			--cyan: #22d3ee;
+			--orange: #fb923c;
+			--pink: #f472b6;
+			--text: #e2e0f0;
+			--text2: #a09cc0;
+			--text3: #6b6890;
+			--code-bg: #111120;
+			--sidebar-w: 280px;
+			--header-h: 64px;
+			--radius: 10px;
+			--transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		}
+		
+		*, *::before, *::after {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+		
+		html {
+			scroll-behavior: smooth;
+			font-size: 16px;
+		}
+		
+		body {
+			font-family: 'DM Sans', sans-serif;
+			background: var(--bg);
+			color: var(--text);
+			line-height: 1.7;
+			min-height: 100vh;
+		}
+		
+		/* ── HEADER ──────────────────────────────── */
+		#site-header {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			z-index: 100;
+			height: var(--header-h);
+			background: rgba(10, 10, 15, 0.85);
+			backdrop-filter: blur(20px);
+			border-bottom: 1px solid var(--border);
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0 24px 0 0;
+		}
+		
+		.header-brand {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			padding: 0 20px;
+			text-decoration: none;
+			height: 100%;
+			border-right: 1px solid var(--border);
+			width: var(--sidebar-w);
+		}
+		
+		.header-brand img {
+			width: 32px;
+			height: 32px;
+			border-radius: 50%;
+			box-shadow: 0 0 0 2px var(--accent);
+		}
+		
+		.header-brand-text {
+			font-family: 'Syne', sans-serif;
+			font-weight: 800;
+			font-size: 1.15rem;
+			color: var(--text);
+		}
+		
+		.header-brand-text span {
+			color: var(--accent2);
+		}
+		
+		.header-right {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+		
+		.badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 4px 10px;
+			border-radius: 20px;
+			font-size: 0.72rem;
+			font-weight: 500;
+			font-family: 'JetBrains Mono', monospace;
+			text-decoration: none;
+			transition: var(--transition);
+		}
+		
+		.badge-npm {
+			background: rgba(203, 56, 55, 0.12);
+			color: #f87171;
+			border: 1px solid rgba(203, 56, 55, 0.25);
+		}
+		
+		.badge-npm:hover {
+			background: rgba(203, 56, 55, 0.2);
+		}
+		
+		.badge-gh {
+			background: rgba(124, 106, 247, 0.12);
+			color: var(--accent2);
+			border: 1px solid rgba(124, 106, 247, 0.25);
+		}
+		
+		.badge-gh:hover {
+			background: rgba(124, 106, 247, 0.2);
+		}
+		
+		.badge-ver {
+			background: rgba(74, 222, 128, 0.1);
+			color: var(--green);
+			border: 1px solid rgba(74, 222, 128, 0.2);
+		}
+		
+		.menu-toggle {
+			display: none;
+			background: none;
+			border: 1px solid var(--border);
+			color: var(--text2);
+			padding: 6px 10px;
+			border-radius: 6px;
+			cursor: pointer;
+			font-size: 1rem;
+			margin-right: 8px;
+		}
+		
+		/* ── LAYOUT ──────────────────────────────── */
+		.layout {
+			display: flex;
+			padding-top: var(--header-h);
+			min-height: 100vh;
+		}
+		
+		/* ── SIDEBAR ─────────────────────────────── */
+		#sidebar {
+			position: fixed;
+			top: var(--header-h);
+			left: 0;
+			bottom: 0;
+			width: var(--sidebar-w);
+			background: var(--bg2);
+			border-right: 1px solid var(--border);
+			overflow-y: auto;
+			overflow-x: hidden;
+			padding: 20px 0 40px;
+			transition: transform var(--transition);
+			z-index: 90;
+		}
+		
+		#sidebar::-webkit-scrollbar {
+			width: 4px;
+		}
+		
+		#sidebar::-webkit-scrollbar-track {
+			background: transparent;
+		}
+		
+		#sidebar::-webkit-scrollbar-thumb {
+			background: var(--border2);
+			border-radius: 4px;
+		}
+		
+		.sidebar-section {
+			margin-bottom: 4px;
+		}
+		
+		.sidebar-section-title {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.65rem;
+			font-weight: 500;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			color: var(--text3);
+			padding: 14px 20px 6px;
+		}
+		
+		.sidebar-link {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			padding: 6px 20px;
+			font-size: 0.84rem;
+			color: var(--text2);
+			text-decoration: none;
+			border-left: 2px solid transparent;
+			transition: var(--transition);
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+		
+		.sidebar-link:hover {
+			color: var(--text);
+			background: rgba(124, 106, 247, 0.06);
+		}
+		
+		.sidebar-link.active {
+			color: var(--accent2);
+			border-left-color: var(--accent);
+			background: rgba(124, 106, 247, 0.08);
+		}
+		
+		.sidebar-link.sub {
+			padding-left: 34px;
+			font-size: 0.8rem;
+		}
+		
+		.sidebar-link.sub2 {
+			padding-left: 50px;
+			font-size: 0.77rem;
+		}
+		
+		/* ── MAIN ────────────────────────────────── */
+		#main {
+			margin-left: var(--sidebar-w);
+			flex: 1;
+			min-width: 0;
+			padding: 48px 60px 100px;
+			max-width: calc(100vw - var(--sidebar-w));
+		}
+		
+		/* ── HERO ────────────────────────────────── */
+		.hero {
+			text-align: center;
+			padding: 60px 0 80px;
+			position: relative;
+			overflow: hidden;
+		}
+		
+		.hero::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124, 106, 247, 0.12) 0%, transparent 70%);
+			pointer-events: none;
+		}
+		
+		.hero-logo {
+			width: 72px;
+			height: 72px;
+			border-radius: 50%;
+			box-shadow: 0 0 0 3px var(--accent), 0 0 32px rgba(124, 106, 247, 0.35);
+			margin-bottom: 24px;
+			animation: logoPulse 3s ease-in-out infinite;
+		}
+		
+		@keyframes logoPulse {
+			0%, 100% {
+				box-shadow: 0 0 0 3px var(--accent), 0 0 32px rgba(124, 106, 247, 0.35);
+			}
+			50% {
+				box-shadow: 0 0 0 3px var(--accent2), 0 0 48px rgba(124, 106, 247, 0.5);
+			}
+		}
+		
+		.hero h1 {
+			font-family: 'Syne', sans-serif;
+			font-weight: 800;
+			font-size: clamp(2.4rem, 5vw, 3.6rem);
+			letter-spacing: -0.03em;
+			line-height: 1.1;
+			background: linear-gradient(135deg, #fff 30%, var(--accent2) 70%, var(--pink) 100%);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+			margin-bottom: 14px;
+		}
+		
+		.hero-tagline {
+			font-size: 1.05rem;
+			color: var(--text2);
+			max-width: 520px;
+			margin: 0 auto 28px;
+			font-weight: 300;
+		}
+		
+		.hero-badges {
+			display: flex;
+			gap: 10px;
+			justify-content: center;
+			flex-wrap: wrap;
+		}
+		
+		.hero-install {
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			margin-top: 32px;
+			background: var(--surface);
+			border: 1px solid var(--border2);
+			border-radius: var(--radius);
+			padding: 12px 20px;
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.9rem;
+			color: var(--accent3);
+			cursor: pointer;
+			transition: var(--transition);
+			position: relative;
+		}
+		
+		.hero-install:hover {
+			border-color: var(--accent);
+			background: var(--surface2);
+		}
+		
+		.hero-install .prompt {
+			color: var(--text3);
+		}
+		
+		.copy-btn {
+			background: none;
+			border: none;
+			color: var(--text3);
+			cursor: pointer;
+			padding: 2px 4px;
+			border-radius: 4px;
+			transition: var(--transition);
+			font-size: 0.85rem;
+		}
+		
+		.copy-btn:hover {
+			color: var(--accent2);
+		}
+		
+		.copy-toast {
+			position: absolute;
+			top: -32px;
+			left: 50%;
+			transform: translateX(-50%);
+			background: var(--accent);
+			color: #fff;
+			font-size: 0.72rem;
+			padding: 3px 10px;
+			border-radius: 20px;
+			opacity: 0;
+			transition: opacity 0.2s;
+			pointer-events: none;
+			white-space: nowrap;
+		}
+		
+		.copy-toast.show {
+			opacity: 1;
+		}
+		
+		/* ── FEATURES GRID ───────────────────────── */
+		.features-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 12px;
+			margin: 20px 0 48px;
+		}
+		
+		.feature-card {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			padding: 18px;
+			transition: var(--transition);
+		}
+		
+		.feature-card:hover {
+			border-color: var(--border2);
+			background: var(--surface2);
+			transform: translateY(-1px);
+		}
+		
+		.feature-icon {
+			font-size: 1.4rem;
+			margin-bottom: 8px;
+		}
+		
+		.feature-title {
+			font-family: 'Syne', sans-serif;
+			font-weight: 600;
+			font-size: 0.9rem;
+			margin-bottom: 4px;
+		}
+		
+		.feature-desc {
+			font-size: 0.78rem;
+			color: var(--text2);
+			line-height: 1.5;
+		}
+		
+		/* ── CONTENT ─────────────────────────────── */
+		.content-section {
+			padding-top: 24px;
+			margin-bottom: 56px;
+			border-top: 1px solid var(--border);
+		}
+		
+		.content-section:first-of-type {
+			border-top: none;
+		}
+		
+		h2 {
+			font-family: 'Syne', sans-serif;
+			font-weight: 700;
+			font-size: 1.65rem;
+			letter-spacing: -0.02em;
+			color: var(--text);
+			margin-bottom: 20px;
+			margin-top: 8px;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+		
+		h2::before {
+			content: '';
+			display: block;
+			width: 4px;
+			height: 24px;
+			border-radius: 2px;
+			background: linear-gradient(180deg, var(--accent), var(--pink));
+			flex-shrink: 0;
+		}
+		
+		h3 {
+			font-family: 'Syne', sans-serif;
+			font-weight: 600;
+			font-size: 1.15rem;
+			color: var(--text);
+			margin: 32px 0 14px;
+			letter-spacing: -0.01em;
+		}
+		
+		h4 {
+			font-family: 'Syne', sans-serif;
+			font-weight: 600;
+			font-size: 0.95rem;
+			color: var(--accent3);
+			margin: 24px 0 10px;
+			letter-spacing: 0.01em;
+			text-transform: uppercase;
+			font-size: 0.8rem;
+		}
+		
+		h5 {
+			font-family: 'JetBrains Mono', monospace;
+			font-weight: 500;
+			font-size: 0.85rem;
+			color: var(--cyan);
+			margin: 20px 0 8px;
+		}
+		
+		p {
+			margin-bottom: 14px;
+			color: var(--text2);
+			font-size: 0.95rem;
+		}
+		
+		p strong {
+			color: var(--text);
+			font-weight: 500;
+		}
+		
+		a {
+			color: var(--accent2);
+			text-decoration: none;
+		}
+		
+		a:hover {
+			color: var(--accent3);
+			text-decoration: underline;
+		}
+		
+		/* ── CODE ────────────────────────────────── */
+		pre {
+			background: var(--code-bg) !important;
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			padding: 20px 24px;
+			overflow-x: auto;
+			margin: 14px 0 20px;
+			position: relative;
+			font-size: 0.83rem;
+			line-height: 1.6;
+		}
+		
+		pre::-webkit-scrollbar {
+			height: 4px;
+		}
+		
+		pre::-webkit-scrollbar-track {
+			background: transparent;
+		}
+		
+		pre::-webkit-scrollbar-thumb {
+			background: var(--border2);
+			border-radius: 4px;
+		}
+		
+		code {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.82rem;
+		}
+		
+		p code, li code, td code {
+			background: rgba(124, 106, 247, 0.1);
+			border: 1px solid rgba(124, 106, 247, 0.2);
+			border-radius: 4px;
+			padding: 1px 6px;
+			color: var(--accent3);
+			font-size: 0.8rem;
+		}
+		
+		.lang-tag {
+			position: absolute;
+			top: 10px;
+			right: 14px;
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.65rem;
+			color: var(--text3);
+			letter-spacing: 0.05em;
+			text-transform: uppercase;
+			background: var(--surface);
+			border: 1px solid var(--border);
+			padding: 2px 8px;
+			border-radius: 4px;
+		}
+		
+		/* ── TABLES ──────────────────────────────── */
+		.table-wrap {
+			overflow-x: auto;
+			margin: 14px 0 20px;
+			border-radius: var(--radius);
+		}
+		
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: 0.84rem;
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			overflow: hidden;
+		}
+		
+		thead tr {
+			background: var(--bg4);
+			border-bottom: 1px solid var(--border2);
+		}
+		
+		th {
+			text-align: left;
+			padding: 10px 16px;
+			font-family: 'Syne', sans-serif;
+			font-weight: 600;
+			font-size: 0.78rem;
+			color: var(--text2);
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			white-space: nowrap;
+		}
+		
+		td {
+			padding: 9px 16px;
+			border-bottom: 1px solid var(--border);
+			color: var(--text2);
+			vertical-align: top;
+		}
+		
+		tr:last-child td {
+			border-bottom: none;
+		}
+		
+		tr:hover td {
+			background: rgba(124, 106, 247, 0.04);
+		}
+		
+		td:first-child {
+			color: var(--accent3);
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.78rem;
+			white-space: nowrap;
+		}
+		
+		/* ── BLOCKQUOTE ──────────────────────────── */
+		blockquote {
+			border-left: 3px solid var(--accent);
+			padding: 12px 20px;
+			margin: 14px 0;
+			background: rgba(124, 106, 247, 0.06);
+			border-radius: 0 var(--radius) var(--radius) 0;
+		}
+		
+		blockquote p {
+			margin: 0;
+			font-size: 0.88rem;
+			color: var(--text2);
+		}
+		
+		blockquote p strong {
+			color: var(--accent3);
+		}
+		
+		/* ── LISTS ───────────────────────────────── */
+		ul, ol {
+			padding-left: 20px;
+			margin-bottom: 14px;
+		}
+		
+		li {
+			color: var(--text2);
+			font-size: 0.92rem;
+			margin-bottom: 4px;
+		}
+		
+		li strong {
+			color: var(--text);
+		}
+		
+		/* ── DIVIDER ─────────────────────────────── */
+		hr {
+			border: none;
+			border-top: 1px solid var(--border);
+			margin: 40px 0;
+		}
+		
+		/* ── PEOPLE GRID ─────────────────────────── */
+		.people-grid {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 16px;
+			margin-top: 16px;
+		}
+		
+		.person-card {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			padding: 12px 16px;
+			text-decoration: none;
+			transition: var(--transition);
+			min-width: 180px;
+		}
+		
+		.person-card:hover {
+			border-color: var(--accent);
+			background: var(--surface2);
+			text-decoration: none;
+		}
+		
+		.person-card img {
+			width: 40px;
+			height: 40px;
+			border-radius: 50%;
+			border: 2px solid var(--border2);
+			flex-shrink: 0;
+		}
+		
+		.person-name {
+			font-size: 0.84rem;
+			font-weight: 500;
+			color: var(--text);
+			display: block;
+		}
+		
+		.person-handle {
+			font-size: 0.75rem;
+			color: var(--text3);
+			font-family: 'JetBrains Mono', monospace;
+		}
+		
+		/* ── CONTACT ─────────────────────────────── */
+		.contact-list {
+			list-style: none;
+			padding: 0;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+		}
+		
+		.contact-list li {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+		
+		.contact-icon {
+			width: 32px;
+			height: 32px;
+			border-radius: 8px;
+			display: grid;
+			place-items: center;
+			font-size: 0.9rem;
+			flex-shrink: 0;
+		}
+		
+		.contact-icon.email {
+			background: rgba(251, 146, 60, 0.1);
+			border: 1px solid rgba(251, 146, 60, 0.2);
+		}
+		
+		.contact-icon.whatsapp {
+			background: rgba(74, 222, 128, 0.1);
+			border: 1px solid rgba(74, 222, 128, 0.2);
+		}
+		
+		/* ── SCROLL TOP ──────────────────────────── */
+		#scroll-top {
+			position: fixed;
+			bottom: 28px;
+			right: 28px;
+			width: 40px;
+			height: 40px;
+			background: var(--accent);
+			border: none;
+			border-radius: 50%;
+			color: #fff;
+			font-size: 1rem;
+			cursor: pointer;
+			display: grid;
+			place-items: center;
+			box-shadow: 0 4px 20px rgba(124, 106, 247, 0.4);
+			opacity: 0;
+			transform: translateY(10px);
+			transition: var(--transition);
+			pointer-events: none;
+		}
+		
+		#scroll-top.visible {
+			opacity: 1;
+			transform: translateY(0);
+			pointer-events: auto;
+		}
+		
+		#scroll-top:hover {
+			background: var(--accent2);
+		}
+		
+		/* ── MIGRATION NOTE ──────────────────────── */
+		.migration-note {
+			background: rgba(251, 146, 60, 0.06);
+			border: 1px solid rgba(251, 146, 60, 0.2);
+			border-radius: var(--radius);
+			padding: 12px 16px;
+			margin: 14px 0;
+			font-size: 0.85rem;
+			color: var(--orange);
+		}
+		
+		.migration-note strong {
+			color: var(--orange);
+		}
+		
+		/* ── RESPONSIVE ──────────────────────────── */
+		@media (max-width: 900px) {
+			:root {
+				--sidebar-w: 0px;
+			}
+			
+			.header-brand {
+				display: none;
+			}
+			
+			#sidebar {
+				transform: translateX(-280px);
+				width: 280px;
+			}
+			
+			#sidebar.open {
+				transform: translateX(0);
+			}
+			
+			.menu-toggle {
+				display: flex;
+				align-items: center;
+			}
+			
+			#main {
+				margin-left: 0;
+				padding: 32px 24px 80px;
+				max-width: 100vw;
+			}
+		}
+		
+		@media (max-width: 600px) {
+			#main {
+				padding: 24px 16px 80px;
+			}
+			
+			.hero h1 {
+				font-size: 2rem;
+			}
+			
+			h2 {
+				font-size: 1.35rem;
+			}
+		}
+		
+		/* ── ANIMATIONS ──────────────────────────── */
+		.content-section {
+			animation: fadeUp 0.4s ease both;
+		}
+		
+		@keyframes fadeUp {
+			from {
+				opacity: 0;
+				transform: translateY(12px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+		
+		.hljs {
+			background: transparent !important;
+		}
+	</style>
 </head>
 <body>
-
-<!-- HEADER -->
-<header id="site-header">
-  <a class="header-brand" href="#">
-    <img src="https://github.com/Bien-Glitch/fuxcel/blob/release/2.1.0/icon.png?raw=true" alt="Fuxcel">
-    <span class="header-brand-text">Fu<span>xcel</span></span>
-  </a>
-  <div class="header-right">
-    <button class="menu-toggle" id="menu-toggle">☰</button>
-    <a href="https://www.npmjs.com/package/fuxcel" target="_blank" class="badge badge-npm">npm</a>
-    <a href="https://github.com/Bien-Glitch/fuxcel" target="_blank" class="badge badge-gh">GitHub</a>
-    <span class="badge badge-ver">v2.1.0</span>
-  </div>
-</header>
-
-<!-- SIDEBAR -->
-<nav id="sidebar">
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">Getting Started</div>
-    <a href="#installation" class="sidebar-link">Installation</a>
-    <a href="#quick-start" class="sidebar-link">Quick Start</a>
-  </div>
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">Usage</div>
-    <a href="#the-fx-function" class="sidebar-link">The fx() Function</a>
-    <a href="#selector" class="sidebar-link">Selector</a>
-  </div>
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">DOM Manipulation</div>
-    <a href="#class-management" class="sidebar-link sub">Class Management</a>
-    <a href="#attributes-properties" class="sidebar-link sub">Attributes &amp; Properties</a>
-    <a href="#content-html" class="sidebar-link sub">Content &amp; HTML</a>
-    <a href="#node-insertion" class="sidebar-link sub">Node Insertion</a>
-    <a href="#removal-detach" class="sidebar-link sub">Removal &amp; Detach</a>
-    <a href="#traversal" class="sidebar-link sub">Traversal</a>
-    <a href="#element-queries" class="sidebar-link sub">Element Queries</a>
-    <a href="#value" class="sidebar-link sub">Value</a>
-    <a href="#disable-enable" class="sidebar-link sub">Disable / Enable</a>
-  </div>
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">Events &amp; Animations</div>
-    <a href="#event-listeners" class="sidebar-link sub">Event Listeners</a>
-    <a href="#trigger-events" class="sidebar-link sub">Trigger Events</a>
-    <a href="#animations" class="sidebar-link">Animations</a>
-  </div>
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">Form Validation</div>
-    <a href="#form-validation" class="sidebar-link">Form Validation</a>
-    <a href="#configuration-options" class="sidebar-link sub">Configuration</a>
-    <a href="#validation-methods" class="sidebar-link sub">Validation Methods</a>
-    <a href="#error-rendering" class="sidebar-link sub">Error Rendering</a>
-    <a href="#password-strength" class="sidebar-link sub">Password Strength</a>
-    <a href="#multi-step-forms" class="sidebar-link sub">Multi-step Forms</a>
-  </div>
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">Modals</div>
-    <a href="#modals" class="sidebar-link">fx.modal()</a>
-    <a href="#fuxcelmodal-class" class="sidebar-link sub">FuxcelModal Class</a>
-  </div>
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">HTTP &amp; Navigation</div>
-    <a href="#form-submission" class="sidebar-link sub">Form Submission</a>
-    <a href="#button-load-states" class="sidebar-link sub">Button Load States</a>
-    <a href="#page-navigation" class="sidebar-link sub">Page Navigation</a>
-    <a href="#page-loader" class="sidebar-link sub">Page Loader</a>
-  </div>
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">Utilities</div>
-    <a href="#global-utilities" class="sidebar-link">Global Functions</a>
-    <a href="#fx-interface" class="sidebar-link">fx Interface</a>
-  </div>
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">About</div>
-    <a href="#about" class="sidebar-link">About</a>
-    <a href="#creator" class="sidebar-link">Creator</a>
-    <a href="#contributors" class="sidebar-link">Contributors</a>
-    <a href="#acknowledgements" class="sidebar-link">Acknowledgements</a>
-    <a href="#contact" class="sidebar-link">Contact</a>
-  </div>
-</nav>
-
-<!-- MAIN -->
-<div class="layout">
-<main id="main">
-
-  <!-- HERO -->
-  <div class="hero">
-    <img class="hero-logo" src="https://github.com/Bien-Glitch/fuxcel/blob/release/2.1.0/icon.png?raw=true" alt="Fuxcel Logo">
-    <h1>Fuxcel</h1>
-    <p class="hero-tagline">A powerful, lightweight, zero-dependency JavaScript library for form validation and fluent chainable DOM manipulation.</p>
-    <div class="hero-badges">
-      <a href="https://github.com/Bien-Glitch/fuxcel/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/github/license/Bien-Glitch/fuxcel?style=flat-square" alt="License"></a>
-      <a href="https://github.com/Bien-Glitch/fuxcel/releases/latest" target="_blank"><img src="https://img.shields.io/github/v/release/Bien-Glitch/fuxcel?style=flat-square" alt="Latest Release"></a>
-      <a href="https://github.com/Bien-Glitch/fuxcel/issues" target="_blank"><img src="https://img.shields.io/github/issues/Bien-Glitch/fuxcel?style=flat-square" alt="Issues"></a>
-    </div>
-    <div class="hero-install" id="install-cmd">
-      <span class="prompt">$</span>
-      <span>npm install fuxcel</span>
-      <button class="copy-btn" onclick="copyInstall()" title="Copy">⎘</button>
-      <span class="copy-toast" id="copy-toast">Copied!</span>
-    </div>
-  </div>
-
-  <!-- FEATURES -->
-  <div class="features-grid">
-    <div class="feature-card"><div class="feature-icon">✅</div><div class="feature-title">Advanced Validation</div><div class="feature-desc">Built-in validators with real-time feedback</div></div>
-    <div class="feature-card"><div class="feature-icon">🎭</div><div class="feature-title">Multi-step Forms</div><div class="feature-desc">Easy wizard-style form management</div></div>
-    <div class="feature-card"><div class="feature-icon">🎨</div><div class="feature-title">Zero Dependencies</div><div class="feature-desc">Pure JavaScript, no external libraries</div></div>
-    <div class="feature-card"><div class="feature-icon">🎬</div><div class="feature-title">Rich Animations</div><div class="feature-desc">Fade, slide, zoom, shake, and blink effects</div></div>
-    <div class="feature-card"><div class="feature-icon">🏗️</div><div class="feature-title">DOM Manipulation</div><div class="feature-desc">Chainable API with full instance awareness</div></div>
-    <div class="feature-card"><div class="feature-icon">🪟</div><div class="feature-title">Modal System</div><div class="feature-desc">Beautiful, customizable modals and alerts</div></div>
-    <div class="feature-card"><div class="feature-icon">📡</div><div class="feature-title">HTTP Client</div><div class="feature-desc">Modern fetch wrapper with SPA navigation</div></div>
-    <div class="feature-card"><div class="feature-icon">🔒</div><div class="feature-title">Type-Safe</div><div class="feature-desc">Full TypeScript support included</div></div>
-  </div>
-
-  <hr>
-
-  <!-- INSTALLATION -->
-  <section class="content-section" id="installation">
-    <h2>Installation</h2>
-    <p>Fuxcel is a standalone plugin — it requires no external libraries, frameworks, or dependencies.</p>
-
-    <h3>NPM</h3>
-    <pre><code class="language-bash">npm install fuxcel</code></pre>
-
-    <p>Or download the latest package from the <a href="https://github.com/Bien-Glitch/fuxcel/releases/latest" target="_blank">releases page</a>. The Fuxcel assets are in the <code>dist</code> folder.</p>
-
-    <h3>TypeScript / Intellisense</h3>
-    <p>Types are bundled with the npm package automatically — no <code>@types/</code> install needed.</p>
-    <p>For non-npm (script-tag) projects, download the definition file directly:</p>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Channel</th><th>URL</th></tr></thead>
-      <tbody>
-        <tr><td>jsDelivr (CDN)</td><td><code>https://cdn.jsdelivr.net/npm/fuxcel/dist/js/fuxcel.d.ts</code></td></tr>
-        <tr><td>GitHub (raw)</td><td><code>https://raw.githubusercontent.com/Bien-Glitch/fuxcel/main/dist/js/fuxcel.d.ts</code></td></tr>
-      </tbody>
-    </table></div>
-    <pre><code class="language-typescript">/// &lt;reference path="./fuxcel.d.ts" /&gt;</code></pre>
-
-    <h3>Script Tag</h3>
-    <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+	
+	<!-- HEADER -->
+	<header id="site-header">
+		<a class="header-brand" href="#">
+			<img src="https://github.com/Bien-Glitch/fuxcel/blob/release/2.1.0/icon.png?raw=true" alt="Fuxcel">
+			<span class="header-brand-text">Fu<span>xcel</span></span>
+		</a>
+		<div class="header-right">
+			<button class="menu-toggle" id="menu-toggle">☰</button>
+			<a href="https://www.npmjs.com/package/fuxcel" target="_blank" class="badge badge-npm">npm</a>
+			<a href="https://github.com/Bien-Glitch/fuxcel" target="_blank" class="badge badge-gh">GitHub</a>
+			<span class="badge badge-ver">v2.1.0</span>
+		</div>
+	</header>
+	
+	<!-- SIDEBAR -->
+	<nav id="sidebar">
+		<div class="sidebar-section">
+			<div class="sidebar-section-title">Getting Started</div>
+			<a href="#installation" class="sidebar-link">Installation</a>
+			<a href="#quick-start" class="sidebar-link">Quick Start</a>
+		</div>
+		<div class="sidebar-section">
+			<div class="sidebar-section-title">Usage</div>
+			<a href="#the-fx-function" class="sidebar-link">The fx() Function</a>
+			<a href="#selector" class="sidebar-link">Selector</a>
+		</div>
+		<div class="sidebar-section">
+			<div class="sidebar-section-title">DOM Manipulation</div>
+			<a href="#class-management" class="sidebar-link sub">Class Management</a>
+			<a href="#attributes-properties" class="sidebar-link sub">Attributes &amp; Properties</a>
+			<a href="#content-html" class="sidebar-link sub">Content &amp; HTML</a>
+			<a href="#node-insertion" class="sidebar-link sub">Node Insertion</a>
+			<a href="#removal-detach" class="sidebar-link sub">Removal &amp; Detach</a>
+			<a href="#traversal" class="sidebar-link sub">Traversal</a>
+			<a href="#element-queries" class="sidebar-link sub">Element Queries</a>
+			<a href="#value" class="sidebar-link sub">Value</a>
+			<a href="#disable-enable" class="sidebar-link sub">Disable / Enable</a>
+		</div>
+		<div class="sidebar-section">
+			<div class="sidebar-section-title">Events &amp; Animations</div>
+			<a href="#event-listeners" class="sidebar-link sub">Event Listeners</a>
+			<a href="#trigger-events" class="sidebar-link sub">Trigger Events</a>
+			<a href="#animations" class="sidebar-link">Animations</a>
+		</div>
+		<div class="sidebar-section">
+			<div class="sidebar-section-title">Form Validation</div>
+			<a href="#form-validation" class="sidebar-link">Form Validation</a>
+			<a href="#configuration-options" class="sidebar-link sub">Configuration</a>
+			<a href="#validation-methods" class="sidebar-link sub">Validation Methods</a>
+			<a href="#error-rendering" class="sidebar-link sub">Error Rendering</a>
+			<a href="#password-strength" class="sidebar-link sub">Password Strength</a>
+			<a href="#multi-step-forms" class="sidebar-link sub">Multi-step Forms</a>
+		</div>
+		<div class="sidebar-section">
+			<div class="sidebar-section-title">Modals</div>
+			<a href="#modals" class="sidebar-link">fx.modal()</a>
+			<a href="#fuxcelmodal-class" class="sidebar-link sub">FuxcelModal Class</a>
+		</div>
+		<div class="sidebar-section">
+			<div class="sidebar-section-title">HTTP &amp; Navigation</div>
+			<a href="#form-submission" class="sidebar-link sub">Form Submission</a>
+			<a href="#button-load-states" class="sidebar-link sub">Button Load States</a>
+			<a href="#page-navigation" class="sidebar-link sub">Page Navigation</a>
+			<a href="#page-loader" class="sidebar-link sub">Page Loader</a>
+		</div>
+		<div class="sidebar-section">
+			<div class="sidebar-section-title">Utilities</div>
+			<a href="#global-utilities" class="sidebar-link">Global Functions</a>
+			<a href="#fx-interface" class="sidebar-link">fx Interface</a>
+		</div>
+		<div class="sidebar-section">
+			<div class="sidebar-section-title">About</div>
+			<a href="#about" class="sidebar-link">About</a>
+			<a href="#creator" class="sidebar-link">Creator</a>
+			<a href="#contributors" class="sidebar-link">Contributors</a>
+			<a href="#acknowledgements" class="sidebar-link">Acknowledgements</a>
+			<a href="#contact" class="sidebar-link">Contact</a>
+		</div>
+	</nav>
+	
+	<!-- MAIN -->
+	<div class="layout">
+		<main id="main">
+			
+			<!-- HERO -->
+			<div class="hero">
+				<img class="hero-logo" src="https://github.com/Bien-Glitch/fuxcel/blob/release/2.1.0/icon.png?raw=true" alt="Fuxcel Logo">
+				<h1>Fuxcel</h1>
+				<p class="hero-tagline">A powerful, lightweight, zero-dependency JavaScript library for form validation and fluent chainable DOM manipulation.</p>
+				<div class="hero-badges">
+					<a href="https://github.com/Bien-Glitch/fuxcel/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/github/license/Bien-Glitch/fuxcel?style=flat-square" alt="License"></a>
+					<a href="https://github.com/Bien-Glitch/fuxcel/releases/latest" target="_blank"><img src="https://img.shields.io/github/v/release/Bien-Glitch/fuxcel?style=flat-square" alt="Latest Release"></a>
+					<a href="https://github.com/Bien-Glitch/fuxcel/issues" target="_blank"><img src="https://img.shields.io/github/issues/Bien-Glitch/fuxcel?style=flat-square" alt="Issues"></a>
+				</div>
+				<div class="hero-install" id="install-cmd">
+					<span class="prompt">$</span>
+					<span>npm install fuxcel</span>
+					<button class="copy-btn" onclick="copyInstall()" title="Copy">⎘</button>
+					<span class="copy-toast" id="copy-toast">Copied!</span>
+				</div>
+			</div>
+			
+			<!-- FEATURES -->
+			<div class="features-grid">
+				<div class="feature-card">
+					<div class="feature-icon">✅</div>
+					<div class="feature-title">Advanced Validation</div>
+					<div class="feature-desc">Built-in validators with real-time feedback</div>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon">🎭</div>
+					<div class="feature-title">Multi-step Forms</div>
+					<div class="feature-desc">Easy wizard-style form management</div>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon">🎨</div>
+					<div class="feature-title">Zero Dependencies</div>
+					<div class="feature-desc">Pure JavaScript, no external libraries</div>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon">🎬</div>
+					<div class="feature-title">Rich Animations</div>
+					<div class="feature-desc">Fade, slide, zoom, shake, and blink effects</div>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon">🏗️</div>
+					<div class="feature-title">DOM Manipulation</div>
+					<div class="feature-desc">Chainable API with full instance awareness</div>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon">🪟</div>
+					<div class="feature-title">Modal System</div>
+					<div class="feature-desc">Beautiful, customizable modals and alerts</div>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon">📡</div>
+					<div class="feature-title">HTTP Client</div>
+					<div class="feature-desc">Modern fetch wrapper with SPA navigation</div>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon">🔒</div>
+					<div class="feature-title">Type-Safe</div>
+					<div class="feature-desc">Full TypeScript support included</div>
+				</div>
+			</div>
+			
+			<hr>
+			
+			<!-- INSTALLATION -->
+			<section class="content-section" id="installation">
+				<h2>Installation</h2>
+				<p>Fuxcel is a standalone plugin — it requires no external libraries, frameworks, or dependencies.</p>
+				
+				<h3>NPM</h3>
+				<pre><code class="language-bash">npm install fuxcel</code></pre>
+				
+				<p>Or download the latest package from the <a href="https://github.com/Bien-Glitch/fuxcel/releases/latest" target="_blank">releases page</a>. The Fuxcel assets are in the <code>dist</code> folder.</p>
+				
+				<h3>TypeScript / Intellisense</h3>
+				<p>Types are bundled with the npm package automatically — no <code>@types/</code> install needed.</p>
+				<p>For non-npm (script-tag) projects, download the definition file directly:</p>
+				<div class="table-wrap">
+					<table>
+						<thead>
+						<tr>
+							<th>Channel</th>
+							<th>URL</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td>jsDelivr (CDN)</td>
+							<td><code>https://cdn.jsdelivr.net/npm/fuxcel/dist/js/fuxcel.d.ts</code></td>
+						</tr>
+						<tr>
+							<td>GitHub (raw)</td>
+							<td><code>https://raw.githubusercontent.com/Bien-Glitch/fuxcel/main/dist/js/fuxcel.d.ts</code></td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+				<pre><code class="language-typescript">/// &lt;reference path="./fuxcel.d.ts" /&gt;</code></pre>
+				
+				<h3>Script Tag</h3>
+				<pre><code class="language-html">&lt;!DOCTYPE html&gt;
 &lt;html lang="en"&gt;
 &lt;head&gt;
   &lt;meta charset="UTF-8"&gt;
@@ -584,13 +1051,13 @@
   &lt;!-- Your content here --&gt;
 &lt;/body&gt;
 &lt;/html&gt;</code></pre>
-    <blockquote><p><strong>Note:</strong> If you are using Bootstrap JS or Font Awesome JS, ensure they are loaded before <code>fuxcel.js</code>.</p></blockquote>
-  </section>
-
-  <!-- QUICK START -->
-  <section class="content-section" id="quick-start">
-    <h2>Quick Start</h2>
-    <pre><code class="language-javascript">// Select element(s) and add event listeners
+				<blockquote><p><strong>Note:</strong> If you are using Bootstrap JS or Font Awesome JS, ensure they are loaded before <code>fuxcel.js</code>.</p></blockquote>
+			</section>
+			
+			<!-- QUICK START -->
+			<section class="content-section" id="quick-start">
+				<h2>Quick Start</h2>
+				<pre><code class="language-javascript">// Select element(s) and add event listeners
 fx('#myButton').upon('click', function () {
   fx(this).fadein(300);
 });
@@ -618,43 +1085,62 @@ fx.fetch({
     console.log(response.responseJSON);
   }
 });</code></pre>
-  </section>
-
-  <!-- THE FX FUNCTION -->
-  <section class="content-section" id="the-fx-function">
-    <h2>The <code>fx()</code> Function</h2>
-    <p>Fuxcel exposes a global <code>fx(selector, context)</code> function that returns a <code>Fuxcel</code> instance of the selected element(s). The alias <code>fuxcel()</code> is identical in every way.</p>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
-      <tbody>
-        <tr><td>selector</td><td><code>string | NodeList | HTMLElement | HTMLCollection</code></td><td>✅</td><td>The element(s) to select</td></tr>
-        <tr><td>context</td><td><code>string | NodeList | HTMLElement | HTMLCollection</code></td><td>❌</td><td>Optional context to select from</td></tr>
-      </tbody>
-    </table></div>
-
-    <h3 id="selector">Selector</h3>
-    <pre><code class="language-javascript">fx('#id')              // Select by ID
+			</section>
+			
+			<!-- THE FX FUNCTION -->
+			<section class="content-section" id="the-fx-function">
+				<h2>The <code>fx()</code> Function</h2>
+				<p>Fuxcel exposes a global <code>fx(selector, context)</code> function that returns a <code>Fuxcel</code> instance of the selected element(s). The alias <code>fuxcel()</code> is identical in every way.</p>
+				<div class="table-wrap">
+					<table>
+						<thead>
+						<tr>
+							<th>Parameter</th>
+							<th>Type</th>
+							<th>Required</th>
+							<th>Description</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td>selector</td>
+							<td><code>string | NodeList | HTMLElement | HTMLCollection</code></td>
+							<td>✅</td>
+							<td>The element(s) to select</td>
+						</tr>
+						<tr>
+							<td>context</td>
+							<td><code>string | NodeList | HTMLElement | HTMLCollection</code></td>
+							<td>❌</td>
+							<td>Optional context to select from</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<h3 id="selector">Selector</h3>
+				<pre><code class="language-javascript">fx('#id')              // Select by ID
 fx('.class')           // Select by class
 fx('div')              // Select by tag
 fx('[data-attr]')      // Select by attribute
 fx('#parent .child')   // Nested selection</code></pre>
-  </section>
-
-  <!-- CLASS MANAGEMENT -->
-  <section class="content-section" id="class-management">
-    <h2>Class Management</h2>
-    <pre><code class="language-javascript">fx('#element').putClass('active', 'highlight')    // Add one or more classes
+			</section>
+			
+			<!-- CLASS MANAGEMENT -->
+			<section class="content-section" id="class-management">
+				<h2>Class Management</h2>
+				<pre><code class="language-javascript">fx('#element').putClass('active', 'highlight')    // Add one or more classes
 fx('#element').removeClass('inactive')             // Remove one or more classes
 fx('#element').toggleClass('visible')              // Toggle a class
 fx('#element').hasClass('active')                  // Returns boolean
 fx('#element').replaceClass('old', 'new')          // Replace a class (adds 'new' if 'old' not found)
 fx('#element').classes                             // Returns the element's DOMTokenList</code></pre>
-  </section>
-
-  <!-- ATTRIBUTES & PROPERTIES -->
-  <section class="content-section" id="attributes-properties">
-    <h2>Attributes &amp; Properties</h2>
-    <pre><code class="language-javascript">// Attributes
+			</section>
+			
+			<!-- ATTRIBUTES & PROPERTIES -->
+			<section class="content-section" id="attributes-properties">
+				<h2>Attributes &amp; Properties</h2>
+				<pre><code class="language-javascript">// Attributes
 fx('#input').attrib('placeholder', 'Enter text')    // Set attribute
 fx('#input').attrib('disabled', true)               // Set boolean attribute
 const value = fx('#input').attrib('value')          // Get attribute
@@ -678,12 +1164,12 @@ fx('#input').listProp()                             // Get all properties as obj
 fx('#box').style('background', 'blue')              // Set a style
 fx('#box').style({width: '100px', height: '100px'}) // Set multiple styles
 fx('#box').style('width')                           // Get a style value</code></pre>
-  </section>
-
-  <!-- CONTENT & HTML -->
-  <section class="content-section" id="content-html">
-    <h2>Content &amp; HTML</h2>
-    <pre><code class="language-javascript">fx('#element').innerText = 'New text'               // Set inner text
+			</section>
+			
+			<!-- CONTENT & HTML -->
+			<section class="content-section" id="content-html">
+				<h2>Content &amp; HTML</h2>
+				<pre><code class="language-javascript">fx('#element').innerText = 'New text'               // Set inner text
 fx('#element').outerText = 'Replaced text'          // Set outer text
 fx('#element').innerText                            // Get inner text
 fx('#element').innerHTML                            // Get inner HTML
@@ -697,14 +1183,14 @@ fx('#container').insertHTML('&lt;hr&gt;', 'before')          // Before the eleme
 fx('#container').insertHTML('&lt;p&gt;First&lt;/p&gt;', 'prepend') // As first child
 fx('#container').insertHTML('&lt;p&gt;Last&lt;/p&gt;', 'append')   // As last child
 fx('#container').insertHTML('&lt;hr&gt;', 'after')           // After the element itself</code></pre>
-    <div class="migration-note"><strong>Migration note (v1 → v2):</strong> The position values <code>'affix'</code>, <code>'prefix'</code>, <code>'suffix'</code>, and <code>'postfix'</code> have been renamed to <code>'before'</code>, <code>'prepend'</code>, <code>'append'</code>, and <code>'after'</code> respectively.</div>
-  </section>
-
-  <!-- NODE INSERTION -->
-  <section class="content-section" id="node-insertion">
-    <h2>Node Insertion</h2>
-    <p><code>insertNode</code> accepts a single node or an array of nodes. Each node can be a raw <code>HTMLElement</code>, a plain HTML string, or a <code>Fuxcel</code> instance.</p>
-    <pre><code class="language-javascript">fx('#container').insertNode('&lt;p&gt;Hello&lt;/p&gt;')                           // Append (default)
+				<div class="migration-note"><strong>Migration note (v1 → v2):</strong> The position values <code>'affix'</code>, <code>'prefix'</code>, <code>'suffix'</code>, and <code>'postfix'</code> have been renamed to <code>'before'</code>, <code>'prepend'</code>, <code>'append'</code>, and <code>'after'</code> respectively.</div>
+			</section>
+			
+			<!-- NODE INSERTION -->
+			<section class="content-section" id="node-insertion">
+				<h2>Node Insertion</h2>
+				<p><code>insertNode</code> accepts a single node or an array of nodes. Each node can be a raw <code>HTMLElement</code>, a plain HTML string, or a <code>Fuxcel</code> instance.</p>
+				<pre><code class="language-javascript">fx('#container').insertNode('&lt;p&gt;Hello&lt;/p&gt;')                           // Append (default)
 fx('#container').insertNode(document.createElement('hr'), 'append')
 
 fx('#container').insertNode(fx('#header'), 'prepend')                  // Prepend
@@ -716,24 +1202,24 @@ fx('#container').insertNode([fx('#header'), '&lt;hr&gt;', document.createElement
 
 // Chainable
 fx('#container').insertNode('&lt;p&gt;Hello&lt;/p&gt;', 'prepend').putClass('loaded').fadein(300)</code></pre>
-  </section>
-
-  <!-- REMOVAL & DETACH -->
-  <section class="content-section" id="removal-detach">
-    <h2>Removal &amp; Detach</h2>
-    <pre><code class="language-javascript">// Remove element completely
+			</section>
+			
+			<!-- REMOVAL & DETACH -->
+			<section class="content-section" id="removal-detach">
+				<h2>Removal &amp; Detach</h2>
+				<pre><code class="language-javascript">// Remove element completely
 fx('#banner').remove()
 fx('#banner').remove(false)
 
 // Detach — preserves event listeners so it can be reinserted later
 const header = fx('#header').remove(true)
 fx('#new-container').insertNode(header, 'prepend')</code></pre>
-  </section>
-
-  <!-- TRAVERSAL -->
-  <section class="content-section" id="traversal">
-    <h2>Element Selection &amp; Traversal</h2>
-    <pre><code class="language-javascript">// Index-based access (supports negative indices)
+			</section>
+			
+			<!-- TRAVERSAL -->
+			<section class="content-section" id="traversal">
+				<h2>Element Selection &amp; Traversal</h2>
+				<pre><code class="language-javascript">// Index-based access (supports negative indices)
 fx('#list li').at()      // First item (index 0)
 fx('#list li').at(2)     // Third item
 fx('#list li').at(-1)    // Last item
@@ -764,12 +1250,12 @@ fx('li').each((element, index, elements) => {
 
 // Filter (returns a shallow copy)
 fx('li').filter((element, index) => index % 2 === 0);</code></pre>
-  </section>
-
-  <!-- ELEMENT QUERIES -->
-  <section class="content-section" id="element-queries">
-    <h2>Element Queries</h2>
-    <pre><code class="language-javascript">fx('#input').isElement('input')          // true if tag name matches
+			</section>
+			
+			<!-- ELEMENT QUERIES -->
+			<section class="content-section" id="element-queries">
+				<h2>Element Queries</h2>
+				<pre><code class="language-javascript">fx('#input').isElement('input')          // true if tag name matches
 fx('#input').matchSelector('#myInput')   // true if selector matches element
 fx('#list').hasScrollBar()               // true if any scrollbar
 fx('#list').hasScrollBar('vertical')     // true if vertical scrollbar
@@ -777,28 +1263,28 @@ fx('#input').isDisabled                  // true if element is disabled
 fx('#form').isFormElement                // true if element is a form
 fx('#input').hasFocus                    // Promise&lt;boolean&gt;
 fx('#input').fieldAttributes             // { id, fxName, type, fxId, fxRole, formId }</code></pre>
-  </section>
-
-  <!-- VALUE -->
-  <section class="content-section" id="value">
-    <h2>Value</h2>
-    <pre><code class="language-javascript">fx('#input').value()            // Get value (returns string | string[] | null)
+			</section>
+			
+			<!-- VALUE -->
+			<section class="content-section" id="value">
+				<h2>Value</h2>
+				<pre><code class="language-javascript">fx('#input').value()            // Get value (returns string | string[] | null)
 fx('#input').value('hello')     // Set value
 fx('#select').value()           // Returns array of selected values for multi-selects</code></pre>
-  </section>
-
-  <!-- DISABLE / ENABLE -->
-  <section class="content-section" id="disable-enable">
-    <h2>Disable / Enable</h2>
-    <pre><code class="language-javascript">fx('#button').disable()         // Disable element
+			</section>
+			
+			<!-- DISABLE / ENABLE -->
+			<section class="content-section" id="disable-enable">
+				<h2>Disable / Enable</h2>
+				<pre><code class="language-javascript">fx('#button').disable()         // Disable element
 fx('#button').disable(true)     // Disable element
 fx('#button').disable(false)    // Enable element</code></pre>
-  </section>
-
-  <!-- EVENTS -->
-  <section class="content-section" id="event-listeners">
-    <h2>Event Listeners</h2>
-    <pre><code class="language-javascript">// Single event
+			</section>
+			
+			<!-- EVENTS -->
+			<section class="content-section" id="event-listeners">
+				<h2>Event Listeners</h2>
+				<pre><code class="language-javascript">// Single event
 fx('#button').upon('click', function (e) {
   console.log('Clicked!');
 });
@@ -823,18 +1309,18 @@ fx('#button').off('focus', 'blur')
 
 // Remove all events
 fx('#button').off()</code></pre>
-
-    <h3 id="trigger-events">Trigger Events</h3>
-    <pre><code class="language-javascript">fx('#button').trigger('click')
+				
+				<h3 id="trigger-events">Trigger Events</h3>
+				<pre><code class="language-javascript">fx('#button').trigger('click')
 fx('#input').trigger('focus', 'mouse')           // mouse | keyboard | custom
 fx('#form').trigger(new CustomEvent('validate'))</code></pre>
-  </section>
-
-  <!-- ANIMATIONS -->
-  <section class="content-section" id="animations">
-    <h2>Animations</h2>
-    <p>All animation methods accept optional <code>timeout</code> (ms), <code>iteration</code> (count), and <code>display</code> (CSS display value) parameters and return <code>Promise&lt;Fuxcel&gt;</code> for chaining.</p>
-    <pre><code class="language-javascript">// Fade
+			</section>
+			
+			<!-- ANIMATIONS -->
+			<section class="content-section" id="animations">
+				<h2>Animations</h2>
+				<p>All animation methods accept optional <code>timeout</code> (ms), <code>iteration</code> (count), and <code>display</code> (CSS display value) parameters and return <code>Promise&lt;Fuxcel&gt;</code> for chaining.</p>
+				<pre><code class="language-javascript">// Fade
 await fx('#element').fadein()
 await fx('#element').fadein(500)              // 500ms
 await fx('#element').fadein(500, 2)           // 500ms, 2 iterations
@@ -858,12 +1344,12 @@ await fx('#alert').shake(500, 2)              // 500ms, 2 iterations
 
 // Chaining
 fx('#element').fadein(300).then(() => fx('#element').slideoutup(400));</code></pre>
-  </section>
-
-  <!-- FORM VALIDATION -->
-  <section class="content-section" id="form-validation">
-    <h2>Form Validation</h2>
-    <pre><code class="language-html">&lt;form method="post" id="login-form"&gt;
+			</section>
+			
+			<!-- FORM VALIDATION -->
+			<section class="content-section" id="form-validation">
+				<h2>Form Validation</h2>
+				<pre><code class="language-html">&lt;form method="post" id="login-form"&gt;
   &lt;div class="form-group"&gt;
     &lt;label for="email"&gt;Email&lt;/label&gt;
     &lt;input type="email" id="email" placeholder="Email" class="form-field"&gt;
@@ -878,8 +1364,8 @@ fx('#element').fadein(300).then(() => fx('#element').slideoutup(400));</code></p
   &lt;/div&gt;
   &lt;button type="submit" class="fx-btn fx-btn-primary"&gt;Register&lt;/button&gt;
 &lt;/form&gt;</code></pre>
-
-    <pre><code class="language-javascript">const _loginForm = fx('#login-form');
+				
+				<pre><code class="language-javascript">const _loginForm = fx('#login-form');
 
 _loginForm.formValidator.init({
   config: {
@@ -894,79 +1380,272 @@ _loginForm.formValidator.init({
     .then(resolve => console.log(resolve))
     .catch(error => console.log(error));
 });</code></pre>
-  </section>
-
-  <!-- CONFIGURATION -->
-  <section class="content-section" id="configuration-options">
-    <h2>Configuration Options</h2>
-    <p>Config is passed as an object to <code>formValidator.init()</code>. It is organized into four sub-objects.</p>
-
-    <h3>regExp — Regular Expression Overrides</h3>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
-      <tbody>
-        <tr><td>name</td><td><code>/^([a-zA-Z]{2,255})(\s[a-zA-Z]{2,255}){1,2}$/gi</code></td><td>Validates a name field when <code>validateName</code> is <code>true</code></td></tr>
-        <tr><td>username</td><td><code>/^(?=.{2,255}$)[a-zA-Z]...$/gi</code></td><td>Validates a username field</td></tr>
-        <tr><td>email</td><td><code>/^[a-zA-Z][a-zA-Z0-9._%+\-]{0,63}@...$/gi</code></td><td>Validates an email field</td></tr>
-        <tr><td>phone</td><td><code>/^\+?(\d{1,3})?[-.\s]?\(?\d...$/g</code></td><td>Validates a phone field</td></tr>
-        <tr><td>cardCVV</td><td><code>/^\d{3,4}$/gi</code></td><td>Validates a CVV field</td></tr>
-        <tr><td>cardNumber</td><td><code>/^(?=.{12,19}$)\d{12,19}$/gi</code></td><td>Validates a card number field</td></tr>
-        <tr><td>password</td><td><code>/^(?=.*[a-z]).{8,32}$/gi</code></td><td>Validates a password field</td></tr>
-      </tbody>
-    </table></div>
-
-    <h3>stepForm — Step Form Wizard Options</h3>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
-      <tbody>
-        <tr><td>use</td><td><code>boolean</code></td><td><code>true</code></td><td>Toggle step form validator initialization</td></tr>
-        <tr><td>plugin</td><td><code>boolean</code></td><td><code>false</code></td><td>Use the xsteps form wizard plugin (if available)</td></tr>
-        <tr><td>config.step</td><td><code>string</code></td><td><code>'.fx-step'</code></td><td>CSS selector for each step container</td></tr>
-        <tr><td>config.slides</td><td><code>boolean</code></td><td><code>false</code></td><td>Enable slide-style step transitions</td></tr>
-        <tr><td>config.switch</td><td><code>string</code></td><td><code>'[data-step]'</code></td><td>CSS selector for step navigation triggers</td></tr>
-      </tbody>
-    </table></div>
-
-    <h3>texts — Validation Display Texts</h3>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
-      <tbody>
-        <tr><td>capslockFormat</td><td><code>string</code></td><td><code>'⚠ Caps Lock is on'</code></td><td>Shown when Caps Lock is on</td></tr>
-        <tr><td>emailFormat</td><td><code>string</code></td><td><code>null</code></td><td>Example email format hint</td></tr>
-        <tr><td>nameFormat</td><td><code>string</code></td><td><code>null</code></td><td>Example name format hint</td></tr>
-        <tr><td>passwordFormat</td><td><code>string</code></td><td><code>'Password requires between 8-32 characters.'</code></td><td>Example password format hint</td></tr>
-        <tr><td>phoneFormat</td><td><code>string</code></td><td><code>null</code></td><td>Example phone format hint</td></tr>
-        <tr><td>usernameFormat</td><td><code>string</code></td><td><code>null</code></td><td>Example username format hint</td></tr>
-      </tbody>
-    </table></div>
-
-    <h3>config — Field Validation Toggles</h3>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
-      <tbody>
-        <tr><td>capslockAlert</td><td><code>boolean</code></td><td><code>true</code></td><td>Show Caps Lock alert on password fields</td></tr>
-        <tr><td>showIcons</td><td><code>boolean</code></td><td><code>true</code></td><td>Show validation icons on fields</td></tr>
-        <tr><td>showPassword</td><td><code>boolean</code></td><td><code>true</code></td><td>Show password visibility toggle icon</td></tr>
-        <tr><td>validateCard</td><td><code>boolean</code></td><td><code>false</code></td><td>Enable card number and CVV validation</td></tr>
-        <tr><td>validateName</td><td><code>boolean</code></td><td><code>false</code></td><td>Enable name field validation</td></tr>
-        <tr><td>validateEmail</td><td><code>boolean</code></td><td><code>true</code></td><td>Enable email field validation</td></tr>
-        <tr><td>validatePhone</td><td><code>boolean</code></td><td><code>false</code></td><td>Enable phone number validation</td></tr>
-        <tr><td>validatePassword</td><td><code>boolean</code></td><td><code>true</code></td><td>Enable password validation</td></tr>
-        <tr><td>validateUsername</td><td><code>boolean</code></td><td><code>false</code></td><td>Enable username field validation</td></tr>
-        <tr><td>nativeValidation</td><td><code>boolean</code></td><td><code>false</code></td><td>Enable native HTML5 form validation</td></tr>
-        <tr><td>useDefaultStyling</td><td><code>boolean</code></td><td><code>false</code></td><td>Use Fuxcel's default field styling</td></tr>
-        <tr><td>showPasswordStrength</td><td><code>boolean</code></td><td><code>false</code></td><td>Enable Password Strength Calculator</td></tr>
-        <tr><td>passwordId</td><td><code>string</code></td><td><code>'password'</code></td><td>The <code>id</code> of your password field</td></tr>
-        <tr><td>passwordConfirmId</td><td><code>string</code></td><td><code>'password_confirmation'</code></td><td>The <code>id</code> of your confirm password field</td></tr>
-        <tr><td>initWrapper</td><td><code>string</code></td><td><code>'.form-group'</code></td><td>CSS selector of the label/input wrapper</td></tr>
-      </tbody>
-    </table></div>
-  </section>
-
-  <!-- VALIDATION METHODS -->
-  <section class="content-section" id="validation-methods">
-    <h2>Validation Methods</h2>
-    <pre><code class="language-javascript">const field = fx('#email').formValidator;
+			</section>
+			
+			<!-- CONFIGURATION -->
+			<section class="content-section" id="configuration-options">
+				<h2>Configuration Options</h2>
+				<p>Config is passed as an object to <code>formValidator.init()</code>. It is organized into four sub-objects.</p>
+				
+				<h3>regExp — Regular Expression Overrides</h3>
+				<div class="table-wrap">
+					<table>
+						<thead>
+						<tr>
+							<th>Key</th>
+							<th>Default</th>
+							<th>Description</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td>name</td>
+							<td><code>/^([a-zA-Z]{2,255})(\s[a-zA-Z]{2,255}){1,2}$/gi</code></td>
+							<td>Validates a name field when <code>validateName</code> is <code>true</code></td>
+						</tr>
+						<tr>
+							<td>username</td>
+							<td><code>/^(?=.{2,255}$)[a-zA-Z]...$/gi</code></td>
+							<td>Validates a username field</td>
+						</tr>
+						<tr>
+							<td>email</td>
+							<td><code>/^[a-zA-Z][a-zA-Z0-9._%+\-]{0,63}@...$/gi</code></td>
+							<td>Validates an email field</td>
+						</tr>
+						<tr>
+							<td>phone</td>
+							<td><code>/^\+?(\d{1,3})?[-.\s]?\(?\d...$/g</code></td>
+							<td>Validates a phone field</td>
+						</tr>
+						<tr>
+							<td>cardCVV</td>
+							<td><code>/^\d{3,4}$/gi</code></td>
+							<td>Validates a CVV field</td>
+						</tr>
+						<tr>
+							<td>cardNumber</td>
+							<td><code>/^(?=.{12,19}$)\d{12,19}$/gi</code></td>
+							<td>Validates a card number field</td>
+						</tr>
+						<tr>
+							<td>password</td>
+							<td><code>/^(?=.*[a-z]).{8,32}$/gi</code></td>
+							<td>Validates a password field</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<h3>stepForm — Step Form Wizard Options</h3>
+				<div class="table-wrap">
+					<table>
+						<thead>
+						<tr>
+							<th>Key</th>
+							<th>Type</th>
+							<th>Default</th>
+							<th>Description</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td>use</td>
+							<td><code>boolean</code></td>
+							<td><code>true</code></td>
+							<td>Toggle step form validator initialization</td>
+						</tr>
+						<tr>
+							<td>plugin</td>
+							<td><code>boolean</code></td>
+							<td><code>false</code></td>
+							<td>Use the xsteps form wizard plugin (if available)</td>
+						</tr>
+						<tr>
+							<td>config.step</td>
+							<td><code>string</code></td>
+							<td><code>'.fx-step'</code></td>
+							<td>CSS selector for each step container</td>
+						</tr>
+						<tr>
+							<td>config.slides</td>
+							<td><code>boolean</code></td>
+							<td><code>false</code></td>
+							<td>Enable slide-style step transitions</td>
+						</tr>
+						<tr>
+							<td>config.switch</td>
+							<td><code>string</code></td>
+							<td><code>'[data-step]'</code></td>
+							<td>CSS selector for step navigation triggers</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<h3>texts — Validation Display Texts</h3>
+				<div class="table-wrap">
+					<table>
+						<thead>
+						<tr>
+							<th>Key</th>
+							<th>Type</th>
+							<th>Default</th>
+							<th>Description</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td>capslockFormat</td>
+							<td><code>string</code></td>
+							<td><code>'⚠ Caps Lock is on'</code></td>
+							<td>Shown when Caps Lock is on</td>
+						</tr>
+						<tr>
+							<td>emailFormat</td>
+							<td><code>string</code></td>
+							<td><code>null</code></td>
+							<td>Example email format hint</td>
+						</tr>
+						<tr>
+							<td>nameFormat</td>
+							<td><code>string</code></td>
+							<td><code>null</code></td>
+							<td>Example name format hint</td>
+						</tr>
+						<tr>
+							<td>passwordFormat</td>
+							<td><code>string</code></td>
+							<td><code>'Password requires between 8-32 characters.'</code></td>
+							<td>Example password format hint</td>
+						</tr>
+						<tr>
+							<td>phoneFormat</td>
+							<td><code>string</code></td>
+							<td><code>null</code></td>
+							<td>Example phone format hint</td>
+						</tr>
+						<tr>
+							<td>usernameFormat</td>
+							<td><code>string</code></td>
+							<td><code>null</code></td>
+							<td>Example username format hint</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<h3>config — Field Validation Toggles</h3>
+				<div class="table-wrap">
+					<table>
+						<thead>
+						<tr>
+							<th>Key</th>
+							<th>Type</th>
+							<th>Default</th>
+							<th>Description</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td>capslockAlert</td>
+							<td><code>boolean</code></td>
+							<td><code>true</code></td>
+							<td>Show Caps Lock alert on password fields</td>
+						</tr>
+						<tr>
+							<td>showIcons</td>
+							<td><code>boolean</code></td>
+							<td><code>true</code></td>
+							<td>Show validation icons on fields</td>
+						</tr>
+						<tr>
+							<td>showPassword</td>
+							<td><code>boolean</code></td>
+							<td><code>true</code></td>
+							<td>Show password visibility toggle icon</td>
+						</tr>
+						<tr>
+							<td>validateCard</td>
+							<td><code>boolean</code></td>
+							<td><code>false</code></td>
+							<td>Enable card number and CVV validation</td>
+						</tr>
+						<tr>
+							<td>validateName</td>
+							<td><code>boolean</code></td>
+							<td><code>false</code></td>
+							<td>Enable name field validation</td>
+						</tr>
+						<tr>
+							<td>validateEmail</td>
+							<td><code>boolean</code></td>
+							<td><code>true</code></td>
+							<td>Enable email field validation</td>
+						</tr>
+						<tr>
+							<td>validatePhone</td>
+							<td><code>boolean</code></td>
+							<td><code>false</code></td>
+							<td>Enable phone number validation</td>
+						</tr>
+						<tr>
+							<td>validatePassword</td>
+							<td><code>boolean</code></td>
+							<td><code>true</code></td>
+							<td>Enable password validation</td>
+						</tr>
+						<tr>
+							<td>validateUsername</td>
+							<td><code>boolean</code></td>
+							<td><code>false</code></td>
+							<td>Enable username field validation</td>
+						</tr>
+						<tr>
+							<td>nativeValidation</td>
+							<td><code>boolean</code></td>
+							<td><code>false</code></td>
+							<td>Enable native HTML5 form validation</td>
+						</tr>
+						<tr>
+							<td>useDefaultStyling</td>
+							<td><code>boolean</code></td>
+							<td><code>false</code></td>
+							<td>Use Fuxcel's default field styling</td>
+						</tr>
+						<tr>
+							<td>showPasswordStrength</td>
+							<td><code>boolean</code></td>
+							<td><code>false</code></td>
+							<td>Enable Password Strength Calculator</td>
+						</tr>
+						<tr>
+							<td>passwordId</td>
+							<td><code>string</code></td>
+							<td><code>'password'</code></td>
+							<td>The <code>id</code> of your password field</td>
+						</tr>
+						<tr>
+							<td>passwordConfirmId</td>
+							<td><code>string</code></td>
+							<td><code>'password_confirmation'</code></td>
+							<td>The <code>id</code> of your confirm password field</td>
+						</tr>
+						<tr>
+							<td>initWrapper</td>
+							<td><code>string</code></td>
+							<td><code>'.form-group'</code></td>
+							<td>CSS selector of the label/input wrapper</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
+			
+			<!-- VALIDATION METHODS -->
+			<section class="content-section" id="validation-methods">
+				<h2>Validation Methods</h2>
+				<pre><code class="language-javascript">const field = fx('#email').formValidator;
 
 // Validate based on field type
 field.validateField()               // Auto-generate error message on failure
@@ -1005,12 +1684,12 @@ field.isNameField
 field.isPhoneField
 field.isUsernameField
 field.canBeValidated</code></pre>
-  </section>
-
-  <!-- ERROR RENDERING -->
-  <section class="content-section" id="error-rendering">
-    <h2>Error Rendering</h2>
-    <pre><code class="language-javascript">const form = fx('#my-form').formValidator;
+			</section>
+			
+			<!-- ERROR RENDERING -->
+			<section class="content-section" id="error-rendering">
+				<h2>Error Rendering</h2>
+				<pre><code class="language-javascript">const form = fx('#my-form').formValidator;
 
 // Get error state
 form.errorBag     // { fieldId: 'error message', ... } or null
@@ -1041,13 +1720,13 @@ form.renderValidationErrors(
 // Render only a message (no field errors)
 form.renderValidationErrors(null, 'Something went wrong')
 form.renderValidationErrors(null, (fx, e) => console.log('dismissed'))</code></pre>
-  </section>
-
-  <!-- PASSWORD STRENGTH -->
-  <section class="content-section" id="password-strength">
-    <h2>Password Strength</h2>
-    <p>When <code>showPasswordStrength: true</code> is set in config, the <code>passwordStrength</code> getter returns a <code>StrengthResult</code>:</p>
-    <pre><code class="language-javascript">const result = fx('#password').formValidator.passwordStrength;
+			</section>
+			
+			<!-- PASSWORD STRENGTH -->
+			<section class="content-section" id="password-strength">
+				<h2>Password Strength</h2>
+				<p>When <code>showPasswordStrength: true</code> is set in config, the <code>passwordStrength</code> getter returns a <code>StrengthResult</code>:</p>
+				<pre><code class="language-javascript">const result = fx('#password').formValidator.passwordStrength;
 // {
 //   score:  number,
 //   label:  'weak' | 'fair' | 'good' | 'strong',
@@ -1056,13 +1735,13 @@ form.renderValidationErrors(null, (fx, e) => console.log('dismissed'))</code></p
 //   failed: string[],
 //   rules:  { name: string, regex: RegExp, weight: number }[]
 // }</code></pre>
-  </section>
-
-  <!-- MULTI-STEP FORMS -->
-  <section class="content-section" id="multi-step-forms">
-    <h2>Multi-step Forms</h2>
-    <p>When a form uses the step form feature, <code>formValidator.init()</code> returns a <code>FuxcelSteps</code> instance:</p>
-    <pre><code class="language-javascript">const steps = fx('#wizard-form').formValidator.init({ stepForm: { use: true } });
+			</section>
+			
+			<!-- MULTI-STEP FORMS -->
+			<section class="content-section" id="multi-step-forms">
+				<h2>Multi-step Forms</h2>
+				<p>When a form uses the step form feature, <code>formValidator.init()</code> returns a <code>FuxcelSteps</code> instance:</p>
+				<pre><code class="language-javascript">const steps = fx('#wizard-form').formValidator.init({ stepForm: { use: true } });
 
 steps.formSteps              // (number | string)[]
 
@@ -1072,12 +1751,12 @@ steps.stepErrors('personal-info')
 
 steps.stepErrorBag(1)        // { fieldId: 'error', ... } | null
 steps.stepErrorCount(1)      // number</code></pre>
-  </section>
-
-  <!-- MODALS -->
-  <section class="content-section" id="modals">
-    <h2>Modals</h2>
-    <pre><code class="language-javascript">fx.modal({
+			</section>
+			
+			<!-- MODALS -->
+			<section class="content-section" id="modals">
+				<h2>Modals</h2>
+				<pre><code class="language-javascript">fx.modal({
   type: 'warning',
   content: '&lt;h1&gt;Are you sure?&lt;/h1&gt;',
   confirmButtonText: 'Yes',
@@ -1086,26 +1765,90 @@ steps.stepErrorCount(1)      // number</code></pre>
   onCancel:  (e, modal) => console.log('Cancelled', modal),
   onEsc:     (e, modal) => console.log('Dismissed with Escape', modal),
 });</code></pre>
-
-    <div class="table-wrap"><table>
-      <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
-      <tbody>
-        <tr><td>title</td><td><code>string | null</code></td><td><code>null</code></td><td>Modal title</td></tr>
-        <tr><td>type</td><td><code>'success' | 'warning' | 'error' | null</code></td><td><code>'success'</code></td><td>Visual style of the modal</td></tr>
-        <tr><td>content</td><td><code>string | null</code></td><td><code>'Alert Content'</code></td><td>Body content</td></tr>
-        <tr><td>confirmButtonText</td><td><code>string | null</code></td><td>—</td><td>Confirm button label</td></tr>
-        <tr><td>cancelButtonText</td><td><code>string | null</code></td><td>—</td><td>Cancel button label</td></tr>
-        <tr><td>html</td><td><code>boolean</code></td><td><code>true</code></td><td>Render content as HTML</td></tr>
-        <tr><td>isStatic</td><td><code>boolean</code></td><td><code>false</code></td><td>Prevent closing on outside click</td></tr>
-        <tr><td>closeOnConfirm</td><td><code>boolean</code></td><td><code>false</code></td><td>Auto-hide the modal on confirm click</td></tr>
-        <tr><td>onConfirm</td><td><code>(e, modal) =&gt; void</code></td><td>—</td><td>Called when confirm is clicked</td></tr>
-        <tr><td>onCancel</td><td><code>(e, modal) =&gt; void</code></td><td>—</td><td>Called when cancel is clicked</td></tr>
-        <tr><td>onEsc</td><td><code>(e, modal) =&gt; void</code></td><td>—</td><td>Called on Escape key</td></tr>
-      </tbody>
-    </table></div>
-
-    <h3 id="fuxcelmodal-class">FuxcelModal Class</h3>
-    <pre><code class="language-javascript">// Via the getter
+				
+				<div class="table-wrap">
+					<table>
+						<thead>
+						<tr>
+							<th>Property</th>
+							<th>Type</th>
+							<th>Default</th>
+							<th>Description</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td>title</td>
+							<td><code>string | null</code></td>
+							<td><code>null</code></td>
+							<td>Modal title</td>
+						</tr>
+						<tr>
+							<td>type</td>
+							<td><code>'success' | 'warning' | 'error' | null</code></td>
+							<td><code>'success'</code></td>
+							<td>Visual style of the modal</td>
+						</tr>
+						<tr>
+							<td>content</td>
+							<td><code>string | null</code></td>
+							<td><code>'Alert Content'</code></td>
+							<td>Body content</td>
+						</tr>
+						<tr>
+							<td>confirmButtonText</td>
+							<td><code>string | null</code></td>
+							<td>—</td>
+							<td>Confirm button label</td>
+						</tr>
+						<tr>
+							<td>cancelButtonText</td>
+							<td><code>string | null</code></td>
+							<td>—</td>
+							<td>Cancel button label</td>
+						</tr>
+						<tr>
+							<td>html</td>
+							<td><code>boolean</code></td>
+							<td><code>true</code></td>
+							<td>Render content as HTML</td>
+						</tr>
+						<tr>
+							<td>isStatic</td>
+							<td><code>boolean</code></td>
+							<td><code>false</code></td>
+							<td>Prevent closing on outside click</td>
+						</tr>
+						<tr>
+							<td>closeOnConfirm</td>
+							<td><code>boolean</code></td>
+							<td><code>false</code></td>
+							<td>Auto-hide the modal on confirm click</td>
+						</tr>
+						<tr>
+							<td>onConfirm</td>
+							<td><code>(e, modal) =&gt; void</code></td>
+							<td>—</td>
+							<td>Called when confirm is clicked</td>
+						</tr>
+						<tr>
+							<td>onCancel</td>
+							<td><code>(e, modal) =&gt; void</code></td>
+							<td>—</td>
+							<td>Called when cancel is clicked</td>
+						</tr>
+						<tr>
+							<td>onEsc</td>
+							<td><code>(e, modal) =&gt; void</code></td>
+							<td>—</td>
+							<td>Called on Escape key</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<h3 id="fuxcelmodal-class">FuxcelModal Class</h3>
+				<pre><code class="language-javascript">// Via the getter
 const modal = fx('#my-modal').modal;
 modal.show()          // Open (allow Escape key to close)
 modal.show(false)     // Open (disable Escape key)
@@ -1129,12 +1872,12 @@ document.body.appendChild(el);
 FuxcelModal.currentModal      // The most recently opened modal, or null
 FuxcelModal.hasOpenModals     // true if any modals are open
 FuxcelModal.modalTriggers     // All elements with [data-fx-target="modal"]</code></pre>
-  </section>
-
-  <!-- FORM SUBMISSION -->
-  <section class="content-section" id="form-submission">
-    <h2>Form Submission</h2>
-    <pre><code class="language-javascript">fx('#my-form').handleFormSubmit({
+			</section>
+			
+			<!-- FORM SUBMISSION -->
+			<section class="content-section" id="form-submission">
+				<h2>Form Submission</h2>
+				<pre><code class="language-javascript">fx('#my-form').handleFormSubmit({
   uri: '/api/register',
   method: 'post',
   dataType: 'json',
@@ -1143,49 +1886,122 @@ FuxcelModal.modalTriggers     // All elements with [data-fx-target="modal"]</cod
 }).then(({ JSON, text, status, form }) => {
   console.log(status, JSON);
 }).catch(error => console.error(error));</code></pre>
-
-    <h4>Options (FXFormSubmitType)</h4>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
-      <tbody>
-        <tr><td>uri</td><td><code>string | null</code></td><td><code>''</code></td><td>Submission URL</td></tr>
-        <tr><td>method</td><td><code>'get' | 'post' | 'put' | 'patch' | 'delete'</code></td><td><code>'post'</code></td><td>HTTP method</td></tr>
-        <tr><td>data</td><td><code>object | null</code></td><td><code>null</code></td><td>Additional form data to merge</td></tr>
-        <tr><td>dataType</td><td><code>'html' | 'json' | 'text' | ...</code></td><td><code>'json'</code></td><td>Expected response type</td></tr>
-        <tr><td>headers</td><td><code>Object | Headers | null</code></td><td>—</td><td>Additional request headers</td></tr>
-        <tr><td>beforeSend</td><td><code>Function | null</code></td><td>—</td><td>Called before the request is sent</td></tr>
-        <tr><td>timeout</td><td><code>number</code></td><td>—</td><td>Timeout in milliseconds</td></tr>
-        <tr><td>handleError</td><td><code>boolean</code></td><td><code>false</code></td><td>Auto-handle 422 validation errors</td></tr>
-      </tbody>
-    </table></div>
-
-    <h4>Response (FXFormResponse)</h4>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
-      <tbody>
-        <tr><td>JSON</td><td><code>any</code></td><td>Parsed JSON response</td></tr>
-        <tr><td>text</td><td><code>string</code></td><td>Raw text response</td></tr>
-        <tr><td>status</td><td><code>number</code></td><td>HTTP response status code</td></tr>
-        <tr><td>form</td><td><code>FuxcelValidator</code></td><td>The submitted form's validator instance</td></tr>
-      </tbody>
-    </table></div>
-  </section>
-
-  <!-- BUTTON LOAD STATES -->
-  <section class="content-section" id="button-load-states">
-    <h2>Button Load States</h2>
-    <pre><code class="language-javascript">await fx('#submit-btn').toggleButtonLoadState(true)    // Enable loading state
+				
+				<h4>Options (FXFormSubmitType)</h4>
+				<div class="table-wrap">
+					<table>
+						<thead>
+						<tr>
+							<th>Property</th>
+							<th>Type</th>
+							<th>Default</th>
+							<th>Description</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td>uri</td>
+							<td><code>string | null</code></td>
+							<td><code>''</code></td>
+							<td>Submission URL</td>
+						</tr>
+						<tr>
+							<td>method</td>
+							<td><code>'get' | 'post' | 'put' | 'patch' | 'delete'</code></td>
+							<td><code>'post'</code></td>
+							<td>HTTP method</td>
+						</tr>
+						<tr>
+							<td>data</td>
+							<td><code>object | null</code></td>
+							<td><code>null</code></td>
+							<td>Additional form data to merge</td>
+						</tr>
+						<tr>
+							<td>dataType</td>
+							<td><code>'html' | 'json' | 'text' | ...</code></td>
+							<td><code>'json'</code></td>
+							<td>Expected response type</td>
+						</tr>
+						<tr>
+							<td>headers</td>
+							<td><code>Object | Headers | null</code></td>
+							<td>—</td>
+							<td>Additional request headers</td>
+						</tr>
+						<tr>
+							<td>beforeSend</td>
+							<td><code>Function | null</code></td>
+							<td>—</td>
+							<td>Called before the request is sent</td>
+						</tr>
+						<tr>
+							<td>timeout</td>
+							<td><code>number</code></td>
+							<td>—</td>
+							<td>Timeout in milliseconds</td>
+						</tr>
+						<tr>
+							<td>handleError</td>
+							<td><code>boolean</code></td>
+							<td><code>false</code></td>
+							<td>Auto-handle 422 validation errors</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<h4>Response (FXFormResponse)</h4>
+				<div class="table-wrap">
+					<table>
+						<thead>
+						<tr>
+							<th>Property</th>
+							<th>Type</th>
+							<th>Description</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td>JSON</td>
+							<td><code>any</code></td>
+							<td>Parsed JSON response</td>
+						</tr>
+						<tr>
+							<td>text</td>
+							<td><code>string</code></td>
+							<td>Raw text response</td>
+						</tr>
+						<tr>
+							<td>status</td>
+							<td><code>number</code></td>
+							<td>HTTP response status code</td>
+						</tr>
+						<tr>
+							<td>form</td>
+							<td><code>FuxcelValidator</code></td>
+							<td>The submitted form's validator instance</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
+			
+			<!-- BUTTON LOAD STATES -->
+			<section class="content-section" id="button-load-states">
+				<h2>Button Load States</h2>
+				<pre><code class="language-javascript">await fx('#submit-btn').toggleButtonLoadState(true)    // Enable loading state
 await fx('#submit-btn').toggleButtonLoadState(false)   // Restore state
 
 await fx('#my-form').toggleFormSubmitButtonState(true)
 await fx('#my-form').toggleFormSubmitButtonState(false)</code></pre>
-  </section>
-
-  <!-- PAGE NAVIGATION -->
-  <section class="content-section" id="page-navigation">
-    <h2>Page Navigation</h2>
-    <p><code>fx.pageNavigate</code> enables SPA-style navigation by fetching page content via AJAX, updating browser history, and injecting content into a target container. On failure it falls back to hard navigation.</p>
-    <pre><code class="language-javascript">// Minimal — navigates to /about, injects into #root
+			</section>
+			
+			<!-- PAGE NAVIGATION -->
+			<section class="content-section" id="page-navigation">
+				<h2>Page Navigation</h2>
+				<p><code>fx.pageNavigate</code> enables SPA-style navigation by fetching page content via AJAX, updating browser history, and injecting content into a target container. On failure it falls back to hard navigation.</p>
+				<pre><code class="language-javascript">// Minimal — navigates to /about, injects into #root
 fx.pageNavigate({ url: '/about' })
   .then(html => console.log('Done'))
   .catch(err => console.error(err));
@@ -1205,31 +2021,60 @@ document.addEventListener('fxPageNavigateReady', () => {
   initComponents();
   window.scrollTo(0, 0);
 });</code></pre>
-
-    <div class="table-wrap"><table>
-      <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
-      <tbody>
-        <tr><td>url</td><td><code>string | null</code></td><td>—</td><td>URL to navigate to</td></tr>
-        <tr><td>selector</td><td><code>string | null</code></td><td><code>'#root'</code></td><td>Container to inject content into</td></tr>
-        <tr><td>dataType</td><td><code>'json' | 'text'</code></td><td><code>'json'</code></td><td>Expected response type</td></tr>
-        <tr><td>replace</td><td><code>boolean</code></td><td><code>false</code></td><td>Use <code>replaceState</code> instead of <code>pushState</code></td></tr>
-      </tbody>
-    </table></div>
-
-    <h3>fx.fetchPage</h3>
-    <pre><code class="language-javascript">// Returns Promise&lt;string&gt; — JSON is returned as an unparsed string
+				
+				<div class="table-wrap">
+					<table>
+						<thead>
+						<tr>
+							<th>Property</th>
+							<th>Type</th>
+							<th>Default</th>
+							<th>Description</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td>url</td>
+							<td><code>string | null</code></td>
+							<td>—</td>
+							<td>URL to navigate to</td>
+						</tr>
+						<tr>
+							<td>selector</td>
+							<td><code>string | null</code></td>
+							<td><code>'#root'</code></td>
+							<td>Container to inject content into</td>
+						</tr>
+						<tr>
+							<td>dataType</td>
+							<td><code>'json' | 'text'</code></td>
+							<td><code>'json'</code></td>
+							<td>Expected response type</td>
+						</tr>
+						<tr>
+							<td>replace</td>
+							<td><code>boolean</code></td>
+							<td><code>false</code></td>
+							<td>Use <code>replaceState</code> instead of <code>pushState</code></td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<h3>fx.fetchPage</h3>
+				<pre><code class="language-javascript">// Returns Promise&lt;string&gt; — JSON is returned as an unparsed string
 fx.fetchPage('/page.html', 'text', () => console.log('Fetching…'))
   .then(html => document.querySelector('#root').innerHTML = html);
 
 fx.fetchPage('/api/data.json', 'json')
   .then(jsonString => JSON.parse(jsonString));</code></pre>
-  </section>
-
-  <!-- PAGE LOADER -->
-  <section class="content-section" id="page-loader">
-    <h2>Page Loader</h2>
-    <p><code>fx.pageLoader</code> provides a YouTube-style thin progress bar at the top of the viewport.</p>
-    <pre><code class="language-javascript">fx.pageLoader.start()    // Show and animate the progress bar (0% → ~90%)
+			</section>
+			
+			<!-- PAGE LOADER -->
+			<section class="content-section" id="page-loader">
+				<h2>Page Loader</h2>
+				<p><code>fx.pageLoader</code> provides a YouTube-style thin progress bar at the top of the viewport.</p>
+				<pre><code class="language-javascript">fx.pageLoader.start()    // Show and animate the progress bar (0% → ~90%)
 fx.pageLoader.finish()   // Jump to 100%, fade out, then reset
 
 // Typical usage
@@ -1238,37 +2083,37 @@ fetch('/api/data')
   .then(res => res.json())
   .then(data => console.log(data))
   .finally(() => fx.pageLoader.finish());</code></pre>
-  </section>
-
-  <!-- GLOBAL UTILITIES -->
-  <section class="content-section" id="global-utilities">
-    <h2>Global Utility Functions</h2>
-    <p>Available directly on the <code>window</code> object after loading Fuxcel.</p>
-
-    <h3>Type Checks</h3>
-    <pre><code class="language-javascript">isBool(true)               // true  — checks if value is boolean
+			</section>
+			
+			<!-- GLOBAL UTILITIES -->
+			<section class="content-section" id="global-utilities">
+				<h2>Global Utility Functions</h2>
+				<p>Available directly on the <code>window</code> object after loading Fuxcel.</p>
+				
+				<h3>Type Checks</h3>
+				<pre><code class="language-javascript">isBool(true)               // true  — checks if value is boolean
 isDefined('')              // false — checks if value is not null/undefined/empty string
 isFunction(() => {})       // true  — checks if value is a function
 isObject({})               // true  — checks if value is an object
 isString('hello')          // true  — checks if value is a string
 parseBool('yes')           // true  — parses 'yes','true','1',1,true → true; all else → false</code></pre>
-  </section>
-
-  <!-- FX INTERFACE -->
-  <section class="content-section" id="fx-interface">
-    <h2>fx Interface Methods</h2>
-
-    <h3>fx.onDocumentLoad(listener)</h3>
-    <pre><code class="language-javascript">fx.onDocumentLoad((e) => {
+			</section>
+			
+			<!-- FX INTERFACE -->
+			<section class="content-section" id="fx-interface">
+				<h2>fx Interface Methods</h2>
+				
+				<h3>fx.onDocumentLoad(listener)</h3>
+				<pre><code class="language-javascript">fx.onDocumentLoad((e) => {
   console.log(e, 'Document Loaded!');
 });</code></pre>
-
-    <h3>fx.passLuhnAlgo(input)</h3>
-    <p>Checks if the given input passes the <a href="https://en.wikipedia.org/wiki/Luhn_algorithm" target="_blank">Luhn Algorithm</a> — used for card number validation.</p>
-    <pre><code class="language-javascript">fx.passLuhnAlgo('4526193832182346'); // true or false</code></pre>
-
-    <h3>fx.fetch(config)</h3>
-    <pre><code class="language-javascript">fx.fetch({
+				
+				<h3>fx.passLuhnAlgo(input)</h3>
+				<p>Checks if the given input passes the <a href="https://en.wikipedia.org/wiki/Luhn_algorithm" target="_blank">Luhn Algorithm</a> — used for card number validation.</p>
+				<pre><code class="language-javascript">fx.passLuhnAlgo('4526193832182346'); // true or false</code></pre>
+				
+				<h3>fx.fetch(config)</h3>
+				<pre><code class="language-javascript">fx.fetch({
   uri: '/api/users',
   method: 'get',
   dataType: 'json',
@@ -1277,154 +2122,202 @@ parseBool('yes')           // true  — parses 'yes','true','1',1,true → true;
   onError:    (err,  status, statusText) => console.error(err),
   onComplete: (data, status, statusText) => console.log('done'),
 });</code></pre>
-
-    <div class="table-wrap"><table>
-      <thead><tr><th>Property</th><th>Description</th><th>Default</th></tr></thead>
-      <tbody>
-        <tr><td>uri</td><td>Request URL</td><td><code>''</code></td></tr>
-        <tr><td>method</td><td>HTTP method (<code>get</code>, <code>post</code>, <code>put</code>, <code>patch</code>, <code>delete</code>)</td><td><code>'get'</code></td></tr>
-        <tr><td>data</td><td>Request payload</td><td><code>null</code></td></tr>
-        <tr><td>dataType</td><td>Expected response type (<code>json</code>, <code>html</code>, <code>text</code>, <code>xml</code>)</td><td><code>'json'</code></td></tr>
-        <tr><td>headers</td><td>Additional request headers</td><td>—</td></tr>
-        <tr><td>beforeSend</td><td>Called before the request is sent</td><td>—</td></tr>
-        <tr><td>timeout</td><td>Timeout in seconds</td><td>—</td></tr>
-        <tr><td>onSuccess</td><td>Called on status 200–299</td><td>—</td></tr>
-        <tr><td>onError</td><td>Called on error status codes</td><td>—</td></tr>
-        <tr><td>onComplete</td><td>Called on completion</td><td>—</td></tr>
-      </tbody>
-    </table></div>
-  </section>
-
-  <!-- ABOUT -->
-  <section class="content-section" id="about">
-    <h2>About</h2>
-    <p>Fuxcel is an easy-to-use JavaScript plugin for front-end form validation and DOM utilities — designed to require little to no deep JavaScript knowledge to get started.</p>
-    <p>It provides an abstraction layer over standard JavaScript APIs, making it straightforward to handle form validation, DOM manipulation, event handling, and AJAX requests. By incorporating Fuxcel into your project, you simplify and streamline your development workflow without pulling in any extra dependencies.</p>
-  </section>
-
-  <!-- CREATOR -->
-  <section class="content-section" id="creator">
-    <h2>Creator</h2>
-    <div class="people-grid">
-      <a class="person-card" href="https://github.com/Bien-Glitch" target="_blank">
-        <img src="https://avatars.githubusercontent.com/u/51288549?s=96&v=4" alt="Bien Nwinate">
-        <div><span class="person-name">Bien Nwinate</span><span class="person-handle">@Bien-Glitch</span></div>
-      </a>
-    </div>
-  </section>
-
-  <!-- CONTRIBUTORS -->
-  <section class="content-section" id="contributors">
-    <h2>Contributors</h2>
-    <div class="people-grid">
-      <a class="person-card" href="https://github.com/Ben-Chanan008" target="_blank">
-        <img src="https://avatars.githubusercontent.com/u/119743454?v=4" alt="Great Ben">
-        <div><span class="person-name">Great Ben</span><span class="person-handle">@Ben-Chanan008</span></div>
-      </a>
-    </div>
-  </section>
-
-  <!-- ACKNOWLEDGEMENTS -->
-  <section class="content-section" id="acknowledgements">
-    <h2>Acknowledgements</h2>
-    <p>Thanks be to GOD Almighty for making this project possible, and a huge thanks to everyone who contributed support along the way:</p>
-    <div class="people-grid">
-      <a class="person-card" href="https://github.com/Xcella-ng" target="_blank">
-        <img src="https://avatars.githubusercontent.com/u/136995993?s=200&v=4" alt="Xcella">
-        <div><span class="person-name">Xcella</span><span class="person-handle">@Xcella-ng</span></div>
-      </a>
-      <a class="person-card" href="https://github.com/scaletfoxltd" target="_blank">
-        <img src="https://avatars.githubusercontent.com/u/101061395?s=200&v=4" alt="ScaletFox Ltd">
-        <div><span class="person-name">ScaletFox Ltd</span><span class="person-handle">@scaletfoxltd</span></div>
-      </a>
-      <a class="person-card" href="https://github.com/mrokojaja" target="_blank">
-        <img src="https://avatars.githubusercontent.com/u/92247356?v=4" alt="David Jaja">
-        <div><span class="person-name">David Jaja</span><span class="person-handle">@mrokojaja</span></div>
-      </a>
-      <a class="person-card" href="https://github.com/Ben-Chanan008" target="_blank">
-        <img src="https://avatars.githubusercontent.com/u/119743454?v=4" alt="Great Ben">
-        <div><span class="person-name">Great Ben</span><span class="person-handle">@Ben-Chanan008</span></div>
-      </a>
-      <a class="person-card" href="https://github.com/echovick" target="_blank">
-        <img src="https://avatars.githubusercontent.com/u/38302798?v=4" alt="Victor Eze">
-        <div><span class="person-name">Victor Eze</span><span class="person-handle">@echovick</span></div>
-      </a>
-      <a class="person-card" href="https://github.com/omotayosam" target="_blank">
-        <img src="https://avatars.githubusercontent.com/u/37814830?v=4" alt="Omotayo Ayomide">
-        <div><span class="person-name">Omotayo Ayomide</span><span class="person-handle">@omotayosam</span></div>
-      </a>
-    </div>
-  </section>
-
-  <!-- CONTACT -->
-  <section class="content-section" id="contact">
-    <h2>Contact</h2>
-    <p>Found a bug, vulnerability, or have a suggestion? Please <a href="https://github.com/Bien-Glitch/fuxcel/issues" target="_blank">open an issue on GitHub</a> or reach out directly. All issues are promptly addressed.</p>
-    <ul class="contact-list">
-      <li>
-        <div class="contact-icon email">📧</div>
-        <a href="mailto:fusionboltinc@gmail.com">fusionboltinc@gmail.com</a>
-      </li>
-      <li>
-        <div class="contact-icon whatsapp">💬</div>
-        <span style="color: var(--text2);">+234 815 744 9189</span>
-      </li>
-    </ul>
-  </section>
-
-</main>
-</div>
-
-<!-- SCROLL TO TOP -->
-<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
-
-<script>
-  // Highlight.js
-  hljs.highlightAll();
-
-  // Sidebar active link on scroll
-  const sections = document.querySelectorAll('section[id], div[id]');
-  const links = document.querySelectorAll('.sidebar-link');
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        links.forEach(l => l.classList.remove('active'));
-        const active = document.querySelector(`.sidebar-link[href="#${entry.target.id}"]`);
-        if (active) active.classList.add('active');
-      }
-    });
-  }, { rootMargin: '-20% 0px -70% 0px' });
-
-  sections.forEach(s => observer.observe(s));
-
-  // Mobile sidebar toggle
-  const menuToggle = document.getElementById('menu-toggle');
-  const sidebar = document.getElementById('sidebar');
-  menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
-  document.addEventListener('click', (e) => {
-    if (!sidebar.contains(e.target) && e.target !== menuToggle) {
-      sidebar.classList.remove('open');
-    }
-  });
-
-  // Sidebar links close mobile menu
-  links.forEach(l => l.addEventListener('click', () => sidebar.classList.remove('open')));
-
-  // Scroll to top button
-  const scrollBtn = document.getElementById('scroll-top');
-  window.addEventListener('scroll', () => {
-    scrollBtn.classList.toggle('visible', window.scrollY > 400);
-  });
-
-  // Copy install command
-  function copyInstall() {
-    navigator.clipboard.writeText('npm install fuxcel').then(() => {
-      const toast = document.getElementById('copy-toast');
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 1800);
-    });
-  }
-</script>
+				
+				<div class="table-wrap">
+					<table>
+						<thead>
+						<tr>
+							<th>Property</th>
+							<th>Description</th>
+							<th>Default</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td>uri</td>
+							<td>Request URL</td>
+							<td><code>''</code></td>
+						</tr>
+						<tr>
+							<td>method</td>
+							<td>HTTP method (<code>get</code>, <code>post</code>, <code>put</code>, <code>patch</code>, <code>delete</code>)</td>
+							<td><code>'get'</code></td>
+						</tr>
+						<tr>
+							<td>data</td>
+							<td>Request payload</td>
+							<td><code>null</code></td>
+						</tr>
+						<tr>
+							<td>dataType</td>
+							<td>Expected response type (<code>json</code>, <code>html</code>, <code>text</code>, <code>xml</code>)</td>
+							<td><code>'json'</code></td>
+						</tr>
+						<tr>
+							<td>headers</td>
+							<td>Additional request headers</td>
+							<td>—</td>
+						</tr>
+						<tr>
+							<td>beforeSend</td>
+							<td>Called before the request is sent</td>
+							<td>—</td>
+						</tr>
+						<tr>
+							<td>timeout</td>
+							<td>Timeout in seconds</td>
+							<td>—</td>
+						</tr>
+						<tr>
+							<td>onSuccess</td>
+							<td>Called on status 200–299</td>
+							<td>—</td>
+						</tr>
+						<tr>
+							<td>onError</td>
+							<td>Called on error status codes</td>
+							<td>—</td>
+						</tr>
+						<tr>
+							<td>onComplete</td>
+							<td>Called on completion</td>
+							<td>—</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
+			
+			<!-- ABOUT -->
+			<section class="content-section" id="about">
+				<h2>About</h2>
+				<p>Fuxcel is an easy-to-use JavaScript plugin for front-end form validation and DOM utilities — designed to require little to no deep JavaScript knowledge to get started.</p>
+				<p>It provides an abstraction layer over standard JavaScript APIs, making it straightforward to handle form validation, DOM manipulation, event handling, and AJAX requests. By incorporating Fuxcel into your project, you simplify and streamline your development workflow without pulling in any extra dependencies.</p>
+			</section>
+			
+			<!-- CREATOR -->
+			<section class="content-section" id="creator">
+				<h2>Creator</h2>
+				<div class="people-grid">
+					<a class="person-card" href="https://github.com/Bien-Glitch" target="_blank">
+						<img src="https://avatars.githubusercontent.com/u/51288549?s=96&v=4" alt="Bien Nwinate">
+						<div><span class="person-name">Bien Nwinate</span><span class="person-handle">@Bien-Glitch</span></div>
+					</a>
+				</div>
+			</section>
+			
+			<!-- CONTRIBUTORS -->
+			<section class="content-section" id="contributors">
+				<h2>Contributors</h2>
+				<div class="people-grid">
+					<a class="person-card" href="https://github.com/Ben-Chanan008" target="_blank">
+						<img src="https://avatars.githubusercontent.com/u/119743454?v=4" alt="Great Ben">
+						<div><span class="person-name">Great Ben</span><span class="person-handle">@Ben-Chanan008</span></div>
+					</a>
+				</div>
+			</section>
+			
+			<!-- ACKNOWLEDGEMENTS -->
+			<section class="content-section" id="acknowledgements">
+				<h2>Acknowledgements</h2>
+				<p>Thanks be to GOD Almighty for making this project possible, and a huge thanks to everyone who contributed support along the way:</p>
+				<div class="people-grid">
+					<a class="person-card" href="https://github.com/Xcella-ng" target="_blank">
+						<img src="https://avatars.githubusercontent.com/u/136995993?s=200&v=4" alt="Xcella">
+						<div><span class="person-name">Xcella</span><span class="person-handle">@Xcella-ng</span></div>
+					</a>
+					<a class="person-card" href="https://github.com/scaletfoxltd" target="_blank">
+						<img src="https://avatars.githubusercontent.com/u/101061395?s=200&v=4" alt="ScaletFox Ltd">
+						<div><span class="person-name">ScaletFox Ltd</span><span class="person-handle">@scaletfoxltd</span></div>
+					</a>
+					<a class="person-card" href="https://github.com/mrokojaja" target="_blank">
+						<img src="https://avatars.githubusercontent.com/u/92247356?v=4" alt="David Jaja">
+						<div><span class="person-name">David Jaja</span><span class="person-handle">@mrokojaja</span></div>
+					</a>
+					<a class="person-card" href="https://github.com/Ben-Chanan008" target="_blank">
+						<img src="https://avatars.githubusercontent.com/u/119743454?v=4" alt="Great Ben">
+						<div><span class="person-name">Great Ben</span><span class="person-handle">@Ben-Chanan008</span></div>
+					</a>
+					<a class="person-card" href="https://github.com/echovick" target="_blank">
+						<img src="https://avatars.githubusercontent.com/u/38302798?v=4" alt="Victor Eze">
+						<div><span class="person-name">Victor Eze</span><span class="person-handle">@echovick</span></div>
+					</a>
+					<a class="person-card" href="https://github.com/omotayosam" target="_blank">
+						<img src="https://avatars.githubusercontent.com/u/37814830?v=4" alt="Omotayo Ayomide">
+						<div><span class="person-name">Omotayo Ayomide</span><span class="person-handle">@omotayosam</span></div>
+					</a>
+				</div>
+			</section>
+			
+			<!-- CONTACT -->
+			<section class="content-section" id="contact">
+				<h2>Contact</h2>
+				<p>Found a bug, vulnerability, or have a suggestion? Please <a href="https://github.com/Bien-Glitch/fuxcel/issues" target="_blank">open an issue on GitHub</a> or reach out directly. All issues are promptly addressed.</p>
+				<ul class="contact-list">
+					<li>
+						<div class="contact-icon email">📧</div>
+						<a href="mailto:fusionboltinc@gmail.com">fusionboltinc@gmail.com</a>
+					</li>
+					<li>
+						<div class="contact-icon whatsapp">💬</div>
+						<span style="color: var(--text2);">+234 815 744 9189</span>
+					</li>
+				</ul>
+			</section>
+		
+		</main>
+	</div>
+	
+	<!-- SCROLL TO TOP -->
+	<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+	
+	<script>
+		// Highlight.js
+		hljs.highlightAll();
+		
+		// Sidebar active link on scroll
+		const sections = document.querySelectorAll('section[id], div[id]');
+		const links = document.querySelectorAll('.sidebar-link');
+		
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					links.forEach(l => l.classList.remove('active'));
+					const active = document.querySelector(`.sidebar-link[href="#${entry.target.id}"]`);
+					if (active) active.classList.add('active');
+				}
+			});
+		}, {rootMargin: '-20% 0px -70% 0px'});
+		
+		sections.forEach(s => observer.observe(s));
+		
+		// Mobile sidebar toggle
+		const menuToggle = document.getElementById('menu-toggle');
+		const sidebar = document.getElementById('sidebar');
+		menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+		document.addEventListener('click', (e) => {
+			if (!sidebar.contains(e.target) && e.target !== menuToggle) {
+				sidebar.classList.remove('open');
+			}
+		});
+		
+		// Sidebar links close mobile menu
+		links.forEach(l => l.addEventListener('click', () => sidebar.classList.remove('open')));
+		
+		// Scroll to top button
+		const scrollBtn = document.getElementById('scroll-top');
+		window.addEventListener('scroll', () => {
+			scrollBtn.classList.toggle('visible', window.scrollY > 400);
+		});
+		
+		// Copy install command
+		function copyInstall() {
+			navigator.clipboard.writeText('npm install fuxcel').then(() => {
+				const toast = document.getElementById('copy-toast');
+				toast.classList.add('show');
+				setTimeout(() => toast.classList.remove('show'), 1800);
+			});
+		}
+	</script>
 </body>
 </html>
