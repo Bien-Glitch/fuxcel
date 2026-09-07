@@ -599,34 +599,6 @@ const parseBool = (value) => {
     }
 };
 /**
- * Format a number as a locale-aware string with grouped thousands separators
- * and a fixed number of decimal places.
- *
- * _Accepts a `number` or numeric `string` — string input is coerced to a number
- * before formatting to avoid silently falling back to `String.prototype.toLocaleString`,
- * which ignores formatting options entirely._
- *
- * @param value {number | string} The number (or numeric string) to format.
- * @param fractionDigits {number=2} Number of decimal places to show _(applied as both
- *   `minimumFractionDigits` and `maximumFractionDigits`)_.
- * @return {string} The formatted number string.
- *
- * @example
- * formatNumber(1234.5);        // '1,234.50'
- * formatNumber('1234.5');      // '1,234.50'
- * formatNumber(1234.567, 3);   // '1,234.567'
- * formatNumber(1234, 0);       // '1,234'
- *
- * @since 2.2.0
- */
-function formatNumber(value, fractionDigits = 2) {
-    const num = typeof value === 'string' ? Number(value) : value;
-    return num.toLocaleString('en-US', {
-        minimumFractionDigits: fractionDigits,
-        maximumFractionDigits: fractionDigits,
-    });
-}
-/**
  * Expose one or more properties onto the global `window` object.
  *
  * @param prop {string | Record<string, any>} Property to expose.
@@ -6389,6 +6361,37 @@ const passLuhnAlgo$1 = (input) => {
 };
 
 /**
+ * Format a number or numeric string as a locale-aware string with grouped
+ * thousands separators and a fixed number of decimal places.
+ *
+ * This is the unified signature that encompasses all narrower overloads above.
+ * String input is coerced to a `number` before formatting — this signature does
+ * NOT fall back to `String.prototype.toLocaleString`, which would otherwise
+ * silently ignore all formatting options.
+ *
+ * @param value {number | string} The number, or numeric string, to format.
+ * @param fractionDigits {number=2} Number of decimal places to show _(applied as
+ *   both `minimumFractionDigits` and `maximumFractionDigits`, so the output
+ *   always has exactly this many decimal places)_. Defaults to `2` if omitted.
+ * @return {string} The formatted number string.
+ *
+ * @example
+ * formatNumber(1234.5);        // '1,234.50'
+ * formatNumber('1234.5');      // '1,234.50'
+ * formatNumber(1234.567, 3);   // '1,234.567'
+ * formatNumber(1234, 0);       // '1,234'
+ *
+ * @since 2.2.0
+ */
+const formatNumber = function (value, fractionDigits = 2) {
+    const num = typeof value === 'string' ? Number(value) : value;
+    return num.toLocaleString('en-US', {
+        minimumFractionDigits: fractionDigits,
+        maximumFractionDigits: fractionDigits,
+    });
+};
+
+/**
  * Re-exports all types from the single source of truth: global.d.ts
  *
  * Import types from here in all source files:
@@ -6416,6 +6419,7 @@ fx.pageLoader = fxPageLoader;
 fx.pageNavigate = fxPageNavigate;
 fx.modal = fxModal;
 fx.onDocumentLoad = (listener) => fx(document).off().upon('DOMContentLoaded', listener);
+fx.formatNumber = formatNumber;
 fx.passLuhnAlgo = passLuhnAlgo$1;
 /**
  * Alias of `fx`. Identical in every way — selector function + static helpers.
@@ -6441,6 +6445,7 @@ pushPropsToWindow({
     fxFetchPage,
     fxPageLoader,
     fxModal,
+    formatNumber,
     passLuhnAlgo: passLuhnAlgo$1,
     // Type-guard / utility helpers
     isBool,
@@ -6449,7 +6454,6 @@ pushPropsToWindow({
     isObject,
     isString,
     parseBool,
-    formatNumber,
 });
 // Auto-init modals if triggers are present in the DOM
 FuxcelModal.modalTriggers.length && new FuxcelModal('*');

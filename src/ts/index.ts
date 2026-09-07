@@ -41,7 +41,7 @@ export type {
 } from './types';
 
 // ─── Bootstrap imports ────────────────────────────────────────────────────────
-import {pushPropsToWindow, isBool, isDefined, isFunction, isObject, isString, parseBool, formatNumber} from './utils';
+import {pushPropsToWindow, isBool, isDefined, isFunction, isObject, isString, parseBool} from './utils';
 import {FuxcelBase} from './core/FuxcelBase';
 import {Fuxcel, fx} from './core/Fuxcel';
 import {FuxcelValidator} from './validator/FuxcelValidator';
@@ -50,6 +50,7 @@ import {FuxcelModal} from './modal/FuxcelModal';
 import {fxModal} from './modal/fxModal';
 import {fxFetch} from './http/fxFetch';
 import {passLuhnAlgo} from './utils/luhn';
+import {formatNumber} from './utils/formatNumber';
 
 // ─── Resolve circular dependencies via static slot injection ──────────────────
 // All modules are now fully loaded. We connect the inter-class references here
@@ -83,6 +84,8 @@ fx.modal = fxModal;
 
 fx.onDocumentLoad = (listener: (e: Event) => void) => fx(document).off().upon('DOMContentLoaded', listener);
 
+fx.formatNumber = formatNumber;
+
 fx.passLuhnAlgo = passLuhnAlgo;
 
 /**
@@ -112,6 +115,7 @@ pushPropsToWindow({
 	fxFetchPage,
 	fxPageLoader,
 	fxModal,
+	formatNumber,
 	passLuhnAlgo,
 	
 	// Type-guard / utility helpers
@@ -121,7 +125,6 @@ pushPropsToWindow({
 	isObject,
 	isString,
 	parseBool,
-	formatNumber,
 });
 
 // Auto-init modals if triggers are present in the DOM

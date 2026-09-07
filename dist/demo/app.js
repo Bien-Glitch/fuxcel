@@ -7,7 +7,7 @@ import {fuxcel} from '../js/fuxcel.esm.js';
 // Initialize a DOM node using Fuxcel's fluent, chainable manipulation API
 const app = fx('#app');
 // const fx = Fuxcel;
-console.log(app, fuxcel);
+console.log(app, fuxcel, fx.formatNumber(2456));
 // app.html('<strong>Success!</strong> Fuxcel bundle loaded completely.').addClass('fuxcel-alert');
 
 fx.onDocumentLoad((e) => {

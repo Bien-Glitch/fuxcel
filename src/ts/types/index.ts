@@ -2675,6 +2675,140 @@ export interface FuxcelModalConstructor {
 // ─── FXInterfaces ──────────────────────────────────────────────────────────────
 
 /**
+ * Type definition for the number formatting function interface.
+ *
+ * Defines the contract for a function that formats a `number` or numeric `string`
+ * into a locale-aware string with grouped thousands separators and a fixed number
+ * of decimal places, using `Intl.NumberFormat` (via `Number.prototype.toLocaleString`)
+ * under the hood with the `'en-US'` locale.
+ *
+ * This interface is implemented by the `formatNumber` function.
+ *
+ * **Why string input needs coercion:**
+ * Passing a numeric string directly to `String.prototype.toLocaleString()` silently
+ * ignores all formatting options and returns the string unchanged — there is no
+ * warning or error. Implementations of this interface MUST coerce string input to
+ * a `number` before formatting to avoid this pitfall.
+ *
+ * @interface FxFormatNumber
+ * @category Utilities
+ * @category Formatting
+ *
+ * @example
+ * // Implementing the interface
+ * const myFormatNumber: FxFormatNumber = (value, fractionDigits = 2) => {
+ *   const num = typeof value === 'string' ? Number(value) : value;
+ *   return num.toLocaleString('en-US', {
+ *     minimumFractionDigits: fractionDigits,
+ *     maximumFractionDigits: fractionDigits,
+ *   });
+ * };
+ *
+ * @see {@link formatNumber} - Implementation of this interface
+ * @since 2.2.0
+ */
+export interface FxFormatNumber {
+	/**
+	 * Format a number as a locale-aware string with grouped thousands separators,
+	 * using the default of 2 decimal places.
+	 *
+	 * @param value {number} The number to format.
+	 * @return {string} The formatted number string, with 2 decimal places.
+	 *
+	 * @example
+	 * formatNumber(1234.5);   // '1,234.50'
+	 * formatNumber(1234);     // '1,234.00'
+	 *
+	 * @since 2.2.0
+	 */
+	(value: number): string;
+	
+	/**
+	 * Format a numeric string as a locale-aware string with grouped thousands
+	 * separators, using the default of 2 decimal places.
+	 *
+	 * The string is coerced to a `number` internally before formatting — this
+	 * overload does NOT fall back to `String.prototype.toLocaleString`, which
+	 * would otherwise silently ignore all formatting options.
+	 *
+	 * @param value {string} The numeric string to format.
+	 * @return {string} The formatted number string, with 2 decimal places.
+	 *
+	 * @example
+	 * formatNumber('1234.5');   // '1,234.50'
+	 * formatNumber('1234');     // '1,234.00'
+	 *
+	 * @since 2.2.0
+	 */
+	(value: string): string;
+	
+	/**
+	 * Format a number as a locale-aware string with grouped thousands separators
+	 * and a specified number of decimal places.
+	 *
+	 * @param value {number} The number to format.
+	 * @param fractionDigits {number} Number of decimal places to show _(applied as
+	 *   both `minimumFractionDigits` and `maximumFractionDigits`, so the output
+	 *   always has exactly this many decimal places)_.
+	 * @return {string} The formatted number string.
+	 *
+	 * @example
+	 * formatNumber(1234.567, 3);   // '1,234.567'
+	 * formatNumber(1234, 0);       // '1,234'
+	 *
+	 * @since 2.2.0
+	 */
+	(value: number, fractionDigits: number): string;
+	
+	/**
+	 * Format a numeric string as a locale-aware string with grouped thousands
+	 * separators and a specified number of decimal places.
+	 *
+	 * The string is coerced to a `number` internally before formatting — this
+	 * overload does NOT fall back to `String.prototype.toLocaleString`, which
+	 * would otherwise silently ignore all formatting options.
+	 *
+	 * @param value {string} The numeric string to format.
+	 * @param fractionDigits {number} Number of decimal places to show _(applied as
+	 *   both `minimumFractionDigits` and `maximumFractionDigits`, so the output
+	 *   always has exactly this many decimal places)_.
+	 * @return {string} The formatted number string.
+	 *
+	 * @example
+	 * formatNumber('1234.5', 3);   // '1,234.500'
+	 * formatNumber('1234', 0);     // '1,234'
+	 *
+	 * @since 2.2.0
+	 */
+	(value: string, fractionDigits: number): string;
+	
+	/**
+	 * Format a number or numeric string as a locale-aware string with grouped
+	 * thousands separators and a fixed number of decimal places.
+	 *
+	 * This is the unified signature that encompasses all narrower overloads above.
+	 * String input is coerced to a `number` before formatting — this signature does
+	 * NOT fall back to `String.prototype.toLocaleString`, which would otherwise
+	 * silently ignore all formatting options.
+	 *
+	 * @param value {number | string} The number, or numeric string, to format.
+	 * @param fractionDigits {number=2} Number of decimal places to show _(applied as
+	 *   both `minimumFractionDigits` and `maximumFractionDigits`, so the output
+	 *   always has exactly this many decimal places)_. Defaults to `2` if omitted.
+	 * @return {string} The formatted number string.
+	 *
+	 * @example
+	 * formatNumber(1234.5);        // '1,234.50'
+	 * formatNumber('1234.5');      // '1,234.50'
+	 * formatNumber(1234.567, 3);   // '1,234.567'
+	 * formatNumber(1234, 0);       // '1,234'
+	 *
+	 * @since 2.2.0
+	 */
+	(value: number | string, fractionDigits?: number): string;
+}
+
+/**
  * Type definition for the page fetching function interface.
  *
  * Defines the contract for a function that fetches page resources using either
@@ -3528,6 +3662,9 @@ export interface FXInterface {
 	 * @returns {boolean} `true` if the number passes the Luhn check; `false` otherwise.
 	 */
 	passLuhnAlgo: (input: string | number) => boolean;
+	
+	
+	formatNumber: FxFormatNumber;
 }
 
 // ─── Global augmentation (script-tag support) ─────────────────────────────────
@@ -3570,6 +3707,8 @@ declare global {
 	const FuxcelModal: FuxcelModalConstructor;
 	
 	// ── Standalone functions ──────────────────────────────────────────────────
+	
+	const formatNumber: typeof fx.formatNumber;
 	
 	/**
 	 * Create a quick alert / confirm modal.
@@ -3631,6 +3770,7 @@ declare global {
 		FuxcelValidator: FuxcelValidatorConstructor;
 		FuxcelSteps: FuxcelStepsConstructor;
 		FuxcelModal: FuxcelModalConstructor;
+		formatNumber: FxFormatNumber;
 		fxModal: (options?: FXModalType) => FuxcelModal;
 		fxFetch: (options: FXRequestType) => void;
 		passLuhnAlgo: (input: string | number) => boolean;
