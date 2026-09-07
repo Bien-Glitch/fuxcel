@@ -22,7 +22,9 @@ function restoreNames() {
 	};
 }
 
+const terserPlugin = [terser()];
 const restoreNamesPlugin = [restoreNames()];
+const restoreNamesPlusTerserPlugin = restoreNamesPlugin.concat(terserPlugin);
 
 export default [
 	{
@@ -44,7 +46,7 @@ export default [
 				name: 'fuxcel',
 				sourcemap: true,
 				exports: 'named',
-				plugins: [restoreNames(), terser()]
+				plugins: restoreNamesPlusTerserPlugin
 			},
 			// CommonJS Build
 			{

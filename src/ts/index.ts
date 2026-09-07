@@ -41,7 +41,7 @@ export type {
 } from './types';
 
 // ─── Bootstrap imports ────────────────────────────────────────────────────────
-import {pushPropsToWindow, isBool, isDefined, isFunction, isObject, isString, parseBool} from './utils';
+import {pushPropsToWindow, isBool, isDefined, isFunction, isObject, isString, parseBool, formatNumber} from './utils';
 import {FuxcelBase} from './core/FuxcelBase';
 import {Fuxcel, fx} from './core/Fuxcel';
 import {FuxcelValidator} from './validator/FuxcelValidator';
@@ -121,9 +121,10 @@ pushPropsToWindow({
 	isObject,
 	isString,
 	parseBool,
+	formatNumber,
 });
 
 // Auto-init modals if triggers are present in the DOM
 FuxcelModal.modalTriggers.length && new FuxcelModal('*');
 
-export default fx;
+export {fx, fuxcel};

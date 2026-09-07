@@ -38,6 +38,7 @@ export type IterableElement =
 	| HTMLScriptElement[]
 	| HTMLFormElement[]
 	| HTMLInputElement[]
+	| HTMLOptionElement[]
 	| HTMLSelectElement[]
 	| HTMLTextAreaElement[]
 	| Document[];
@@ -46,6 +47,7 @@ export type SingleElement =
 	| HTMLElement
 	| HTMLFormElement
 	| HTMLInputElement
+	| HTMLOptionElement
 	| HTMLSelectElement
 	| HTMLTextAreaElement
 	| Document
@@ -276,6 +278,18 @@ export type FXFormResponse = {
 	/** The request's HTTP response status **/ status: number,
 	/** FuxcelValidator instance of the submitted form **/ form: FuxcelValidator
 }
+
+export type FxFetchPageResponse = {
+	data: string | object | undefined;
+	status: number;
+	statusText: string;
+};
+
+export type FxPageNavigateResponse = {
+	html: string;
+	status: number;
+	statusText: string;
+};
 
 export type FXPageNavigateOptions = {
 	url?: string | null,
@@ -2009,6 +2023,36 @@ export interface FuxcelInstance {
 	 */
 	value(value?: StringOrNull): StringOrNull | string[] | Fuxcel;
 	
+	
+	// ─── Internal Helpers ──────────────────────────────────────────────────────────────
+	/**
+	 * Validate one or more newly added form-group elements against their parent form's
+	 * existing validator instance — without needing to re-initialize the entire form.
+	 *
+	 * For each selected element:
+	 * - Skips it (with a `console.debug` message) if it doesn't have the `.form-group` class.
+	 * - Skips it (with a `console.debug` message) if no parent `<form>` element is found.
+	 * - Skips it (with a `console.debug` message) if the parent `<form>` has no `id` attribute _(required for validator tracking)_.
+	 * - Otherwise, forwards it to `FuxcelValidator.validateFromGroup`, tagged with `'extendValidation'`
+	 *   as the source — so if the form-group was already validated, the resulting warning identifies
+	 *   this method as the caller.
+	 *
+	 * @return {void}
+	 *
+	 * @example
+	 * // Add a new field, then extend validation to include it
+	 * fx('#login-form').insertNode(newFormGroup, 'append');
+	 * fx(newFormGroup).extendValidation();
+	 *
+	 * @example
+	 * // Extend validation across multiple newly added form-groups at once
+	 * fx('.form-group.newly-added').extendValidation();
+	 *
+	 * @see {@link FuxcelValidator.validateFromGroup} - Underlying validation call for each form-group.
+	 */
+	extendValidation(): void;
+	
+	
 	// ─── Getters ──────────────────────────────────────────────────────────────
 	/** Get the class list of element. **/ readonly classes: DOMTokenList;
 	/** A promise with a boolean argument; true if the given element has the mouse focus; false otherwise. **/ readonly hasFocus: Promise<boolean>;
@@ -2018,18 +2062,18 @@ export interface FuxcelInstance {
 	/** The Outer HTML value of the given element. **/ readonly outerHTML: string;
 	/** The Inner Text value of the given element. **/ innerText: string;
 	/** The Outer Text value of the given element. **/ outerText: string;
-	/** Returns the direct parent of the first selected element. */ parent: this;
-	/** Returns the next sibling of the first selected element. */ next: this;
-	/** Returns the previous sibling of the first selected element. */ previous: this;
-	/** Returns the first element in the current selection. */ first: this;
-	/** Returns the last element in the current selection. */ last: this;
+	/** Returns the direct parent of the first selected element. **/ parent: this;
+	/** Returns the next sibling of the first selected element. **/ next: this;
+	/** Returns the previous sibling of the first selected element. **/ previous: this;
+	/** Returns the first element in the current selection. **/ first: this;
+	/** Returns the last element in the current selection. **/ last: this;
 	
 	// Sub-system accessors
 	/** A new instance of the Fuxcel Form Validator. **/ readonly formValidator: FuxcelValidator;
 	/** A new instance of the Fuxcel Modal. **/ readonly modal: FuxcelModal;
 }
 
-/** Public API of a FuxcelValidator instance. */
+/** Public API of a FuxcelValidator instance. **/
 export interface FuxcelValidatorInstance extends FuxcelInstance {
 	/**
 	 * Initialize validation on selected form(s).
@@ -2037,10 +2081,13 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 * _Throws an error if non form elements are selected._
 	 *
 	 * @param config {ValidatorConfigObject} user config object.
+	 * @param source {string | null = 'init'}
 	 * @return {FuxcelSteps | FuxcelValidator} Fuxcel Validator Object of the forms.
 	 */
-	init(config?: ValidatorConfigObject | null): FuxcelValidator | FuxcelSteps | void;
+	init(config?: ValidatorConfigObject | null, source?: string | null): FuxcelValidator | FuxcelSteps | void;
 	
+	/** Empties the given form(s) error bags **/
+	clearErrorBag(): this;
 	
 	/** Validate the selected field. **/
 	validateField(): FuxcelValidator;
@@ -2300,6 +2347,46 @@ export interface FuxcelValidatorInstance extends FuxcelInstance {
 	 */
 	validateRegex(regExpOrFn: RegExp | Function, message?: StringOrNull): FuxcelValidator;
 	
+	
+	/**
+	 * Validate the given form-group element.
+	 *
+	 * _Internally guards against re-validating a form-group that's already been
+	 * validated — if the given element has already been processed, a warning is
+	 * logged to the console and the call is a no-op._
+	 *
+	 * @param formGroup {HTMLElement} The form-group element to validate.
+	 * @return {void}
+	 */
+	validateFromGroup(formGroup: HTMLElement): void;
+	
+	/**
+	 * Validate the given form-group element, tagging the call with a source label
+	 * for diagnostic purposes.
+	 *
+	 * _If the given element has already been validated, a warning is logged to the
+	 * console — including the `source` value — to help identify which code path
+	 * triggered the duplicate call._
+	 *
+	 * @param formGroup {HTMLElement} The form-group element to validate.
+	 * @param source {string} Label identifying the calling function/context _(e.g. `'extendValidation'`)_. Included in the console warning if the form-group has already been validated.
+	 * @return {void}
+	 */
+	validateFromGroup(formGroup: HTMLElement, source: string): void;
+	
+	/**
+	 * Validate the given form-group element.
+	 *
+	 * _Internally guards against re-validating a form-group that's already been
+	 * validated — if the given element has already been processed, a warning is
+	 * logged to the console (tagged with `source`, if provided) and the call is a
+	 * no-op._
+	 *
+	 * @param formGroup {HTMLElement} The form-group element to validate.
+	 * @param source {StringOrNull=null} Optional label identifying the calling function/context _(e.g. `'extendValidation'`)_. Used to make the duplicate-validation warning more diagnostic. Defaults to `'validateFromGroup'` internally if omitted.
+	 * @return {void}
+	 */
+	validateFromGroup(formGroup: HTMLElement, source?: StringOrNull): void;
 	
 	/**
 	 * Show validation error for the selected field.
@@ -2673,7 +2760,7 @@ export interface FxFetchPage {
 	 *   fxPageLoader.finish();
 	 * }
 	 */
-	(url: string, dataType: 'text', beforeSend?: (() => void) | null): Promise<string>;
+	(url: string, dataType: 'text', beforeSend?: (() => void) | null): Promise<FxFetchPageResponse>;
 	
 	/**
 	 * Fetches a URL and returns the response as a JSON string (unparsed).
@@ -2758,7 +2845,7 @@ export interface FxFetchPage {
 	 * - Consistent return type with 'text' dataType
 	 * - Avoids double-parsing if response needs to be stored as string
 	 */
-	(url: string, dataType: 'json', beforeSend?: (() => void) | null): Promise<string>;
+	(url: string, dataType: 'json', beforeSend?: (() => void) | null): Promise<FxFetchPageResponse>;
 	
 	/**
 	 * Fetches a URL with the specified data type and optional beforeSend callback.
@@ -2856,7 +2943,7 @@ export interface FxFetchPage {
 	 *
 	 * @see {@link fxFetchPage} - Standard implementation
 	 */
-	(url: string, dataType: 'json' | 'text', beforeSend?: (() => void) | null): Promise<string>;
+	(url: string, dataType: 'json' | 'text', beforeSend?: (() => void) | null): Promise<FxFetchPageResponse>;
 }
 
 /**
@@ -3238,7 +3325,7 @@ export interface FxPageNavigate {
 	 *   .then(html => console.log('Done'))
 	 *   .catch(err => console.error(err));
 	 */
-	(options: { url?: string | null }): Promise<string>;
+	(options: { url?: string | null }): Promise<FxPageNavigateResponse>;
 	
 	/**
 	 * Navigate to a new URL and inject the fetched content into a specific DOM container.
@@ -3263,7 +3350,7 @@ export interface FxPageNavigate {
 	 *   .then(html => console.log('Injected into #main-content'))
 	 *   .catch(err => console.error(err));
 	 */
-	(options: { url?: string | null; selector?: string | null }): Promise<string>;
+	(options: { url?: string | null; selector?: string | null }): Promise<FxPageNavigateResponse>;
 	
 	/**
 	 * Navigate to a new URL, inject content into a specific container, and specify the response type.
@@ -3301,7 +3388,7 @@ export interface FxPageNavigate {
 	 *     setPageTitle(data.title);
 	 *   });
 	 */
-	(options: { url?: string | null; selector?: string | null; dataType?: 'json' | 'text' }): Promise<string>;
+	(options: { url?: string | null; selector?: string | null; dataType?: 'json' | 'text' }): Promise<FxPageNavigateResponse>;
 	
 	/**
 	 * Navigate to a new URL with full control over the container, response type, and history mode.
@@ -3370,7 +3457,7 @@ export interface FxPageNavigate {
 	 *   window.scrollTo(0, 0);
 	 * });
 	 */
-	(options: FXPageNavigateOptions): Promise<string>;
+	(options: FXPageNavigateOptions): Promise<FxPageNavigateResponse>;
 }
 
 /**

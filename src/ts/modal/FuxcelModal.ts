@@ -15,7 +15,7 @@ export class FuxcelModal extends Fuxcel implements FuxcelModalInstance {
 	
 	// ─── Custom Events ─────────────────────────────────────────────
 	/**
-	 * On Modal show
+	 * On Modal showing
 	 *
 	 * @type {CustomEventType}
 	 */
@@ -25,11 +25,31 @@ export class FuxcelModal extends Fuxcel implements FuxcelModalInstance {
 	});
 	
 	/**
-	 * On Modal hide
+	 * On Modal shown
+	 *
+	 * @type {CustomEventType}
+	 */
+	static fxModalShownEvent: CustomEventType = new CustomEvent('fx.modal.shown', {
+		bubbles: true,
+		detail: {plugin: 'Fuxcel', interface: 'FuxcelModalInterface', timestamp: Date.now()},
+	});
+	
+	/**
+	 * On Modal hidding
 	 *
 	 * @type {CustomEventType}
 	 */
 	static fxModalHideEvent: CustomEventType = new CustomEvent('fx.modal.hide', {
+		bubbles: true,
+		detail: {plugin: 'Fuxcel', interface: 'FuxcelModalInterface', timestamp: Date.now()},
+	});
+	
+	/**
+	 * On Modal hidden
+	 *
+	 * @type {CustomEventType}
+	 */
+	static fxModalHiddenEvent: CustomEventType = new CustomEvent('fx.modal.hidden', {
 		bubbles: true,
 		detail: {plugin: 'Fuxcel', interface: 'FuxcelModalInterface', timestamp: Date.now()},
 	});
@@ -154,12 +174,13 @@ export class FuxcelModal extends Fuxcel implements FuxcelModalInstance {
 		const modalContent = fx('.fx-modal-content', this);
 		if (!this.#_isHiding) {
 			this.#_isHiding = true;
+			this[0].dispatchEvent(FuxcelModal.fxModalHideEvent);
 			modalContent.fadeout(200).then(() =>
 				this.fadeout(200).then(() => {
 					const index = FuxcelModal.#_openModals.indexOf(this);
 					if (index !== -1) FuxcelModal.#_openModals.splice(index, 1);
 					
-					this[0].dispatchEvent(FuxcelModal.fxModalHideEvent);
+					this[0].dispatchEvent(FuxcelModal.fxModalHiddenEvent);
 					destroy && this.destroy();
 					this.#_isHiding = false;
 				})
@@ -175,26 +196,29 @@ export class FuxcelModal extends Fuxcel implements FuxcelModalInstance {
 	show(escKey: boolean | undefined = true): void {
 		const modalContent = fx('.fx-modal-content', this);
 		
-		this.style({pointerEvents: 'none'}).fadein(0).then(() =>
-			modalContent.fadein(0, 'flex').then(() => {
-				FuxcelModal.#_openModals.push(this);
-				this.style({pointerEvents: 'unset'});
-				
-				this.upon('click', () => modalContent.hasFocus.then((focused: boolean) => {
-					!focused ? (!parseBool(this.dataAttrib('fx-static')) ? this.hide() : modalContent.shake(500, 2)) : null
-				}));
-				
-				if (escKey)
-					fx(document).upon('keyup', (e: Event) => {
-						const key = (<KeyboardEvent>e).key.toLowerCase();
-						if ((key === 'escape' || key === 'esc') && FuxcelModal.hasOpenModals)
-							!parseBool(this.dataAttrib('fx-static')) ?
-								FuxcelModal.currentModal?.hide() :
-								modalContent.shake(500, 2);
-					});
-				this[0].dispatchEvent(FuxcelModal.fxModalShowEvent);
-			})
-		);
+		if (modalContent.length) {
+			this[0].dispatchEvent(FuxcelModal.fxModalShowEvent);
+			this.style({pointerEvents: 'none'}).fadein(0).then(() =>
+				modalContent.fadein(0, 'flex').then(() => {
+					FuxcelModal.#_openModals.push(this);
+					this.style({pointerEvents: 'unset'});
+					
+					this.upon('click', () => modalContent.hasFocus.then((focused: boolean) => {
+						!focused ? (!parseBool(this.dataAttrib('fx-static')) ? this.hide() : modalContent.shake(500, 2)) : null
+					}));
+					
+					if (escKey)
+						fx(document).upon('keyup', (e: Event) => {
+							const key = (<KeyboardEvent>e).key.toLowerCase();
+							if ((key === 'escape' || key === 'esc') && FuxcelModal.hasOpenModals)
+								!parseBool(this.dataAttrib('fx-static')) ?
+									FuxcelModal.currentModal?.hide() :
+									modalContent.shake(500, 2);
+						});
+					this[0].dispatchEvent(FuxcelModal.fxModalShownEvent);
+				})
+			);
+		}
 	}
 	
 	/** Toggle between hide and show state of the selected modal. **/

@@ -5,7 +5,7 @@ import {
 	ValidationProps, FXModalType, FuxcelValidatorInstance, FormValidationRegistryBag, CustomEventType, ExtractedRule,
 	StrengthResult,
 } from '../types';
-import {Fuxcel, fx} from '../core/Fuxcel';
+import {Fuxcel, _setSubmitter, fx} from '../core/Fuxcel';
 import {isDefined, isObject, isString, parseBool} from '../utils';
 import {FuxcelSteps} from './FuxcelSteps';
 import {parseRegExpLiteral, visitRegExpAST} from 'regexpp';
@@ -352,9 +352,10 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 	/**
 	 *
 	 * @param {HTMLElement} formGroup
+	 * @param source {StringOrNull='extendValidation'}
 	 */
-	validateFromGroup(formGroup: HTMLElement) {
-		return this.#_validate(formGroup);
+	validateFromGroup(formGroup: HTMLElement, source: StringOrNull = 'extendValidation'): void {
+		return this.#_validate(formGroup, source);
 	}
 	
 	#_initValidateForms(): FuxcelValidator {
@@ -399,6 +400,9 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 								currentForm.#_validate(formGroup);
 							}
 						});
+						currentForm[0].addEventListener('submit', (e: SubmitEvent) => {
+							_setSubmitter(currentForm[0], e.submitter ?? null);
+						}, true);
 						initialized.push(form);
 					} else
 						console.warn(`Initialization interrupted while loading for form: #${formId}`);
@@ -618,7 +622,7 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 		return formGroup;
 	}
 	
-	#_validate(formGroup: HTMLElement): void {
+	#_validate(formGroup: HTMLElement, source: StringOrNull = 'init'): void {
 		let refillRequired: boolean,
 			isCapsOn: boolean;
 		
@@ -641,6 +645,14 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 		
 		const inputGroup = fx('.input-group', formGroup);
 		const labelElement = fx('label', inputGroup);
+		
+		if (_element.length && _element.dataAttrib('fx-validated') === 'true') {
+			console.warn(`
+				[Fuxcel] (${source}()) Attempted to re-validate a form-group that's already been validated.\r\n
+				This can happen from calling init() more than once on the same form, or from extendValidation() being called on a form-group that wasn't actually new. Element:
+			`, formGroup);
+			return; // already wired — skip re-binding
+		}
 		
 		// Input events
 		_inputElement.length && _inputElement.attrib('id')?.length && _inputElement.upon({
@@ -852,6 +864,7 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 				_element.#_resetFuxcelObject(fx(_element[0].form));
 			}
 		}
+		_element.length && _element.dataAttrib('fx-validated', 'true');
 	}
 	
 	/**
@@ -959,12 +972,11 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 		const selected = <HTMLElement[]>this.toArray;
 		return selected.length ?
 			(this.dataAttrib('fx-validate') ?
-					parseBool(this.dataAttrib('fx-validate')) :
-					(this.parents('.form-group').length ?
-							this.parents('.form-group').style('display') !== 'none' :
-							this.style('display') !== 'none'
-					)
-			) :
+				parseBool(this.dataAttrib('fx-validate')) : (
+					this.parents('.form-group').length ?
+						this.parents('.form-group').style('display') !== 'none' :
+						this.style('display') !== 'none'
+				)) :
 			false;
 	}
 	
@@ -1065,10 +1077,10 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 	/** Returns the `ValidationProps` of the selected form field element. **/
 	get validationProps(): ValidationProps {
 		const configObject = this.validatorConfig;
-		const a = this.fieldAttributes;
-		const formGroup = <string>configObject.config?.initWrapper;
-		const formId = `#${a.formId}`;
-		const elementId = `#${a.id}`;
+		const fieldAttributes = this.fieldAttributes;
+		const formGroup = configObject.config?.initWrapper ?? '.form-group';
+		const formId = `#${fieldAttributes?.formId}`;
+		const elementId = `#${fieldAttributes?.id}`;
 		
 		if (formId) return {
 			id: elementId,
@@ -1160,6 +1172,27 @@ export class FuxcelValidator extends Fuxcel implements FuxcelValidatorInstance {
 			console.error(`Non form-elements passed to validator`, nonForms);
 			throw `${nonForms.length} non-form element(s) passed to validator.`;
 		}
+	}
+	
+	/**
+	 * Empties the given form(s) error bag
+	 *
+	 * @returns {FuxcelSteps | FuxcelValidator} Fuxcel Validator Object of the forms.
+	 * @since 2.2.0
+	 */
+	clearErrorBag() {
+		const forms = this.filter(el => el.isElement('form'));
+		const nonForms = this.filter(el => !el.isElement('form'));
+		
+		if (forms.length) {
+			if (nonForms.length)
+				console.error(`${nonForms.length} non-form element(s) passed to validator:`, nonForms);
+			forms.each(form => form.attrib('id') && FuxcelValidator.#_clearFormRegistry(form.attrib('id')));
+		} else {
+			console.error(`Non form-elements passed to validator`, nonForms);
+			throw `${nonForms.length} non-form element(s) passed to validator.`;
+		}
+		return this;
 	}
 	
 	/** Reset validation message. **/

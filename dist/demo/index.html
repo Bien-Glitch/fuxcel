@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+<link rel="stylesheet" href="">
 
 <head>
 	<meta charset="UTF-8">
@@ -11,12 +12,17 @@
 		<meta http-equiv="refresh" content="0;url=./noscript.html">
 	</noscript>
 
-	<script defer src="../js/fuxcel.js"></script>
+	<!-- <script defer src="../js/fuxcel.js"></script> -->
 	<script defer src="./app.js" type="module"></script>
 </head>
 
 
 <body>
+	<a href="" data-component-url="./modal-test.html" data-component-id="modal-test" class="open-component">Hello</a>
+	<a data-url="" data-id="data-modal-1" class="open-component">Hello</a>
+	<a data-url="" data-id="data-modal-2" class="open-component">Hello</a>
+	<a data-url="" data-id="data-modal-3" class="open-component">Hello</a>
+	<a data-url="" data-id="data-modal-4" class="open-component">Hello</a>
 	<main>
 		<form action="" id="test-form">
 			<div class="form-group">
@@ -50,7 +56,7 @@
 
 			<button type="submit">Submit</button>
 		</form>
-		
+
 		<!--<form action="" id="test-step">
 			<div class="fx-step" data-fx-step="2">
 				<div class="form-group">
@@ -174,7 +180,7 @@
 		<button type="button" data-fx-target="modal" data-fx-modal="test-modal">Show</button>
 	</main>
 
-	
+
 	<div class="fx-modal filter" id="test-modal" data-fx-static="true">
 		<div class="fx-modal-dialog fx-dialog-centered fx-dialog-scrollable">
 			<div class="fx-modal-content">
