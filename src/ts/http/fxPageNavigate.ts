@@ -1,4 +1,4 @@
-import {CustomEventType, FxFetchPage, FxPageLoader, FxPageNavigate, FXPageNavigateOptions, Selector} from '../types';
+import {CustomEventType, FxFetchPage, FxFetchPageResponse, FxPageLoader, FxPageNavigate, FXPageNavigateOptions, FxPageNavigateResponse, Selector} from '../types';
 
 let progressBar: HTMLDivElement | null = null,
 	progressTimer: any = null;
@@ -31,7 +31,7 @@ const injectHTML = function (selector: Selector, html: string) {
 			
 			// Extract scripts
 			const scripts = template.content.querySelectorAll('script');
-			console.log(scripts)
+			
 			// Remove scripts from HTML
 			scripts.forEach(script => script.remove());
 			
@@ -119,7 +119,7 @@ const injectHTML = function (selector: Selector, html: string) {
  * @see {@link fx.fetch} - Custom fetch implementation
  * @since 2.0.1
  */
-export const fxFetchPage: FxFetchPage = function (url: string, dataType: 'json' | 'text', beforeSend?: Function | null): Promise<string> {
+export const fxFetchPage: FxFetchPage = function (url: string, dataType: 'json' | 'text', beforeSend?: Function | null): Promise<FxFetchPageResponse> {
 	return new Promise((resolve, reject) => {
 		fx.fetch ? fx.fetch({
 			uri: url,
@@ -127,13 +127,14 @@ export const fxFetchPage: FxFetchPage = function (url: string, dataType: 'json' 
 			dataType: dataType,
 			timeout: 30,
 			beforeSend: () => typeof beforeSend === 'function' && beforeSend(),
-			onSuccess: res => resolve(res.responseText as string),
-			onError: err => reject(err)
-		}) : fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
-			.then(r => r[dataType]())
-			.then(parsed => resolve(parsed))
-			.catch(err => reject(err));
-	}) as Promise<string>;
+			// onComplete: response => resolve(response as any),
+			onComplete: (res, status, statusText) => resolve({data: (dataType === 'text' ? res.responseText : res.responseJSON), status, statusText}),
+			onError: (err, status, statusText) => reject({error: err, status, statusText}),
+		}) : fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}}).then(async (r) => {
+			const data = dataType === 'text' ? await r.text() : await r.json();
+			resolve({data, status: r.status, statusText: r.statusText});
+		}).catch((err) => reject({error: err}));
+	}) as Promise<FxFetchPageResponse>;
 };
 
 /**
@@ -255,29 +256,46 @@ export const fxFetchPage: FxFetchPage = function (url: string, dataType: 'json' 
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/History_API|History API}
  * @since 2.0.1
  */
-export const fxPageNavigate: FxPageNavigate = function (options: FXPageNavigateOptions): Promise<string> {
+export const fxPageNavigate: FxPageNavigate = function (options: FXPageNavigateOptions): Promise<FxPageNavigateResponse> {
 	return new Promise((resolve, reject) => {
-		if (!options.url || options.url === location.href) reject('');
-		
-		fxFetchPage(options.url ?? '', options.dataType ?? 'json', fxPageLoader.start).then(html => {
-			document.documentElement.classList.add('fx-leaving');
-			
-			if (options.replace) {
-				history.replaceState({}, '', options.url);
-			} else {
-				history.pushState({}, '', options.url);
-			}
-			injectHTML(options.selector ?? '#root', html).then(() => {
-				document.dispatchEvent(fxPageNavigateReadyEvent);
-				resolve(html);
-			});
-		}).catch(err => {
-			console.error('FX navigation error:', err);
-			fxPageLoader.finish();
-			document.documentElement.classList.remove('fx-leaving');
-			window.location.href = options.url ?? ''; // hard fallback
-			reject(err);
-		});
+		(options.url && options.url !== location.href) ?
+			fxFetchPage(options.url ?? '', options.dataType ?? 'json', fxPageLoader.start).then(response => {
+				const data = response.data
+				document.documentElement.classList.add('fx-leaving');
+				
+				options.replace ?
+					history.replaceState({}, '', options.url) :
+					history.pushState({}, '', options.url);
+				
+				// Resolve what to inject based on dataType
+				let html: string;
+				
+				if (options.dataType === 'json') {
+					const parsed = data as { html: string, title?: string, status?: string | number };
+					
+					if (typeof parsed?.html !== 'string')
+						return reject(new Error('JSON response must contain an "html" property'));
+					
+					if (parsed.title)
+						document.title = parsed.title;
+					html = parsed.html;
+				} else {
+					html = data as string;
+				}
+				
+				injectHTML(options.selector ?? '#root', html).then(() => {
+					document.dispatchEvent(fxPageNavigateReadyEvent);
+					resolve({html, status: response.status, statusText: response.statusText});
+				}).catch(e => reject(e));
+			}).catch(err => {
+				document.documentElement.classList.remove('fx-leaving', 'fx-entering');
+				document.documentElement.classList.add('fx-entered');
+				fxPageLoader.finish();
+				
+				console.error('FX navigation error:', err);
+				window.location.href = options.url ?? ''; // hard fallback
+				reject(err);
+			}) : reject('Same page!');
 	});
 }
 
@@ -554,7 +572,7 @@ document.addEventListener('click', (e: PointerEvent) => {
 		url: link.getAttribute('href'),
 		replace: link.hasAttribute('data-fx-navigate-replace'),
 		dataType: (dataType?.length && (dataType === 'json' || dataType === 'text')) ? dataType : 'json'
-	}).then(() => console.log(link));
+	}).then(() => console.log(link)).catch(error => console.warn(error));
 });
 
 /* ----------------------------------------------------------------------

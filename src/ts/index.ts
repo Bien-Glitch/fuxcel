@@ -50,6 +50,7 @@ import {FuxcelModal} from './modal/FuxcelModal';
 import {fxModal} from './modal/fxModal';
 import {fxFetch} from './http/fxFetch';
 import {passLuhnAlgo} from './utils/luhn';
+import {formatNumber} from './utils/formatNumber';
 
 // ─── Resolve circular dependencies via static slot injection ──────────────────
 // All modules are now fully loaded. We connect the inter-class references here
@@ -83,6 +84,8 @@ fx.modal = fxModal;
 
 fx.onDocumentLoad = (listener: (e: Event) => void) => fx(document).off().upon('DOMContentLoaded', listener);
 
+fx.formatNumber = formatNumber;
+
 fx.passLuhnAlgo = passLuhnAlgo;
 
 /**
@@ -112,6 +115,7 @@ pushPropsToWindow({
 	fxFetchPage,
 	fxPageLoader,
 	fxModal,
+	formatNumber,
 	passLuhnAlgo,
 	
 	// Type-guard / utility helpers
@@ -126,4 +130,4 @@ pushPropsToWindow({
 // Auto-init modals if triggers are present in the DOM
 FuxcelModal.modalTriggers.length && new FuxcelModal('*');
 
-export default fx;
+export {fx, fuxcel};

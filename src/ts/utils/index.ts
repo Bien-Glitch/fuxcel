@@ -84,6 +84,16 @@ export function pushPropsToWindow(prop: string | Record<string, any>, value: any
 declare global {
 	interface String {
 		/**
+		 * Convert string to camel-cased string.
+		 */
+		toCamelCase(): string;
+		
+		/**
+		 * Convert string to kebab-cased string.
+		 */
+		toKebabCase(): string;
+		
+		/**
 		 * Convert string to title-cased string.
 		 *
 		 * @param separator {boolean=false} Preserve separators (spaces, hyphens, underscores) in output.
@@ -91,6 +101,33 @@ declare global {
 		toTitleCase(separator?: boolean): string;
 	}
 }
+
+String.prototype.toCamelCase = function (): string {
+	const value = this;
+	let camelCased = '';
+	const valueSplit = value.split(/(?=[A-Z _-])/);
+	valueSplit.forEach((word: string, key: number) => {
+		const replaced = word.replace(/[ _-]/, '');
+		if (!key)
+			camelCased += replaced.toLowerCase();
+		else {
+			const wordSplit = replaced.toLowerCase().split('');
+			const firstChar = wordSplit[0];
+			wordSplit[0] = wordSplit[0].length ? firstChar.toUpperCase() : '';
+			camelCased += wordSplit.join('');
+		}
+	});
+	return String(camelCased.trim());
+};
+
+String.prototype.toKebabCase = function (): string {
+	const value = this;
+	const kebabArray: string[] = [];
+	const nameSplit = value.toString().split(/(?=[A-Z])/);
+	
+	nameSplit.forEach(split => kebabArray.push(split.toLowerCase()));
+	return kebabArray.join('-');
+};
 
 String.prototype.toTitleCase = function (separators: boolean = false): string {
 	const value = this;
@@ -100,10 +137,10 @@ String.prototype.toTitleCase = function (separators: boolean = false): string {
 	valueSplit.forEach((word: string, key: number) => {
 		const wordSplit = word.toLowerCase().split('');
 		const firstChar = wordSplit[0];
-		wordSplit[0] = wordSplit[0] ? firstChar.toUpperCase() : '';
-		titleCased += separators
-			? wordSplit.join('')
-			: (wordSplit.join('') + (key <= valueSplit.length - 1 ? ' ' : ''));
+		wordSplit[0] = wordSplit[0].length ? firstChar.toUpperCase() : '';
+		titleCased += separators ?
+			wordSplit.join('') :
+			(wordSplit.join('') + (key <= valueSplit.length - 1 ? ' ' : ''));
 	});
 	return String(titleCased.trim());
 };

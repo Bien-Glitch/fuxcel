@@ -77,18 +77,15 @@ export const fxFetch = function ({
 		}
 	}).then(parsedData => {
 		responseData.responseJSON = dataType === 'json' && parsedData;
-		responseData.responseText = dataType === 'json'
-			? JSON.stringify(parsedData)
-			: (dataType === 'text' && parsedData);
+		responseData.responseText = dataType === 'json' ?
+			JSON.stringify(parsedData) :
+			(dataType === 'text' && parsedData);
 		
 		onComplete && isFunction(onComplete) && onComplete(responseData, status, statusText);
 		status > 199 && status < 300 && onSuccess && isFunction(onSuccess) && onSuccess(responseData, status, statusText);
 	}).catch(error => {
-		isFunction(onError) && (error.name === 'AbortError'
-			? (<Function>onError)(
-				new TimeoutError(`⏰ Request timed out\r\nSet Timeout:${(timeout as number) / 1000}s`),
-				408, 'timeout'
-			)
-			: (<Function>onError)(error, status, statusText));
+		isFunction(onError) && (error.name === 'AbortError' ?
+			(<Function>onError)(new TimeoutError(`⏰ Request timed out\r\nSet Timeout:${(timeout as number) / 1000}s`), 408, 'timeout') :
+			(<Function>onError)(error, status, statusText));
 	}).finally(() => clearTimeout(timeoutID));
 };

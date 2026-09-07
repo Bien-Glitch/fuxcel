@@ -17,6 +17,18 @@ import {isBool, isDefined, isFunction, isObject, isString, parseBool} from '../u
 import {FuxcelValidator} from '../validator/FuxcelValidator';
 import {FuxcelModal} from '../modal/FuxcelModal';
 
+const submitterRegistry = new WeakMap<HTMLElement, HTMLElement | null>();
+
+/** @internal */
+export function _setSubmitter(formEl: HTMLElement, submitter: HTMLElement | null): void {
+	submitterRegistry.set(formEl, submitter);
+}
+
+/** @internal */
+export function _getSubmitter(formEl: HTMLElement): HTMLElement | null {
+	return submitterRegistry.get(formEl) ?? null;
+}
+
 /**
  * Core Fuxcel class.
  * Wraps one or more DOM elements and exposes a fluent, chainable API for
@@ -2017,11 +2029,11 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 											setTimeout(() => response.redirect ? (location.href = response.redirect) : location.reload(), 2000);
 										else if (status === 422 || status === 500)
 											form.toggleFormSubmitButtonState(false).then(() => {
-												if (handleError && status === 422)
+												(handleError && status === 422) && (
 													response.errors ?
 														(response.message ? form.renderValidationErrors(response.errors, response.message) : form.renderValidationErrors(response.errors)) :
-														(response.message && form.renderValidationErrors({}, response.message));
-												else resolve({JSON: response, status, form});
+														(response.message && form.renderValidationErrors({}, response.message)));
+												resolve({JSON: response, text: xhr.responseText, status, form});
 											});
 										else {
 											console.error('Server Failure', xhr);
@@ -2048,9 +2060,10 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 */
 	toggleButtonLoadState(isLoading: boolean = true): Promise<Fuxcel> {
 		return new Promise(resolve => {
-			const selected = <HTMLElement[]>this.toArray;
+			const selected = this;
 			const button = fx(selected[0]);
 			const loaderElement = fx(Fuxcel.buttonLoaderClass, button);
+			const loaderElementReplace = fx(`${Fuxcel.buttonLoaderClass}-replace`, button);
 			const resolveDisable = (disabled = true) => {
 				button.disable(disabled);
 				resolve(button);
@@ -2059,11 +2072,15 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 			if (isLoading) {
 				if (!button.prop('disabled') || !button.attrib('disabled'))
 					if (loaderElement.length && loaderElement.style('display') === 'none')
-						loaderElement.fadein().then(() => resolveDisable());
+						loaderElementReplace.length ?
+							loaderElementReplace.fadeout().then(() => loaderElement.fadein().then(() => resolveDisable())) :
+							loaderElement.fadein().then(() => resolveDisable());
 					else resolveDisable();
 			} else {
 				if (loaderElement.length && loaderElement.style('display') !== 'none')
-					loaderElement.fadeout().then(() => resolveDisable(false));
+					loaderElementReplace.length ?
+						loaderElement.fadeout().then(() => loaderElementReplace.fadein().then(() => resolveDisable(false))) :
+						loaderElement.fadeout().then(() => resolveDisable(false));
 				else resolveDisable(false);
 			}
 		});
@@ -2077,14 +2094,21 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 */
 	toggleFormSubmitButtonState(isLoading: boolean = true): Promise<Fuxcel> {
 		return new Promise(resolve => {
-			const selected = <HTMLFormElement[]>this.toArray;
-			if (this.isElement('form')) {
-				const submitButton = fx('button[type="submit"]', <SingleElement>selected[0]).length
-					? fx('button[type="submit"]', <SingleElement>selected[0])
-					: fx(`button[form="${(<HTMLFormElement>(<SingleElement>selected[0])).id}"]`);
-				submitButton.toggleButtonLoadState(isLoading).then(btn => resolve(btn));
-			} else
-				console.warn('Non form element given.');
+			const selected = this;
+			
+			selected.each(expectedForm => {
+				if (expectedForm.isElement('form')) {
+					const form = expectedForm[0];
+					const submitter = _getSubmitter(form) ?? (
+						form?.querySelector('button[type="submit"]') ??
+						document.querySelector(`button[form="${form?.id}"]`) ??
+						document.querySelector(`*[form="${form?.id}"][type="submit"]`)
+					);
+					const submitButton = fx(submitter ?? '');
+					submitButton.length && submitButton.toggleButtonLoadState(isLoading).then(btn => resolve(btn));
+				} else
+					console.warn('Non form element given.', expectedForm);
+			});
 		});
 	}
 	
@@ -2118,12 +2142,12 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 					events.forEach(event => {
 						if (listener.event.toLowerCase() === event?.toLowerCase()) {
 							element.removeEventListener(listener.event, <any>listener.listener, listener.option);
-							(<[]>element.listeners).splice(index, 1);
+							element.listeners?.splice(index, 1);
 						}
 					});
 				} else {
 					element.removeEventListener(listener.event, <any>listener.listener, listener.option);
-					delete element.listeners;
+					element.listeners?.splice(index, 1);
 				}
 			});
 		});
@@ -2289,17 +2313,15 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {StringOrNull | string[] | Fuxcel} The value of the selected element if no parameter is passed for value; Fuxcel object of the selected element otherwise.
 	 */
 	value(value: StringOrNull = null): StringOrNull | string[] | Fuxcel {
-		const selected = <HTMLElement[]>this.toArray;
+		const selected = this.toArray as HTMLElement[] | HTMLFormElement[];
 		if (isString(value) || isDefined(value)) {
-			selected.forEach((el: HTMLElement) =>
-				parseBool(el.contentEditable) ?
-					(el.innerText = (<string>value).toString()) :
-					((<HTMLFormElement>el).value = (<string>value).toString())
-			);
+			(selected as (HTMLElement | HTMLFormElement)[]).forEach((el: HTMLElement | HTMLFormElement) => parseBool(el.contentEditable) ?
+				(el.innerText = (<string>value).toString()) :
+				((<HTMLFormElement>el).value = (<string>value).toString()));
 			return this;
 		}
 		
-		switch ((<HTMLElement>selected[0]).tagName.toLowerCase()) {
+		switch (selected[0].tagName.toLowerCase()) {
 			case 'select':
 				const el = selected[0] as HTMLSelectElement;
 				if (el.attributes.getNamedItem('multiple')) {
@@ -2309,16 +2331,59 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 				} else
 					return el.value;
 			default:
-				return parseBool((<HTMLElement>selected[0]).contentEditable) ?
-					(<HTMLElement>selected[0]).innerText :
-					(<HTMLFormElement>selected[0]).value;
+				return parseBool(selected[0].contentEditable) ?
+					selected[0].innerText :
+					(selected[0] as HTMLFormElement).value;
 		}
 	}
 	
-	testValidateAfter(formGroup: any) {
-		const form = this.formValidator;
-		const group = fx(formGroup).toArray as HTMLElement[];
-		return form.validateFromGroup(<HTMLElement>group[0]);
+	// ─── Internal Helpers ──────────────────────────────────────────────────────────────
+	
+	/**
+	 * Validate one or more newly added form-group elements against their parent form's
+	 * existing validator instance — without needing to re-initialize the entire form.
+	 *
+	 * For each selected element:
+	 * - Skips it (with a `console.debug` message) if it doesn't have the `.form-group` class.
+	 * - Skips it (with a `console.debug` message) if no parent `<form>` element is found.
+	 * - Skips it (with a `console.debug` message) if the parent `<form>` has no `id` attribute _(required for validator tracking)_.
+	 * - Otherwise, forwards it to `FuxcelValidator.validateFromGroup`, tagged with `'extendValidation'`
+	 *   as the source — so if the form-group was already validated, the resulting warning identifies
+	 *   this method as the caller.
+	 *
+	 * @return {void}
+	 *
+	 * @example
+	 * // Add a new field, then extend validation to include it
+	 * fx('#login-form').insertNode(newFormGroup, 'append');
+	 * fx(newFormGroup).extendValidation();
+	 *
+	 * @example
+	 * // Extend validation across multiple newly added form-groups at once
+	 * fx('.form-group.newly-added').extendValidation();
+	 *
+	 * @see {@link FuxcelValidator.validateFromGroup} - Underlying validation call for each form-group.
+	 *
+	 * @since 2.2.0
+	 */
+	extendValidation(): void {
+		this.each(group => {
+			if (group.hasClass('form-group')) {
+				const parentForm = group.parents('form');
+				
+				if (!parentForm.length) {
+					console.debug(`[Fuxcel] extendValidation() skipped an element: no parent <form> found. Element:`, group[0]);
+					return;
+				}
+				
+				if (!parentForm.attrib('id')) {
+					console.debug(`[Fuxcel] extendValidation() skipped a form-group: parent <form> has no id attribute, so it can't be tracked. Form:`, parentForm[0]);
+					return;
+				}
+				parentForm.formValidator.validateFromGroup(group[0]);
+			} else
+				console.debug(`[Fuxcel] extendValidation() skipped an element: missing .form-group class. Element:`, group[0]);
+		});
 	}
 	
 	// ─── Getters ──────────────────────────────────────────────────────────────
@@ -2364,28 +2429,30 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
 	 * @return {string} The Inner Text value of the given element.
 	 */
 	get innerText(): string {
-		return (<HTMLElement[]>this.toArray)[0].innerText;
+		let value = '';
+		this.each(el => (value += el[0].innerText))
+		return value;
 	}
 	
 	/**
 	 * @return {string} The Outer Text value of the given element.
 	 */
 	get outerText(): string {
-		return (<HTMLElement[]>this.toArray)[0].outerText;
+		return this[0].outerText;
 	}
 	
 	/**
 	 * @return {string} The Inner HTML value of the given element.
 	 */
 	get innerHTML(): string {
-		return (<HTMLElement[]>this.toArray)[0].innerHTML;
+		return this[0].innerHTML;
 	}
 	
 	/**
 	 * @return {string} The Outer HTML value of the given element.
 	 */
 	get outerHTML(): string {
-		return (<HTMLElement[]>this.toArray)[0].outerHTML;
+		return this[0].outerHTML;
 	}
 	
 	/**
@@ -2518,8 +2585,8 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
  * Static helpers (`.fetch`, `.modal`, `.onDocumentLoad`, `.passLuhnAlgo`)
  * are attached in `src/index.ts` during bootstrap.
  *
- * @param selector {string | IterableElement | SingleElement} CSS selector or element(s).
- * @param context  {string | IterableElement | SingleElement | null} Optional scoping context.
+ * @param selector {Selector | IterableElement | SingleElement} CSS selector or element(s).
+ * @param context  {Selector | IterableElement | SingleElement = null} Optional scoping context.
  * @returns {Fuxcel}
  *
  * @example
@@ -2528,9 +2595,6 @@ export class Fuxcel extends FuxcelBase implements FuxcelInstance {
  * fx.fetch({ uri: '/api', method: 'post' });
  * fx.modal({ type: 'success', content: 'Done!' });
  */
-export const fx = function (
-	selector: string | IterableElement | SingleElement,
-	context: string | IterableElement | SingleElement | null = null
-): Fuxcel {
+export const fx = function (selector: Selector | IterableElement | SingleElement, context: Selector | IterableElement | SingleElement = null): Fuxcel {
 	return new Fuxcel(selector, context);
 } as FXInterface;

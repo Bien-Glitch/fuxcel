@@ -1,3 +1,15 @@
+// 1. Import your library (resolves using the '.' -> 'types' and 'import' block)
+import {fuxcel} from '../js/fuxcel.esm.js';
+
+// 2. Import your CSS explicitly (resolves using the './css' block)
+// import '../css/fuxcel.css';
+
+// Initialize a DOM node using Fuxcel's fluent, chainable manipulation API
+const app = fx('#app');
+// const fx = Fuxcel;
+console.log(app, fuxcel, fx.formatNumber(2456));
+// app.html('<strong>Success!</strong> Fuxcel bundle loaded completely.').addClass('fuxcel-alert');
+
 fx.onDocumentLoad((e) => {
 	/*console.log(e);
 	const form = fx('form').formValidator;
@@ -9,14 +21,14 @@ fx.onDocumentLoad((e) => {
 	
 	testStep.toArray.forEach(stepForm => {
 		const stepsArray = [];
-		const steps = fx('.fx-step', stepForm).attrib({});
+		const steps = fx('.fx-step', stepForm);
 		
 		const btnNext = fx('button[data-action="next"]', stepForm);
 		const btnPrev = fx('button[data-action="prev"]', stepForm);
 		
-		steps.toArray.forEach(step => {
-			fx(step).style({display: 'none'});
-			stepsArray.push(step.dataset.fxStep);
+		steps.each(step => {
+			step.style({display: 'none'});
+			stepsArray.push(step.dataAttrib('fx-step'));
 		});
 		
 		stepsArray.sort();
@@ -51,6 +63,7 @@ fx.onDocumentLoad((e) => {
 		
 		btnPrev.off().upon('click', function (e) {
 			e.preventDefault();
+			console.log(this);
 			let currentStepStorage = localStorage.getItem(`fx-current-step-${stepForm.id}`),
 				currentStep = parseInt(currentStepStorage),
 				assumedPrevStep = currentStep - 1;
@@ -82,6 +95,42 @@ fx.onDocumentLoad((e) => {
 		onEsc: (e, modal) => {
 			alert('Escaped');
 			console.log(e, modal);
+		}
+	});
+	
+	function onOpenComponent(callbackObject) {
+		const body = fx('body');
+		
+		fx('.open-component').off('click').upon('click', function (event) {
+			event.preventDefault();
+			const target = fx(this);
+			const componentID = target.dataAttrib('component-id');
+			const componentURL = target.dataAttrib('component-url');
+			const componentSelector = `.component#${componentID}`;
+			
+			Object.keys(callbackObject).forEach(key => {
+				if (componentID?.toCamelCase() === key) {
+					fx.fetchPage(componentURL, 'text').then(function (response) {
+						if (!body.children(componentSelector).length)
+							body.insertNode(response.data);
+						
+						const component = fx(componentSelector);
+						const modal = component.modal;
+						modal.show();
+						modal.upon({
+							'fx.modal.hide': () => console.log('Modal dismissing', modal),
+							'fx.modal.hidden': () => modal.destroy()
+						});
+						(callbackObject[key](target, modal));
+					}).catch(error => console.error(error));
+				}
+			});
+		});
+	}
+	
+	onOpenComponent({
+		modalTest: (e, modal) => {
+			console.log('Open modal0', e, modal);
 		}
 	});
 });

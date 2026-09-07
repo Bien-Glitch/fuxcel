@@ -5,11 +5,12 @@
     "email": "biennwinate@gmail.com"
   },
   "type": "module",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "A powerful, lightweight, standalone, zero-dependency JavaScript library for form validation and fluent chainable DOM manipulation.",
   "main": "dist/js/fuxcel.js",
   "module": "dist/js/fuxcel.esm.js",
   "types": "dist/js/fuxcel.d.ts",
+  "style": "dist/css/fuxcel.css",
   "files": [
     "icon.png",
     "dist/",
@@ -17,10 +18,12 @@
   ],
   "exports": {
     ".": {
+      "types": "./dist/js/fuxcel.d.ts",
       "import": "./dist/js/fuxcel.esm.js",
       "require": "./dist/js/fuxcel.cjs.js",
-      "types": "./dist/js/fuxcel.d.ts"
-    }
+      "style": "./dist/css/fuxcel.css"
+    },
+    "./css": "./dist/css/fuxcel.css"
   },
   "publishConfig": {
     "access": "public"
