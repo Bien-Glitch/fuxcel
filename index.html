@@ -861,7 +861,7 @@
 			<button class="menu-toggle" id="menu-toggle">☰</button>
 			<a href="https://www.npmjs.com/package/fuxcel" target="_blank" class="badge badge-npm">npm</a>
 			<a href="https://github.com/Bien-Glitch/fuxcel" target="_blank" class="badge badge-gh">GitHub</a>
-			<span class="badge badge-ver">v2.1.0</span>
+			<a href="https://github.com/Bien-Glitch/fuxcel/releases/latest" target="_blank" class="badge badge-ver" style="padding: 0;"><img src="https://img.shields.io/github/v/release/Bien-Glitch/fuxcel?style=flat-square&color=4ade80&label=v" alt="Latest version" style="display:block;"></a>
 		</div>
 	</header>
 	
@@ -900,6 +900,7 @@
 			<a href="#form-validation" class="sidebar-link">Form Validation</a>
 			<a href="#configuration-options" class="sidebar-link sub">Configuration</a>
 			<a href="#validation-methods" class="sidebar-link sub">Validation Methods</a>
+			<a href="#extend-validation" class="sidebar-link sub">Extending Validation</a>
 			<a href="#error-rendering" class="sidebar-link sub">Error Rendering</a>
 			<a href="#password-strength" class="sidebar-link sub">Password Strength</a>
 			<a href="#multi-step-forms" class="sidebar-link sub">Multi-step Forms</a>
@@ -1686,6 +1687,25 @@ field.isUsernameField
 field.canBeValidated</code></pre>
 			</section>
 			
+			<!-- EXTEND VALIDATION -->
+			<section class="content-section" id="extend-validation">
+				<h2>Extending Validation</h2>
+				<p>Add form fields dynamically after the validator has already been initialized? Call <code>extendValidation()</code> on the newly added <code>.form-group</code> element(s) instead of re-running <code>init()</code> on the whole form.</p>
+				<pre><code class="language-javascript">// Add a new field, then extend validation to include it
+fx('#login-form').insertNode(newFormGroup, 'append');
+fx(newFormGroup).extendValidation();
+
+// Extend validation across multiple newly added form-groups at once
+fx('.form-group.newly-added').extendValidation();</code></pre>
+				<p>For each selected element, <code>extendValidation()</code>:</p>
+				<ul>
+					<li>Skips it (logging a <code>console.debug</code> message) if it doesn't have the <code>.form-group</code> class.</li>
+					<li>Skips it if no parent <code>&lt;form&gt;</code> element is found.</li>
+					<li>Skips it if the parent <code>&lt;form&gt;</code> has no <code>id</code> attribute <em>(required for validator tracking)</em>.</li>
+					<li>Otherwise, forwards it to <code>validateFromGroup</code>, tagged with <code>'extendValidation'</code> as the source — so if the form-group was already validated, the resulting console warning identifies this method as the caller.</li>
+				</ul>
+			</section>
+			
 			<!-- ERROR RENDERING -->
 			<section class="content-section" id="error-rendering">
 				<h2>Error Rendering</h2>
@@ -2000,10 +2020,10 @@ await fx('#my-form').toggleFormSubmitButtonState(false)</code></pre>
 			<!-- PAGE NAVIGATION -->
 			<section class="content-section" id="page-navigation">
 				<h2>Page Navigation</h2>
-				<p><code>fx.pageNavigate</code> enables SPA-style navigation by fetching page content via AJAX, updating browser history, and injecting content into a target container. On failure it falls back to hard navigation.</p>
+				<p><code>fx.pageNavigate</code> enables SPA-style navigation by fetching page content via AJAX, updating browser history, and injecting content into a target container. On failure it falls back to hard navigation. It resolves with a structured <code>{ html, status, statusText }</code> object rather than a raw string.</p>
 				<pre><code class="language-javascript">// Minimal — navigates to /about, injects into #root
 fx.pageNavigate({ url: '/about' })
-  .then(html => console.log('Done'))
+  .then(({ html, status, statusText }) => console.log('Done', status))
   .catch(err => console.error(err));
 
 // With custom container and response type
@@ -2012,7 +2032,7 @@ fx.pageNavigate({
   selector: '#app',
   dataType: 'text',
   replace: false,   // true = replaceState, false = pushState (default)
-}).then(html => {
+}).then(({ html, status, statusText }) => {
   window.scrollTo(0, 0);
 });
 
@@ -2062,12 +2082,14 @@ document.addEventListener('fxPageNavigateReady', () => {
 				</div>
 				
 				<h3>fx.fetchPage</h3>
-				<pre><code class="language-javascript">// Returns Promise&lt;string&gt; — JSON is returned as an unparsed string
-fx.fetchPage('/page.html', 'text', () => console.log('Fetching…'))
-  .then(html => document.querySelector('#root').innerHTML = html);
+				<p>Resolves with a structured <code>{ data, status, statusText }</code> object rather than a raw string.</p>
+				<pre><code class="language-javascript">fx.fetchPage('/page.html', 'text', () => console.log('Fetching…'))
+  .then(({ data, status, statusText }) => {
+    document.querySelector('#root').innerHTML = data;
+  });
 
 fx.fetchPage('/api/data.json', 'json')
-  .then(jsonString => JSON.parse(jsonString));</code></pre>
+  .then(({ data, status, statusText }) => console.log(data, status));</code></pre>
 			</section>
 			
 			<!-- PAGE LOADER -->
@@ -2111,6 +2133,13 @@ parseBool('yes')           // true  — parses 'yes','true','1',1,true → true;
 				<h3>fx.passLuhnAlgo(input)</h3>
 				<p>Checks if the given input passes the <a href="https://en.wikipedia.org/wiki/Luhn_algorithm" target="_blank">Luhn Algorithm</a> — used for card number validation.</p>
 				<pre><code class="language-javascript">fx.passLuhnAlgo('4526193832182346'); // true or false</code></pre>
+				
+				<h3>fx.formatNumber(value, fractionDigits)</h3>
+				<p>Formats a number (or numeric string) as a locale-aware string with grouped thousands separators. Defaults to 2 decimal places.</p>
+				<pre><code class="language-javascript">fx.formatNumber(1234.5);        // '1,234.50'
+fx.formatNumber('1234.5');      // '1,234.50'
+fx.formatNumber(1234.567, 3);   // '1,234.567'
+fx.formatNumber(1234, 0);       // '1,234'</code></pre>
 				
 				<h3>fx.fetch(config)</h3>
 				<pre><code class="language-javascript">fx.fetch({

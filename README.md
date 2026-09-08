@@ -16,15 +16,16 @@ A powerful, lightweight, standalone, zero-dependency JavaScript library for form
 
 ---
 
-## Features
+Features
+
+[//]: # (- 🎭 **Multi-step Forms** - Easy wizard-style form management)
 
 - ✅ **Advanced Form Validation** - Built-in validators with real-time feedback
-- 🎭 **Multi-step Forms** - Easy wizard-style form management
 - 🎨 **Zero Dependencies** - Pure JavaScript, no external libraries
-- 🎬 **Rich Animations** - Fade, slide, zoom, shake, and blink effects
+- 🎬 **Rich Animations** - Fade, slide, zoom, and blink effects
 - 🏗️ **DOM Manipulation** - Chainable DOM manipulation with full Fuxcel-instance awareness
 - 🪟 **Modal System** - Beautiful, customizable modals and alerts
-- 📡 **HTTP Client** - Modern fetch API wrapper with page navigation support
+- 📡 **HTTP Client** - Modern fetch API wrapper, with SPA-style page navigation and structured responses
 - 📱 **Mobile-First** - Touch and device detection built-in
 - 🔒 **Type-Safe** - Full TypeScript support
 
@@ -33,41 +34,9 @@ A powerful, lightweight, standalone, zero-dependency JavaScript library for form
 ## Table of Contents
 
 - [Installation](#installation)
-- [Quick Start](#quick-start)
 - [Usage](#usage)
-	- [The `fx()` Function](#the-fx-function)
-	- [Selector](#selector)
-	- [DOM Manipulation](#dom-manipulation)
-		- [Class Management](#class-management)
-		- [Attributes & Properties](#attributes--properties)
-		- [Content & HTML](#content--html)
-		- [Node Insertion](#node-insertion)
-		- [Removal & Detach](#removal--detach)
-		- [Element Selection & Traversal](#element-selection--traversal)
-		- [Element Queries](#element-queries)
-		- [Value](#value)
-		- [Disable / Enable](#disable--enable)
-	- [Events](#events)
-		- [Event Listeners](#event-listeners)
-		- [Trigger Events](#trigger-events)
-	- [Animations](#animations)
-	- [Form Validation](#form-validation)
-		- [Configuration Options](#configuration-options)
-		- [Validation Methods](#validation-methods)
-		- [Error Rendering](#error-rendering)
-		- [Password Strength](#password-strength)
-		- [Multi-step Forms](#multi-step-forms)
-	- [Modals](#modals)
-		- [FuxcelModal Class](#fuxcelmodal-class)
-	- [HTTP & Navigation](#http--navigation)
-		- [Form Submission](#form-submission)
-		- [Button Load States](#button-load-states)
-		- [Page Navigation](#page-navigation)
-		- [Page Loader](#page-loader)
 - [Utilities](#utilities)
-	- [Global Utility Functions](#global-utility-functions)
-	- [`Fx` Interface Methods](#fx-interface-methods)
-- [Configuration Options](#configuration-options-1)
+- [Configuration Options](#configuration-options)
 - [About](#about)
 - [Creator](#creator)
 - [Contributors](#contributors)
@@ -133,7 +102,7 @@ Then link the assets in your HTML document:
 ## Quick Start
 
 ```javascript
-// Select element(s) and add event listeners
+// Select element(s) and manipulate them (addind event lsteners)
 fx('#myButton').upon('click', function () {
 	fx(this).fadein(300);
 });
@@ -163,15 +132,13 @@ fx.fetch({
 });
 ```
 
----
-
 ## Usage
 
 Ensure the stylesheet and script are linked correctly as shown above before proceeding.
 
 ### The `fx()` Function
 
-Fuxcel exposes a global `fx(selector, context)` function that returns a `Fuxcel` instance of the selected element(s). The alias `fuxcel()` is identical in every way.
+Fuxcel exposes a global `fx(selector, context)` function that returns a `Fuxcel` instance of the selected element(s).
 
 | Parameter  | Type                                                  | Required | Description                     |
 |------------|-------------------------------------------------------|----------|---------------------------------|
@@ -190,174 +157,59 @@ fx('[data-attr]')      // Select by attribute
 fx('#parent .child')   // Nested selection
 ```
 
----
-
 ### DOM Manipulation
 
 #### Class Management
 
 ```javascript
-fx('#element').putClass('active', 'highlight')  // Add one or more classes
-fx('#element').removeClass('inactive')           // Remove one or more classes
-fx('#element').toggleClass('visible')            // Toggle a class
-fx('#element').hasClass('active')                // Returns boolean
-fx('#element').replaceClass('old', 'new')        // Replace a class (adds 'new' if 'old' not found)
-fx('#element').classes                           // Returns the element's DOMTokenList
+fx('#element').putClass('active', 'highlight') // Add class `active` and `highlight` to the classlist of the selected element.
+fx('#element').removeClass('inactive') // Remove class `inactive`from the classlist of the selected element.
+fx('#element').toggleClass('visible') // Toggle class `visible` to the classlist of the selected element.
+fx('#element').hasClass('active') // returns boolean.
+fx('#element').replaceClass('old', 'new') // Replace class `new` with class `old` - 'adds `new` to the classlist if `old` is not found'.
 ```
 
 #### Attributes & Properties
 
 ```javascript
 // Attributes
-fx('#input').attrib('placeholder', 'Enter text')   // Set attribute
-fx('#input').attrib('disabled', true)               // Set boolean attribute
-const value = fx('#input').attrib('value')          // Get attribute
-fx('#input').attrib({id: 'myInput', name: 'input'}) // Set multiple attributes
-fx('#input').removeAttrib('disabled')               // Remove attribute
-fx('#input').listAttrib()                           // Get all attributes as object
+fx('#input').attrib('placeholder', 'Enter text')
+fx('#input').attrib('disabled', true)
+const value = fx('#input').attrib('value')
+fx('#input').removeAttrib('disabled')
 
 // Data attributes
-fx('#element').dataAttrib('user-id', '123')         // Set [data-user-id]
-const userId = fx('#element').dataAttrib('user-id') // Get [data-user-id]
-fx('#element').removeDataAttrib('user-id')          // Remove [data-user-id]
+fx('#element').dataAttrib('user-id', '123')
+const userId = fx('#element').dataAttrib('user-id')
 
 // Properties
-fx('#checkbox').prop('checked', true)               // Set property
-fx('#input').prop({disabled: true, required: true}) // Set multiple properties
-fx('#input').prop('value')                          // Get property
-fx('#input').removeProp('required')                 // Remove property
-fx('#input').listProp()                             // Get all properties as object
+fx('#checkbox').prop('checked', true)
+fx('#input').prop({disabled: true, required: true})
 
 // Styles
-fx('#box').style('background', 'blue')              // Set a style
-fx('#box').style({width: '100px', height: '100px'}) // Set multiple styles
-fx('#box').style('width')                           // Get a style value
+fx('#box').style('background', 'blue')
+fx('#box').style({width: '100px', height: '100px'})
 ```
 
 #### Content & HTML
 
 ```javascript
-fx('#element').innerText = 'New text'               // Set inner text
-fx('#element').outerText = 'Replaced text'          // Set outer text
-fx('#element').innerText                            // Get inner text
-fx('#element').outerText                            // Get outer text
-fx('#element').innerHTML                            // Get inner HTML
-fx('#element').outerHTML                            // Get outer HTML
-
-// Replace inner HTML entirely
-fx('#container').insertHTML('<p>New content</p>')
-
-// Insert relative to element (positions: 'before' | 'prepend' | 'append' | 'after')
-fx('#container').insertHTML('<hr>', 'before')        // Before the element itself
-fx('#container').insertHTML('<p>First</p>', 'prepend') // As first child
-fx('#container').insertHTML('<p>Last</p>', 'append')  // As last child
-fx('#container').insertHTML('<hr>', 'after')         // After the element itself
+fx('#element').innerText = 'New text'
+fx('#element').insertHTML('<p>New content</p>')
+fx('#element').insertHTML('<span>Before</span>', 'prefix')
+fx('#container').innerHTML // Get HTML
 ```
 
-> **Migration note (v1 → v2):** The position values `'affix'`, `'prefix'`, `'suffix'`, and `'postfix'` have been renamed to `'before'`, `'prepend'`, `'append'`, and `'after'` respectively.
-
-#### Node Insertion
-
-`insertNode` accepts a single node or an array of nodes. Each node can be a raw `HTMLElement`, a plain HTML string, or a `Fuxcel` instance.
+#### Traversal
 
 ```javascript
-// Append a node (default)
-fx('#container').insertNode('<p>Hello</p>')
-fx('#container').insertNode(document.createElement('hr'), 'append')
-
-// Prepend as first child
-fx('#container').insertNode(fx('#header'), 'prepend')
-
-// Insert before or after the element itself
-fx('#container').insertNode(document.createElement('hr'), 'before')
-fx('#container').insertNode('<p>Footer</p>', 'after')
-
-// Multiple nodes as an array
-fx('#container').insertNode([fx('#header'), '<hr>', document.createElement('p')], 'prepend')
-
-// Chainable
-fx('#container').insertNode('<p>Hello</p>', 'prepend').putClass('loaded').fadein(300)
+fx('#element').children()                    // Direct children
+fx('#element').children('.active')           // Filtered children
+fx('#element').descendants()                 // All descendants
+fx('#element').parents()                     // Parent elements
+fx('#element').siblings()                    // Sibling elements
+fx('#element').prevSiblings()               // Previous siblings
 ```
-
-#### Removal & Detach
-
-```javascript
-// Remove element completely
-fx('#banner').remove()
-fx('#banner').remove(false)
-
-// Detach — preserves event listeners so it can be reinserted later
-const header = fx('#header').remove(true)
-fx('#new-container').insertNode(header, 'prepend')
-```
-
-#### Element Selection & Traversal
-
-```javascript
-// Index-based access (supports negative indices)
-fx('#list li').at()      // First item (index 0)
-fx('#list li').at(2)     // Third item
-fx('#list li').at(-1)    // Last item
-fx('#list li').at(-2)    // Second to last
-
-// Traversal getters (operate on first selected element)
-fx('#el').parent         // Direct parent
-fx('#el').next           // Next sibling
-fx('#el').previous       // Previous sibling
-fx('#el').first          // First element in selection
-fx('#el').last           // Last element in selection
-
-// Traversal methods (operate across all selected elements)
-fx('#element').children()                  // Direct children
-fx('#element').children('.active')         // Filtered direct children
-fx('#element').descendants()              // All descendants
-fx('#element').descendants('span')        // Filtered descendants
-fx('#element').parents()                  // All ancestor elements
-fx('#element').parents('.wrapper')        // Filtered ancestors
-fx('#element').siblings()                 // All siblings
-fx('#element').siblings('.item')          // Filtered siblings
-fx('#element').prevSiblings()             // All previous siblings
-fx('#element').prevSiblings('.item')      // Filtered previous siblings
-
-// Iteration
-fx('li').each((element, index, elements) => {
-	console.log(index, element.innerHTML);
-});
-
-// Filter (returns a shallow copy)
-fx('li').filter((element, index) => index % 2 === 0);
-```
-
-#### Element Queries
-
-```javascript
-fx('#input').isElement('input')          // true if tag name matches
-fx('#input').matchSelector('#myInput')   // true if selector matches element
-fx('#list').hasScrollBar()               // true if any scrollbar
-fx('#list').hasScrollBar('vertical')     // true if vertical scrollbar
-fx('#input').isDisabled                  // true if element is disabled
-fx('#form').isFormElement                // true if element is a form
-fx('#input').hasFocus                    // Promise<boolean>
-fx('#input').fieldAttributes             // { id, fxName, type, fxId, fxRole, formId }
-```
-
-#### Value
-
-```javascript
-fx('#input').value()            // Get value (returns string | string[] | null)
-fx('#input').value('hello')     // Set value
-fx('#select').value()           // Returns array of selected values for multi-selects
-```
-
-#### Disable / Enable
-
-```javascript
-fx('#button').disable()         // Disable element
-fx('#button').disable(true)     // Disable element
-fx('#button').disable(false)    // Enable element
-```
-
----
 
 ### Events
 
@@ -369,12 +221,12 @@ fx('#button').upon('click', function (e) {
 	console.log('Clicked!');
 });
 
-// Multiple events as an array
+// Multiple events
 fx('#input').upon(['focus', 'blur'], function (e) {
 	console.log(e.type);
 });
 
-// Events as a key-value object
+// Event object
 fx('#form').upon({
 	submit: function (e) {
 		e.preventDefault();
@@ -384,56 +236,44 @@ fx('#form').upon({
 	}
 });
 
-// With capture phase
-fx('#button').upon('click', handler, true)
-
-// Remove specific event(s)
+// Remove events
 fx('#button').off('click')
-fx('#button').off('focus', 'blur')
-
-// Remove all events
-fx('#button').off()
+fx('#button').off() // Remove all events
 ```
 
 #### Trigger Events
 
 ```javascript
 fx('#button').trigger('click')
-fx('#input').trigger('focus', 'mouse')          // mouse | keyboard | custom
+fx('#input').trigger('focus', 'mouse')
 fx('#form').trigger(new CustomEvent('validate'))
 ```
 
----
-
 ### Animations
 
-All animation methods accept optional `timeout` (ms), `iteration` (count), and `display` (CSS display value) parameters and return `Promise<Fuxcel>` for chaining.
+All animations return Promises and support chainable syntax:
 
 ```javascript
-// Fade
+// Fade animations
 await fx('#element').fadein()
-await fx('#element').fadein(500)              // 500ms
-await fx('#element').fadein(500, 2)           // 500ms, 2 iterations
-await fx('#element').fadein(500, 2, 'flex')   // 500ms, 2 iterations, display: flex
-await fx('#element').fadeout(300)
+await fx('#element').fadein(500)           // 500ms duration
+await fx('#element').fadeout(300, 'block') // Custom display
 
-// Slide
+// Slide animations
 await fx('#menu').slideindown()
-await fx('#menu').slideinup(400)
-await fx('#menu').slideoutdown(300)
 await fx('#menu').slideoutup(400)
 await fx('#panel').slideinleft(300)
-await fx('#panel').slideinright(300)
-await fx('#panel').slideoutleft(500)
 await fx('#panel').slideoutright(500)
 
-// Other
+// Other animations
 await fx('#box').zoomin(300)
-await fx('#alert').blink(200, 3)              // 200ms, 3 iterations
-await fx('#alert').shake(500, 2)              // 500ms, 2 iterations
+await fx('#alert').blink(200, 3) // 3 iterations
+await fx('#alert').shake(500, 2) // 2 iterations
 
-// Chaining
-fx('#element').fadein(300).then(() => fx('#element').slideoutup(400));
+// Chain animations
+fx('#element')
+	.fadein(300).then(() => fx('#element')
+	.slideoutup(400));
 ```
 
 You can also use the `fuxcel` alias:
@@ -441,8 +281,6 @@ You can also use the `fuxcel` alias:
 ```javascript
 fuxcel('#myElement').fadein();
 ```
-
----
 
 ### Form Validation
 
@@ -452,8 +290,22 @@ Given the following form:
 
 <form method="post" id="login-form">
 	<div class="form-group">
+		<label for="title">Title</label>
+		<input type="text" id="title" placeholder="Title" class="form-field">
+	</div>
+	
+	<div class="form-group">
 		<label for="name">Name</label>
 		<input type="text" id="name" placeholder="Name" class="form-field">
+	</div>
+	
+	<div class="form-group">
+		<label for="gender">Gender</label>
+		<select id="gender" class="form-field">
+			<option value="" selected>Select Gender</option>
+			<option value="male">Male</option>
+			<option value="female">Female</option>
+		</select>
 	</div>
 	
 	<div class="form-group">
@@ -475,36 +327,59 @@ Given the following form:
 </form>
 ```
 
-Initialize and configure the validator:
+Initialize and configure the validator in your JavaScript file:
 
 ```javascript
+// Get the Fuxcel instance of the form
 const _loginForm = fx('#login-form');
 
+// Define config options
 const loginFormConfig = {
 	config: {
 		showIcons: true,
 		showPassword: true,
 		validateEmail: true,
-		validatePassword: true,
 	}
 };
 
+// Initialize the validator with optional config, then attach an event listener
 _loginForm.formValidator.init(loginFormConfig).upon('submit', function (e) {
 	e.preventDefault();
 	
+	// Fuxcel can also handle form submission asynchronously, returning a promise:
 	_loginForm.handleFormSubmit()
 		.then(resolve => console.log(resolve))
 		.catch(error => console.log(error));
 });
 ```
 
-#### Configuration Options
+#### Extending Validation to New Fields
+
+If you add form fields to a form after the validator has already been initialized (e.g. dynamically inserted inputs), you don't need to re-run `init()` on the whole form. Call `extendValidation()` on the newly added `.form-group` element(s) instead:
+
+```javascript
+// Add a new field, then extend validation to include it
+fx('#login-form').insertNode(newFormGroup, 'append');
+fx(newFormGroup).extendValidation();
+
+// Extend validation across multiple newly added form-groups at once
+fx('.form-group.newly-added').extendValidation();
+```
+
+For each selected element, `extendValidation()`:
+
+- Skips it (logging a `console.debug` message) if it doesn't have the `.form-group` class.
+- Skips it if no parent `<form>` element is found.
+- Skips it if the parent `<form>` has no `id` attribute _(required for validator tracking)_.
+- Otherwise, forwards it to the validator, tagged with `'extendValidation'` as the source — so if the form-group was already validated, the resulting console warning identifies this method as the caller rather than a generic re-validation.
+
+### Configuration Options
 
 Config is passed as an object to `formValidator.init()`. It is organized into four sub-objects.
 
 ---
 
-##### `regExp` — Regular Expression Overrides
+#### `regExp` — Regular Expression Overrides
 
 Override the default regex patterns used to validate specific field types.
 
@@ -530,15 +405,12 @@ config = {
 
 ---
 
-##### `stepForm` — Step Form Wizard Options
+#### `stepForm` — Step Form Wizard Options
 
-| Key             | Type      | Default         | Description                                       |
-|-----------------|-----------|-----------------|---------------------------------------------------|
-| `use`           | `boolean` | `true`          | Toggle step form validator initialization         |
-| `plugin`        | `boolean` | `false`         | Use the xsteps form wizard plugin (if available)  |
-| `config.step`   | `string`  | `'.fx-step'`    | CSS selector for each step container              |
-| `config.slides` | `boolean` | `false`         | Enable slide-style step transitions               |
-| `config.switch` | `string`  | `'[data-step]'` | CSS selector for step navigation trigger elements |
+| Key      | Type      | Default | Description                                      |
+|----------|-----------|---------|--------------------------------------------------|
+| `use`    | `boolean` | `true`  | Toggle step form validator initialization        |
+| `plugin` | `boolean` | `false` | Use the xsteps form wizard plugin (if available) |
 
 ```javascript
 config = {
@@ -556,13 +428,13 @@ config = {
 
 ---
 
-##### `texts` — Validation Display Texts
+#### `texts` — Validation Display Texts
 
 Override the default text strings shown during validation.
 
 | Key              | Type     | Default                                        | Description                  |
 |------------------|----------|------------------------------------------------|------------------------------|
-| `capslockFormat` | `string` | `'⚠ Caps Lock is on'`                          | Shown when Caps Lock is on   |
+| `capslock`       | `string` | `'⚠ Caps Lock is on'`                          | Shown when Caps Lock is on   |
 | `emailFormat`    | `string` | `null`                                         | Example email format hint    |
 | `nameFormat`     | `string` | `null`                                         | Example name format hint     |
 | `passwordFormat` | `string` | `'Password requires between 8-32 characters.'` | Example password format hint |
@@ -572,7 +444,7 @@ Override the default text strings shown during validation.
 ```javascript
 config = {
 	texts: {
-		capslockFormat: '⚠ Caps Lock is on',
+		capslock: '⚠ Caps Lock is on',
 		emailFormat: 'e.g. johndoe@gmail.com',
 	}
 }
@@ -580,25 +452,25 @@ config = {
 
 ---
 
-##### `config` — Field Validation Toggles
+#### `config` — Field Validation Toggles
 
-| Key                    | Type      | Default                   | Description                                                                                             |
-|------------------------|-----------|---------------------------|---------------------------------------------------------------------------------------------------------|
-| `capslockAlert`        | `boolean` | `true`                    | Show Caps Lock alert on password fields                                                                 |
-| `showIcons`            | `boolean` | `true`                    | Show validation icons on fields                                                                         |
-| `showPassword`         | `boolean` | `true`                    | Show password visibility toggle icon                                                                    |
-| `validateCard`         | `boolean` | `false`                   | Enable card number and CVV validation                                                                   |
-| `validateName`         | `boolean` | `false`                   | Enable name field validation                                                                            |
-| `validateEmail`        | `boolean` | `true`                    | Enable email field validation                                                                           |
-| `validatePhone`        | `boolean` | `false`                   | Enable phone number validation                                                                          |
-| `validatePassword`     | `boolean` | `true`                    | Enable password validation (recommended when a confirmation field is present)                           |
-| `validateUsername`     | `boolean` | `false`                   | Enable username field validation                                                                        |
-| `nativeValidation`     | `boolean` | `false`                   | Enable native HTML5 form validation                                                                     |
-| `useDefaultStyling`    | `boolean` | `false`                   | Use Fuxcel's default field styling. Set to `false` if it conflicts with your own styles                 |
-| `showPasswordStrength` | `boolean` | `false`                   | Enable Password Strength Calculator. Returns `score`, `label`, `color`, `failed`, `passed`, and `rules` |
-| `passwordId`           | `string`  | `'password'`              | The `id` of your password field                                                                         |
-| `passwordConfirmId`    | `string`  | `'password_confirmation'` | The `id` of your confirm password field                                                                 |
-| `initWrapper`          | `string`  | `'.form-group'`           | CSS selector of the wrapper element containing each `label` and `input` pair                            |
+| Key                    | Type      | Default                   | Description                                                                                                                                                               |
+|------------------------|-----------|---------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `capslockAlert`        | `boolean` | `true`                    | Show Caps Lock alert on password fields                                                                                                                                   |
+| `showIcons`            | `boolean` | `true`                    | Show validation icons on fields                                                                                                                                           |
+| `showPassword`         | `boolean` | `true`                    | Show password visibility toggle icon                                                                                                                                      |
+| `validateCard`         | `boolean` | `false`                   | Enable card number and CVV validation                                                                                                                                     |
+| `validateName`         | `boolean` | `false`                   | Enable name field validation                                                                                                                                              |
+| `validateEmail`        | `boolean` | `true`                    | Enable email field validation                                                                                                                                             |
+| `validatePhone`        | `boolean` | `false`                   | Enable phone number validation                                                                                                                                            |
+| `validatePassword`     | `boolean` | `true`                    | Enable password validation (recommended when a confirmation field is present)                                                                                             |
+| `validateUsername`     | `boolean` | `false`                   | Enable username field validation                                                                                                                                          |
+| `nativeValidation`     | `boolean` | `false`                   | Enable native HTML5 form validation                                                                                                                                       |
+| `useDefaultStyling`    | `boolean` | `false`                   | Use Fuxcel's default field styling. Set to `false` if it conflicts with your own styles                                                                                   |
+| `showPasswordStrength` | `boolean` | `false`                   | Enable Password Strength Calculator. It returns `score: number`, `label: Strength`, `color: string`, `failed: string[]`, `passed: string[]`, and `rules: ExtractedRule[]` |
+| `passwordId`           | `string`  | `'password'`              | The `id` of your password field                                                                                                                                           |
+| `passwordConfirmId`    | `string`  | `'password_confirmation'` | The `id` of your confirm password field                                                                                                                                   |
+| `initWrapper`          | `string`  | `'.form-group'`           | CSS class of the wrapper element containing each `label` and `input` pair                                                                                                 |
 
 ```javascript
 config = {
@@ -610,322 +482,18 @@ config = {
 		useDefaultStyling: true,
 		passwordConfirmId: 'confirm_password',
 	}
+
+
 }
 ```
 
 ---
 
-#### Validation Methods
-
-Once the validator is initialized, you can call validation methods directly on field elements:
-
-```javascript
-const field = fx('#email').formValidator;
-
-// Validate based on field type (auto-detects email, password, name, phone, username)
-field.validateField()               // Validate, auto-generate error message on failure
-field.validateField(true)           // Validate, force error message
-field.validateField('Looks good!')  // Validate with a custom success message
-field.validateField(null, true)     // Validate, display error if invalid
-
-// Validate with a specific regex
-field.validateEmail(/your-regex/)
-field.validateEmail(/your-regex/, 'e.g. user@example.com')
-
-field.validatePassword(/your-regex/)
-field.validateName(/your-regex/)
-field.validatePhone(/your-regex/)
-field.validateUsername(/your-regex/)
-field.validateCardNumber(/your-regex/)
-field.validateCardCVV(/your-regex/)
-
-// Validate with a custom regex or callback function
-field.validateRegex(/[A-Z]+/, 'Must contain uppercase')
-field.validateRegex((value) => value.length > 5)
-
-// Show / hide validation state manually
-field.showError()
-field.showError('This field is required')
-field.showSuccess()
-field.showSuccess('All good!')
-
-// Toggle or clear validation
-field.toggleValidation()
-field.undoValidation()         // Clear validation UI
-field.undoValidation(true)     // Clear UI and remove from error bag
-
-// Field type checks
-field.isEmailField
-field.isPasswordField
-field.isNameField
-field.isPhoneField
-field.isUsernameField
-field.canBeValidated
-```
-
-#### Error Rendering
-
-```javascript
-const form = fx('#my-form').formValidator;
-
-// Get error state
-form.errorBag           // { fieldId: 'error message', ... } or null
-form.errorCount         // Number of errors
-form.getErrors          // Object with errorBag and errorCount
-
-// Render a global message on the form
-form.renderMessage()                        // Reset / clear message
-form.renderMessage('Submission failed')     // Show a plain message
-form.renderMessage('Saved!', 'success')     // Show a typed message
-
-// Render server-side validation errors (keys = field IDs)
-form.renderValidationErrors({email: 'Already taken', name: 'Required'})
-
-// Render errors with a global message
-form.renderValidationErrors(
-	{email: 'Already taken'},
-	'Please fix the errors below'
-)
-
-// Render errors with a callback on the dismiss/confirm button
-form.renderValidati + onErrors(
-	{email: 'Already taken'},
-	'Fix errors below',
-	(fx, e) => console.log('dismissed', e)
-)
-
-// Render only a message (no field errors)
-form.renderValidationErrors(null, 'Something went wrong')
-form.renderValidationErrors(null, (fx, e) => console.log('dismissed'))
-```
-
-#### Password Strength
-
-When `showPasswordStrength: true` is set in config, the `passwordStrength` getter returns a `StrengthResult`:
-
-```javascript
-const result = fx('#password').formValidator.passwordStrength;
-// {
-//   score: number,
-//   label: 'weak' | 'fair' | 'good' | 'strong',
-//   color: string,
-//   passed: string[],
-//   failed: string[],
-//   rules: { name: string, regex: RegExp, weight: number }[]
-// }
-```
-
-#### Multi-step Forms
-
-When a form uses the step form feature (detected automatically or via `stepForm.use: true`), `formValidator.init()` returns a `FuxcelSteps` instance:
-
-```javascript
-const steps = fx('#wizard-form').formValidator.init({stepForm: {use: true}});
-
-// Get all step identifiers for the form
-steps.formSteps          // (number | string)[]
-
-// Get errors for all steps
-steps.stepErrors()
-
-// Get errors for a specific step
-steps.stepErrors(1)
-steps.stepErrors('personal-info')
-
-// Step-level error bag and count (also available on FuxcelValidator)
-steps.stepErrorBag(1)    // { fieldId: 'error', ... } | null
-steps.stepErrorCount(1)  // number
-```
-
----
-
-### Modals
-
-#### `fx.modal(config)` / `fxModal(config)`
-
-Creates a quick alert or confirm modal.
-
-```javascript
-fx.modal({
-	type: 'warning',
-	content: '<h1>Are you sure?</h1>',
-	confirmButtonText: 'Yes',
-	cancelButtonText: 'No',
-	onConfirm: (e, modal) => console.log('Confirmed', modal),
-	onCancel: (e, modal) => console.log('Cancelled', modal),
-	onEsc: (e, modal) => console.log('Dismissed with Escape', modal),
-});
-```
-
-**Config properties:**
-
-| Property            | Type                                           | Default           | Description                                  |
-|---------------------|------------------------------------------------|-------------------|----------------------------------------------|
-| `title`             | `string \| null`                               | `null`            | Modal title                                  |
-| `type`              | `'success' \| 'warning' \| 'error' \| null`    | `'success'`       | Visual style of the modal                    |
-| `content`           | `string \| null`                               | `'Alert Content'` | Body content                                 |
-| `confirmButtonText` | `string \| null`                               | —                 | Confirm button label                         |
-| `cancelButtonText`  | `string \| null`                               | —                 | Cancel button label                          |
-| `html`              | `boolean`                                      | `true`            | Render content as HTML                       |
-| `isStatic`          | `boolean`                                      | `false`           | Prevent closing on outside click             |
-| `closeOnConfirm`    | `boolean`                                      | `false`           | Auto-hide the modal on confirm click         |
-| `onConfirm`         | `(e: CustomEvent, modal: FuxcelModal) => void` | —                 | Called when confirm is clicked               |
-| `onCancel`          | `(e: CustomEvent, modal: FuxcelModal) => void` | —                 | Called when cancel is clicked                |
-| `onEsc`             | `(e: CustomEvent, modal: FuxcelModal) => void` | —                 | Called on Escape key (when no cancel button) |
-
-#### FuxcelModal Class
-
-For more control, use the `FuxcelModal` class or the `.modal` getter on any `Fuxcel` instance:
-
-```javascript
-// Via the getter
-const modal = fx('#my-modal').modal;
-modal.show()          // Open (allow Escape key to close)
-modal.show(false)     // Open (disable Escape key)
-modal.hide()          // Hide
-modal.hide(true)      // Hide and remove from DOM
-modal.toggle()        // Toggle open/closed
-modal.destroy()       // Remove from DOM entirely
-
-// Build a modal DOM structure programmatically
-const el = FuxcelModal.init({
-	id: 'confirm-dialog',
-	title: 'Confirm Action',
-	content: 'Are you sure?',
-	html: false,
-	isStatic: true,
-	hasFooter: true,
-});
-document.body.appendChild(el);
-
-// Static properties
-FuxcelModal.currentModal      // The most recently opened modal, or null
-FuxcelModal.hasOpenModals     // true if any modals are open
-FuxcelModal.modalTriggers     // All elements with [data-fx-target="modal"]
-```
-
----
-
-### HTTP & Navigation
-
-#### Form Submission
-
-`handleFormSubmit` is a convenient wrapper that automatically serializes form data and submits it via the Fetch API:
-
-```javascript
-fx('#my-form').handleFormSubmit({
-	uri: '/api/register',
-	method: 'post',
-	dataType: 'json',
-	handleError: true,       // Auto-render 422 validation errors
-	beforeSend: () => console.log('Sending…'),
-}).then(({JSON, text, status, form}) => {
-	console.log(status, JSON);
-}).catch(error => console.error(error));
-```
-
-**Options (`FXFormSubmitType`):**
-
-| Property      | Type                                              | Default  | Description                       |
-|---------------|---------------------------------------------------|----------|-----------------------------------|
-| `uri`         | `string \| null`                                  | `''`     | Submission URL                    |
-| `method`      | `'get' \| 'post' \| 'put' \| 'patch' \| 'delete'` | `'get'`  | HTTP method                       |
-| `data`        | `object \| null`                                  | `null`   | Additional form data to merge     |
-| `dataType`    | `'html' \| 'json' \| 'text' \| ...`               | `'json'` | Expected response type            |
-| `headers`     | `Object \| Headers \| null`                       | —        | Additional request headers        |
-| `beforeSend`  | `Function \| null`                                | —        | Called before the request is sent |
-| `timeout`     | `number`                                          | `10`     | Timeout in milliseconds           |
-| `handleError` | `boolean`                                         | `false`  | Auto-handle 422 validation errors |
-
-**Response (`FXFormResponse`):**
-
-| Property | Type              | Description                             |
-|----------|-------------------|-----------------------------------------|
-| `JSON`   | `any`             | Parsed JSON response (if applicable)    |
-| `text`   | `string`          | Raw text response                       |
-| `status` | `number`          | HTTP response status code               |
-| `form`   | `FuxcelValidator` | The submitted form's validator instance |
-
-#### Button Load States
-
-```javascript
-// Toggle a button's disabled state during async operations
-await fx('#submit-btn').toggleButtonLoadState(true)   // Enable loading state
-await fx('#submit-btn').toggleButtonLoadState(false)  // Restore state
-
-// Toggle the submit button of a selected form
-await fx('#my-form').toggleFormSubmitButtonState(true)
-await fx('#my-form').toggleFormSubmitButtonState(false)
-```
-
-#### Page Navigation
-
-`fx.pageNavigate` enables SPA-style navigation by fetching page content via AJAX, updating browser history, and injecting content into a target container. On failure it falls back to a hard navigation.
-
-```javascript
-// Minimal — navigates to /about, injects into #root
-fx.pageNavigate({url: '/about'})
-	.then(html => console.log('Done'))
-	.catch(err => console.error(err));
-
-// With custom container and response type
-fx.pageNavigate({
-	url: '/dashboard',
-	selector: '#app',
-	dataType: 'text',
-	replace: false,         // true = replaceState, false = pushState (default)
-}).then(html => {
-	window.scrollTo(0, 0);
-});
-
-// Listen for navigation ready to re-initialize components
-document.addEventListener('fxPageNavigateReady', () => {
-	initComponents();
-	window.scrollTo(0, 0);
-});
-```
-
-**Options (`FXPageNavigateOptions`):**
-
-| Property   | Type               | Default   | Description                                          |
-|------------|--------------------|-----------|------------------------------------------------------|
-| `url`      | `string \| null`   | —         | URL to navigate to                                   |
-| `selector` | `string \| null`   | `'#root'` | CSS selector of the container to inject content into |
-| `dataType` | `'json' \| 'text'` | `'json'`  | Expected response type                               |
-| `replace`  | `boolean`          | `false`   | Use `replaceState` instead of `pushState`            |
-
-`fx.fetchPage` is also available directly for lower-level use:
-
-```javascript
-// Returns Promise<string> — JSON is returned as an unparsed string
-fx.fetchPage('/page.html', 'text', () => console.log('Fetching…'))
-	.then(html => document.querySelector('#root').innerHTML = html);
-
-fx.fetchPage('/api/data.json', 'json')
-	.then(jsonString => JSON.parse(jsonString));
-```
-
-#### Page Loader
-
-`fx.pageLoader` provides a YouTube-style thin progress bar at the top of the viewport:
-
-```javascript
-fx.pageLoader.start()    // Show and animate the progress bar (0% → ~90%)
-fx.pageLoader.finish()   // Jump to 100%, fade out, then reset
-
-// Typical usage with async operations
-fx.pageLoader.start();
-fetch('/api/data')
-	.then(res => res.json())
-	.then(data => console.log(data))
-	.finally(() => fx.pageLoader.finish());
-```
-
 ---
 
 ## Utilities
 
-Fuxcel provides a set of global utility functions available directly on the `window` object.
+Fuxcel provides a set of utility functions and methods for DOM manipulation, event handling, AJAX requests, and other common web tasks.
 
 ### Global Utility Functions
 
@@ -1080,7 +648,7 @@ Checks if the given input passes the [Luhn Algorithm](https://en.wikipedia.org/w
 
 **Parameters:**
 
-- `input {string | number}` *(required)* — The card number to validate.
+- `input` *(required)* — The card number string to validate.
 
 **Returns:** `true` if valid; `false` otherwise.
 
@@ -1096,19 +664,17 @@ console.log(isValid); // true or false
 
 Performs a fetch request using the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) with a convenient options interface.
 
-**Config properties (`FXRequestType`):**
+**Config properties:**
 
 | Property     | Description                                                                                     | Default  |
 |--------------|-------------------------------------------------------------------------------------------------|----------|
 | `uri`        | Request URL                                                                                     | `''`     |
-| `method`     | HTTP method (`get`, `post`, `put`, `patch`, `delete`)                                           | `'get'`  |
+| `method`     | HTTP method                                                                                     | `'get'`  |
 | `data`       | Request payload                                                                                 | `null`   |
-| `dataType`   | Expected response type (`json`, `html`, `text`, `xml`, `script`, `jsonp`)                       | `'json'` |
-| `headers`    | Additional request headers                                                                      | —        |
+| `dataType`   | Expected response type                                                                          | `'json'` |
 | `beforeSend` | Called before the request is sent                                                               | —        |
-| `timeout`    | Timeout in seconds                                                                              | `10`     |
 | `onSuccess`  | Called on status `200–299`                                                                      | —        |
-| `onError`    | Called on error status codes *(HTTP codes outside `onSuccess` and `onComplete`)*                | —        |
+| `onError`    | Called on error status codes *(Other HTTP codes outside `onSuccess` and `onComplete`)*          | —        |
 | `onComplete` | Called on completion (`200–299`, `308`, `401`, `402`, `422`, `423`, `426`, `451`, `500`, `511`) | —        |
 
 **Callback arguments:**
@@ -1130,9 +696,100 @@ fx.fetch({
 
 ---
 
+#### `fx.fetchPage(url, dataType, beforeSend)`
+
+Fetches page content via AJAX for SPA-style navigation. Resolves with a structured result object rather than a raw string.
+
+**Parameters:**
+
+- `url {string}` *(required)* — The URL to request.
+- `dataType {'json' | 'text'}` *(required)* — Expected response type.
+- `beforeSend {(() => void) | null}` *(optional)* — Called immediately before the request is sent.
+
+**Returns:** `Promise<{ data, status, statusText }>`
+
+```javascript
+fx.fetchPage('/about.html', 'text')
+	.then(({data, status, statusText}) => {
+		console.log(data, status, statusText);
+	});
+```
+
+---
+
+#### `fx.pageNavigate(options)`
+
+SPA-style navigation helper — fetches page content, updates browser history, and injects the result into a target container. Falls back to a hard navigation (`window.location.href`) if the fetch fails.
+
+**Options:**
+
+| Property   | Description                                           | Default   |
+|------------|-------------------------------------------------------|-----------|
+| `url`      | URL to navigate to                                    | —         |
+| `selector` | CSS selector of the container to inject content into  | `'#root'` |
+| `dataType` | Expected response type (`'json'` \| `'text'`)         | `'json'`  |
+| `replace`  | Use `history.replaceState()` instead of `pushState()` | `false`   |
+
+**Returns:** `Promise<{ html, status, statusText }>`
+
+```javascript
+fx.pageNavigate({url: '/dashboard', selector: '#app', dataType: 'text'})
+	.then(({html, status, statusText}) => console.log('Navigated', status));
+```
+
+Listen for the `fxPageNavigateReady` event on `document` to re-initialize components after new content is injected:
+
+```javascript
+document.addEventListener('fxPageNavigateReady', () => {
+	// re-bind listeners, run scripts, etc.
+});
+```
+
+---
+
+#### `fx.formatNumber(value, fractionDigits)`
+
+Formats a number (or numeric string) as a locale-aware string with grouped thousands separators.
+
+**Parameters:**
+
+- `value {number | string}` *(required)* — The number or numeric string to format.
+- `fractionDigits {number}` *(optional)* — Decimal places to show. Defaults to `2`.
+
+**Returns:** `string`
+
+```javascript
+fx.formatNumber(1234.5);      // '1,234.50'
+fx.formatNumber('1234', 0);   // '1,234'
+```
+
+---
+
 #### `fx.modal(config)`
 
-Creates a quick, simple modal dialog with callback support. See [Modals](#modals) for the full config reference.
+Creates a quick, simple modal dialog with callback support.
+
+**Config properties:**
+
+| Property            | Description                                       | Default           |
+|---------------------|---------------------------------------------------|-------------------|
+| `title`             | Modal title                                       | `null`            |
+| `type`              | Modal type (`success`, `warning`, `error`, etc.)  | `'success'`       |
+| `content`           | Body content                                      | `'Alert Content'` |
+| `confirmButtonText` | Confirm button label                              | —                 |
+| `cancelButtonText`  | Cancel button label                               | —                 |
+| `html`              | Render content as HTML?                           | `true`            |
+| `isStatic`          | Render as a static Modal?                         | `false`           |
+| `closeOnConfirm`    | Hide the modal on confirm button click?           | `false`           |
+| `onConfirm`         | Called after confirm button click                 | —                 |
+| `onCancel`          | Called after cancel button click                  | —                 |
+| `onEsc`             | Called on Escape key (only when no cancel button) | —                 |
+
+**Callback arguments:**
+
+- `onConfirm(e, modal)`, `onCancel(e, modal)`, `onEsc(e, modal)`
+	- `e` — The modal hide event.
+	- `modal` — The `FuxcelModal` instance.
 
 ```javascript
 fx.modal({
